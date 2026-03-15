@@ -77,20 +77,15 @@ const StatCard = memo(({ stat, index }) => {
   
   return (
     <Col md={3} key={index} className="text-center mb-3">
-      <div ref={ref} role="article" aria-labelledby={cardId}>
-        <h2 id={cardId} style={{
-          fontSize: 'clamp(1.5rem, 4vw, 2.5rem)',
-          fontWeight: 'bold',
-          color: '#cebd04',
-          marginBottom: '0.25rem'
-        }} aria-hidden="true">
+      <div ref={ref} className="stat-item" role="article" aria-labelledby={cardId}>
+        <div id={cardId} className="stat-number" aria-hidden="true">
           {inView ? (
             <CountUp end={stat.value} suffix={stat.suffix} />
           ) : (
             `0${stat.suffix}`
           )}
-        </h2>
-        <p style={{ fontSize: '0.9rem', color: 'rgba(255,255,255,0.9)' }}>{stat.label}</p>
+        </div>
+        <div className="stat-label">{stat.label}</div>
         <span className="visually-hidden">{stat.value}{stat.suffix} {stat.label}</span>
       </div>
     </Col>
@@ -106,40 +101,14 @@ const SponsorCard = memo(({ icon, title, description }) => {
   return (
     <Col md={4} className="mb-3">
       <div
+        className="sponsor-card"
         role="article"
         aria-labelledby={cardId}
-        style={{
-          backgroundColor: 'white',
-          borderRadius: '12px',
-          padding: '1.5rem',
-          textAlign: 'center',
-          height: '100%',
-          boxShadow: '0 4px 12px rgba(0,0,0,0.05)',
-          transition: 'transform 0.3s ease, box-shadow 0.3s ease'
-        }}
-        onMouseEnter={(e) => {
-          e.currentTarget.style.transform = 'translateY(-4px)';
-          e.currentTarget.style.boxShadow = '0 8px 24px rgba(0,0,0,0.1)';
-        }}
-        onMouseLeave={(e) => {
-          e.currentTarget.style.transform = 'translateY(0)';
-          e.currentTarget.style.boxShadow = '0 4px 12px rgba(0,0,0,0.05)';
-        }}
-        onFocus={(e) => {
-          e.currentTarget.style.transform = 'translateY(-4px)';
-          e.currentTarget.style.boxShadow = '0 8px 24px rgba(0,0,0,0.1)';
-        }}
-        onBlur={(e) => {
-          e.currentTarget.style.transform = 'translateY(0)';
-          e.currentTarget.style.boxShadow = '0 4px 12px rgba(0,0,0,0.05)';
-        }}
         tabIndex={0}
       >
-        <div style={{ fontSize: '2.5rem', marginBottom: '1rem' }} aria-hidden="true">{icon}</div>
-        <h3 id={cardId} style={{ fontSize: '1.1rem', fontWeight: 'bold', color: '#132f66', marginBottom: '0.5rem' }}>
-          {title}
-        </h3>
-        <p style={{ fontSize: '0.9rem', color: '#4a5568', marginBottom: 0 }}>{description}</p>
+        <div className="sponsor-icon" aria-hidden="true">{icon}</div>
+        <h3 id={cardId}>{title}</h3>
+        <p>{description}</p>
       </div>
     </Col>
   );
@@ -152,42 +121,28 @@ const Alert = memo(({ show, success, message, onClose }) => {
   if (!show) return null;
   
   return (
-    <div className="mb-3" role="alert" aria-live="polite">
-      <div style={{
-        backgroundColor: success ? '#d4edda' : '#f8d7da',
-        color: success ? '#155724' : '#721c24',
-        padding: '1rem',
-        borderRadius: '8px',
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'space-between'
-      }}>
-        <div className="d-flex align-items-center gap-2">
-          <i className={`fas ${success ? 'fa-check-circle' : 'fa-exclamation-circle'}`} style={{ fontSize: '1.2rem' }} aria-hidden="true"></i>
-          <span>{message}</span>
-        </div>
-        <button
-          onClick={onClose}
-          onKeyDown={(e) => {
-            if (e.key === 'Enter' || e.key === ' ') {
-              e.preventDefault();
-              onClose();
-            }
-          }}
-          style={{
-            background: 'none',
-            border: 'none',
-            fontSize: '1.2rem',
-            cursor: 'pointer',
-            color: success ? '#155724' : '#721c24',
-            minHeight: '44px',
-            minWidth: '44px'
-          }}
-          aria-label="Close alert"
-        >
-          ×
-        </button>
+    <div 
+      className={`sponsor-alert ${success ? 'sponsor-alert-success' : 'sponsor-alert-error'}`}
+      role="alert" 
+      aria-live="polite"
+    >
+      <div className="d-flex align-items-center gap-2">
+        <i className={`fas ${success ? 'fa-check-circle' : 'fa-exclamation-circle'}`} style={{ fontSize: '1.2rem' }} aria-hidden="true"></i>
+        <span>{message}</span>
       </div>
+      <button
+        onClick={onClose}
+        onKeyDown={(e) => {
+          if (e.key === 'Enter' || e.key === ' ') {
+            e.preventDefault();
+            onClose();
+          }
+        }}
+        className="sponsor-alert-close"
+        aria-label="Close alert"
+      >
+        ×
+      </button>
     </div>
   );
 });
@@ -200,9 +155,9 @@ const FormInput = memo(({ label, type = "text", name, value, onChange, placehold
   const errorId = `${id}-error`;
   
   return (
-    <div className="mb-3">
-      <label htmlFor={id} style={{ fontSize: '0.9rem', fontWeight: '600', color: '#132f66', marginBottom: '0.3rem', display: 'block' }}>
-        {label} {required && <span style={{ color: '#dc3545' }} aria-hidden="true">*</span>}
+    <div className="sponsor-form-group">
+      <label htmlFor={id} className="sponsor-form-label">
+        {label} {required && <span className="text-danger" aria-hidden="true">*</span>}
         {required && <span className="visually-hidden"> (required)</span>}
       </label>
       {as === 'select' ? (
@@ -212,16 +167,9 @@ const FormInput = memo(({ label, type = "text", name, value, onChange, placehold
           value={value}
           onChange={onChange}
           required={required}
+          className="sponsor-form-control"
           aria-invalid={required && !value ? "true" : "false"}
           aria-describedby={required && !value ? errorId : undefined}
-          style={{
-            width: '100%',
-            padding: '0.6rem 1rem',
-            border: '1px solid #dee2e6',
-            borderRadius: '8px',
-            fontSize: '0.9rem',
-            minHeight: '44px'
-          }}
         >
           <option value="">Select an option</option>
           {options?.map(opt => (
@@ -237,17 +185,9 @@ const FormInput = memo(({ label, type = "text", name, value, onChange, placehold
           placeholder={placeholder}
           required={required}
           rows={rows}
+          className="sponsor-form-control"
           aria-invalid={required && !value ? "true" : "false"}
           aria-describedby={required && !value ? errorId : undefined}
-          style={{
-            width: '100%',
-            padding: '0.6rem 1rem',
-            border: '1px solid #dee2e6',
-            borderRadius: '8px',
-            fontSize: '0.9rem',
-            fontFamily: 'inherit',
-            minHeight: '44px'
-          }}
         />
       ) : (
         <input
@@ -258,20 +198,13 @@ const FormInput = memo(({ label, type = "text", name, value, onChange, placehold
           onChange={onChange}
           placeholder={placeholder}
           required={required}
+          className="sponsor-form-control"
           aria-invalid={required && !value ? "true" : "false"}
           aria-describedby={required && !value ? errorId : undefined}
-          style={{
-            width: '100%',
-            padding: '0.6rem 1rem',
-            border: '1px solid #dee2e6',
-            borderRadius: '8px',
-            fontSize: '0.9rem',
-            minHeight: '44px'
-          }}
         />
       )}
       {required && feedback && (
-        <div id={errorId} style={{ color: '#dc3545', fontSize: '0.8rem', marginTop: '0.2rem' }} role="alert">{feedback}</div>
+        <div id={errorId} className="sponsor-error-message" role="alert">{feedback}</div>
       )}
     </div>
   );
@@ -383,7 +316,7 @@ This inquiry was sent from the Kitale Progressive School website.
         </div>
         <h3 style="color: #132f66;">New Sponsorship/Donation Inquiry</h3>
         <table style="width: 100%; border-collapse: collapse;">
-          <tr><td style="padding: 8px 0; font-weight: bold; width: 120px;">Full Name:</td><td>${formData.fullName}</td></tr>
+          <tr><td style="padding: 8px 0; font-weight: bold; width: 100px;">Full Name:</td><td>${formData.fullName}</td></tr>
           <tr><td style="padding: 8px 0; font-weight: bold;">Email:</td><td>${formData.email}</td></tr>
           <tr><td style="padding: 8px 0; font-weight: bold;">Phone:</td><td>${formData.phone || 'Not provided'}</td></tr>
           <tr><td style="padding: 8px 0; font-weight: bold;">Support Type:</td><td>${getDisplaySupportType()}</td></tr>
@@ -571,34 +504,11 @@ This inquiry was sent from the Kitale Progressive School website.
         />
       </Helmet>
 
-      {/* Hero Section with proper heading hierarchy */}
-      <section 
-        style={{
-          position: 'relative',
-          height: '400px',
-          backgroundImage: 'linear-gradient(135deg, #132f66 0%, #0a1f4d 100%)',
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-          textAlign: 'center',
-          color: 'white'
-        }}
-        aria-labelledby="hero-title"
-      >
+      {/* Hero Section */}
+      <section className="sponsor-hero">
         <Container>
-          <h1 id="hero-title" style={{
-            fontSize: 'clamp(2rem, 5vw, 3rem)',
-            fontWeight: 'bold',
-            marginBottom: '1rem'
-          }}>
-            Change a Life. Build a Future.
-          </h1>
-          <p style={{
-            fontSize: 'clamp(1rem, 4vw, 1.2rem)',
-            maxWidth: '800px',
-            margin: '0 auto',
-            opacity: 0.95
-          }}>
+          <h1>Change a Life. Build a Future.</h1>
+          <p>
             Your generosity today can open doors to education, hope, and lifelong
             success for a child in our community.
           </p>
@@ -606,10 +516,8 @@ This inquiry was sent from the Kitale Progressive School website.
       </section>
 
       {/* Main Content */}
-      <section className="py-5" aria-labelledby="main-heading">
+      <section className="py-5">
         <Container>
-          <h2 id="main-heading" className="visually-hidden">Sponsorship Information and Form</h2>
-          
           {/* Intro */}
           <Row className="mb-4">
             <Col lg={10} className="mx-auto text-center">
@@ -628,25 +536,20 @@ This inquiry was sent from the Kitale Progressive School website.
           </Row>
 
           {/* Sponsor Cards */}
-          <Row className="mb-4 g-3" role="list" aria-label="Sponsorship options">
+          <Row className="mb-4 g-4" role="list" aria-label="Sponsorship options">
             {sponsorCards.map((card, index) => (
-              <Col md={4} key={index} role="listitem">
-                <SponsorCard icon={card.icon} title={card.title} description={card.description} />
-              </Col>
+              <SponsorCard 
+                key={index} 
+                icon={card.icon} 
+                title={card.title} 
+                description={card.description} 
+              />
             ))}
           </Row>
 
           {/* Statistics Section */}
-          <div 
-            style={{
-              background: 'linear-gradient(135deg, #132f66 0%, #0a1f4d 100%)',
-              padding: '2rem 1rem',
-              borderRadius: '12px',
-              marginBottom: '2rem'
-            }}
-            aria-labelledby="stats-heading"
-          >
-            <h3 id="stats-heading" className="visually-hidden">Sponsorship Impact Statistics</h3>
+          <div className="sponsor-stats">
+            <h2 className="visually-hidden">Sponsorship Impact Statistics</h2>
             <Row className="justify-content-center g-3" role="list" aria-label="Impact statistics">
               {sponsorStats.map((stat, index) => (
                 <StatCard key={index} stat={stat} index={index} />
@@ -665,21 +568,8 @@ This inquiry was sent from the Kitale Progressive School website.
           {/* Form Section */}
           <Row className="mb-4">
             <Col lg={8} className="mx-auto">
-              <div style={{
-                backgroundColor: 'white',
-                borderRadius: '16px',
-                padding: '2rem',
-                boxShadow: '0 4px 20px rgba(0,0,0,0.08)'
-              }}>
-                <h3 style={{
-                  fontSize: '1.5rem',
-                  fontWeight: 'bold',
-                  color: '#132f66',
-                  marginBottom: '1.5rem',
-                  textAlign: 'center'
-                }}>
-                  Partner With Us Today
-                </h3>
+              <div className="sponsor-form-container">
+                <h2 className="sponsor-form-title">Partner With Us Today</h2>
 
                 <form onSubmit={handleSubmit} noValidate aria-label="Sponsorship inquiry form">
                   <FormInput
@@ -704,8 +594,8 @@ This inquiry was sent from the Kitale Progressive School website.
                   />
 
                   {/* Phone Input */}
-                  <div className="mb-3">
-                    <label htmlFor="phone" style={{ fontSize: '0.9rem', fontWeight: '600', color: '#132f66', marginBottom: '0.3rem', display: 'block' }}>
+                  <div className="sponsor-form-group">
+                    <label htmlFor="phone" className="sponsor-form-label">
                       Phone Number
                     </label>
                     <PhoneInput
@@ -715,21 +605,14 @@ This inquiry was sent from the Kitale Progressive School website.
                       value={phone}
                       onChange={handlePhoneChange}
                       placeholder="712345678"
+                      className="sponsor-phone-input"
                       aria-invalid={phoneError ? "true" : "false"}
                       aria-describedby={phoneError ? "phone-error" : "phone-help"}
-                      style={{
-                        width: '100%',
-                        padding: '0.6rem 1rem',
-                        border: '1px solid #dee2e6',
-                        borderRadius: '8px',
-                        fontSize: '0.9rem',
-                        minHeight: '44px'
-                      }}
                     />
                     {phoneError && (
-                      <div id="phone-error" style={{ color: '#dc3545', fontSize: '0.8rem', marginTop: '0.2rem' }} role="alert">{phoneError}</div>
+                      <div id="phone-error" className="sponsor-error-message" role="alert">{phoneError}</div>
                     )}
-                    <div id="phone-help" style={{ fontSize: '0.8rem', color: '#718096', marginTop: '0.2rem' }}>
+                    <div id="phone-help" className="sponsor-helper-text">
                       Enter exactly 9 digits after country code (e.g., 712345678)
                     </div>
                   </div>
@@ -770,8 +653,8 @@ This inquiry was sent from the Kitale Progressive School website.
                   />
 
                   {/* Terms Checkbox */}
-                  <div className="mb-3">
-                    <label style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', cursor: 'pointer' }}>
+                  <div className="sponsor-form-group">
+                    <label className="sponsor-checkbox">
                       <input
                         type="checkbox"
                         name="agreeToTerms"
@@ -780,13 +663,13 @@ This inquiry was sent from the Kitale Progressive School website.
                         required
                         aria-required="true"
                       />
-                      <span style={{ fontSize: '0.9rem' }}>
+                      <span>
                         I agree to the{' '}
-                        <Link to="/privacy-policy" target="_blank" style={{ color: '#132f66', textDecoration: 'underline' }}>
+                        <Link to="/privacy-policy" target="_blank" className="text-navy text-decoration-underline">
                           Privacy Policy
                         </Link>
                         {' '}and{' '}
-                        <Link to="/terms-of-service" target="_blank" style={{ color: '#132f66', textDecoration: 'underline' }}>
+                        <Link to="/terms-of-service" target="_blank" className="text-navy text-decoration-underline">
                           Terms of Service
                         </Link>
                         <span className="visually-hidden"> (required)</span>
@@ -798,32 +681,7 @@ This inquiry was sent from the Kitale Progressive School website.
                     <button
                       type="submit"
                       disabled={submitting}
-                      style={{
-                        backgroundColor: '#132f66',
-                        color: 'white',
-                        border: 'none',
-                        padding: '0.75rem 2rem',
-                        borderRadius: '40px',
-                        fontSize: '1rem',
-                        fontWeight: '600',
-                        cursor: submitting ? 'not-allowed' : 'pointer',
-                        opacity: submitting ? 0.7 : 1,
-                        transition: 'all 0.3s ease',
-                        minHeight: '44px',
-                        minWidth: '44px'
-                      }}
-                      onMouseEnter={(e) => {
-                        if (!submitting) {
-                          e.target.style.backgroundColor = '#0a1f4d';
-                          e.target.style.transform = 'translateY(-2px)';
-                          e.target.style.boxShadow = '0 4px 12px rgba(19,47,102,0.3)';
-                        }
-                      }}
-                      onMouseLeave={(e) => {
-                        e.target.style.backgroundColor = '#132f66';
-                        e.target.style.transform = 'translateY(0)';
-                        e.target.style.boxShadow = 'none';
-                      }}
+                      className="sponsor-submit-btn"
                       aria-label={submitting ? "Sending your inquiry" : "Become a sponsor or donate"}
                     >
                       {submitting ? (
@@ -838,13 +696,7 @@ This inquiry was sent from the Kitale Progressive School website.
                     </button>
                   </div>
 
-                  <p style={{
-                    fontSize: '0.8rem',
-                    color: '#718096',
-                    marginTop: '1rem',
-                    marginBottom: 0,
-                    textAlign: 'center'
-                  }}>
+                  <p className="text-center text-muted small mt-3 mb-0">
                     <i className="fas fa-lock me-1" aria-hidden="true"></i>
                     You'll sign in with Google to verify your identity
                   </p>
@@ -856,36 +708,29 @@ This inquiry was sent from the Kitale Progressive School website.
           {/* Testimonial */}
           <Row className="mb-4">
             <Col lg={10} className="mx-auto">
-              <div style={{
-                backgroundColor: '#f8fafc',
-                borderRadius: '16px',
-                padding: '2rem',
-                textAlign: 'center'
-              }} role="complementary" aria-label="Sponsor testimonial">
-                <i className="fas fa-quote-left" style={{ fontSize: '2rem', color: '#cebd04', opacity: 0.5, marginBottom: '1rem' }} aria-hidden="true"></i>
-                <p style={{ fontSize: '1.1rem', fontStyle: 'italic', marginBottom: '1rem' }}>
+              <div className="sponsor-testimonial" role="complementary" aria-label="Sponsor testimonial">
+                <div className="sponsor-testimonial-quote" aria-hidden="true">"</div>
+                <p className="sponsor-testimonial-text">
                   "Sponsoring a child at Kitale Progressive School has been one of the most rewarding experiences of my life. Seeing the joy and hope in their eyes is priceless."
                 </p>
-                <div>
-                  <h6 style={{ fontSize: '1rem', fontWeight: 'bold', marginBottom: '0.2rem' }}>James Mwangi</h6>
-                  <small style={{ color: '#718096' }}>Sponsor since 2022</small>
-                </div>
+                <div className="sponsor-testimonial-author">James Mwangi</div>
+                <div className="sponsor-testimonial-title">Sponsor since 2022</div>
               </div>
             </Col>
           </Row>
 
           {/* Closing */}
           <div className="text-center">
-            <h4 style={{ fontSize: '1.1rem', fontWeight: 'bold', color: '#132f66', marginBottom: '0.5rem' }}>
+            <h4 className="fw-bold mb-2" style={{ color: '#132f66', fontSize: '1.1rem' }}>
               Together, we can nurture dreams and transform generations.
             </h4>
             <p style={{ color: '#4a5568', marginBottom: '1rem' }}>
               Thank you for choosing to invest in education and hope.
             </p>
             <div>
-              <Link to="/privacy-policy" style={{ color: '#718096', marginRight: '0.5rem', fontSize: '0.9rem' }}>Privacy Policy</Link>
-              <span style={{ color: '#718096' }} aria-hidden="true">|</span>
-              <Link to="/terms-of-service" style={{ color: '#718096', marginLeft: '0.5rem', fontSize: '0.9rem' }}>Terms of Service</Link>
+              <Link to="/privacy-policy" className="text-muted me-2" style={{ fontSize: '0.9rem' }}>Privacy Policy</Link>
+              <span className="text-muted" aria-hidden="true">|</span>
+              <Link to="/terms-of-service" className="text-muted ms-2" style={{ fontSize: '0.9rem' }}>Terms of Service</Link>
             </div>
           </div>
         </Container>
@@ -894,49 +739,6 @@ This inquiry was sent from the Kitale Progressive School website.
       <Suspense fallback={null}>
         <GetInTouch />
       </Suspense>
-
-      {/* Critical CSS inline with accessibility improvements */}
-      <style dangerouslySetInnerHTML={{ __html: `
-        .visually-hidden {
-          position: absolute;
-          width: 1px;
-          height: 1px;
-          padding: 0;
-          margin: -1px;
-          overflow: hidden;
-          clip: rect(0, 0, 0, 0);
-          border: 0;
-        }
-        .spinner-border {
-          display: inline-block;
-          width: 1rem;
-          height: 1rem;
-          vertical-align: text-bottom;
-          border: 0.2em solid currentColor;
-          border-right-color: transparent;
-          border-radius: 50%;
-          animation: spinner-border .75s linear infinite;
-        }
-        @keyframes spinner-border {
-          to { transform: rotate(360deg); }
-        }
-        button:focus-visible,
-        input:focus-visible,
-        select:focus-visible,
-        textarea:focus-visible,
-        [role="article"]:focus-visible {
-          outline: 3px solid #cebd04;
-          outline-offset: 2px;
-        }
-        @media (prefers-reduced-motion: reduce) {
-          .spinner-border {
-            animation: none;
-          }
-          * {
-            transition: none !important;
-          }
-        }
-      `}} />
     </>
   );
 }
