@@ -1,283 +1,108 @@
+// pages/ClubsSocieties.jsx - FINAL VERSION
 import { Helmet } from "react-helmet-async";
-import { Container, Row, Col, Card } from "react-bootstrap";
+import { Container, Row, Col } from "react-bootstrap";
 import { useState, lazy, Suspense, memo, useCallback, useEffect } from "react";
+import SimpleImage from "../components/SimpleImage";
+import "./clubs-societies.css"; // Move all styles here
 
-// Lazy load non-critical components with named export
+// Lazy load non-critical components
 const GetInTouch = lazy(() => import("../components/GetInTouch"));
 
-// Optimized image component with proper error handling and sizing
-const OptimizedImage = memo(({ src, alt, width, height, color }) => {
-  const [imgSrc, setImgSrc] = useState(src);
-  const [isLoaded, setIsLoaded] = useState(false);
-  
-  // Fallback image based on category color with proper contrast text
-  const fallbackImage = `data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='${width}' height='${height}' viewBox='0 0 ${width} ${height}'%3E%3Crect width='${width}' height='${height}' fill='%23${color?.replace('#', '') || 'f0f0f0'}'/%3E%3Ctext x='50%25' y='50%25' font-family='Arial' font-size='16' fill='%23${getContrastColor(color)}' text-anchor='middle' dy='.3em'%3E${alt}%3C/text%3E%3C/svg%3E`;
-
-  // Helper function to determine text color based on background
-  function getContrastColor(hexColor) {
-    if (!hexColor) return '333333';
-    // Simple contrast check - if background is dark, use white text
-    const color = hexColor.replace('#', '');
-    const r = parseInt(color.substr(0, 2), 16);
-    const g = parseInt(color.substr(2, 2), 16);
-    const b = parseInt(color.substr(4, 2), 16);
-    const luminance = (0.299 * r + 0.587 * g + 0.114 * b) / 255;
-    return luminance > 0.5 ? '000000' : 'ffffff';
-  }
-
-  return (
-    <div className="club-image-container" style={{ 
-      aspectRatio: '4/3', 
-      backgroundColor: color || '#f0f0f0',
-      position: 'relative',
-      overflow: 'hidden'
-    }}>
-      {!isLoaded && (
-        <div style={{
-          position: 'absolute',
-          top: 0,
-          left: 0,
-          right: 0,
-          bottom: 0,
-          background: `linear-gradient(90deg, ${color}25 25%, ${color}40 50%, ${color}25 75%)`,
-          backgroundSize: '200% 100%',
-          animation: 'shimmer 1.5s infinite'
-        }} />
-      )}
-      <img
-        src={imgSrc}
-        alt={alt}
-        loading="lazy"
-        decoding="async"
-        width={width}
-        height={height}
-        onLoad={() => setIsLoaded(true)}
-        onError={() => {
-          setIsLoaded(true);
-          setImgSrc(fallbackImage);
-        }}
-        style={{
-          width: '100%',
-          height: '100%',
-          objectFit: 'cover',
-          opacity: isLoaded ? 1 : 0,
-          transition: 'opacity 0.3s ease'
-        }}
-      />
-    </div>
-  );
-});
-
-OptimizedImage.displayName = 'OptimizedImage';
-
-// Memoized club card component with enhanced accessibility
+// Club Card Component with SimpleImage
 const ClubCard = memo(({ club, index }) => {
-  const cardId = `club-${index}-${club.name.toLowerCase().replace(/\s+/g, '-')}`;
+  const cardId = `club-${index}`;
   
   return (
-    <Col lg={6} className="mb-4" key={cardId}>
-      <Card 
-        className="h-100 border-0 shadow-sm club-card"
-        as="article"
-        aria-labelledby={`${cardId}-title`}
-      >
-        <Row className="g-0 h-100">
-          <Col md={5} className="px-0">
-            <OptimizedImage 
-              src={club.image} 
-              alt={`${club.name} club members participating in activities`}
-              width="400"
-              height="300"
-              color={club.color}
-            />
-          </Col>
-          <Col md={7}>
-            <Card.Body className="p-3 p-lg-4">
-              <div className="d-flex align-items-center mb-2">
-                <span className="club-icon fs-4 me-2" aria-hidden="true">{club.icon}</span>
-                <Card.Title 
-                  as="h3" 
-                  id={`${cardId}-title`}
-                  className="fw-bold h6 mb-0"
-                  style={{ color: club.color }}
-                >
-                  {club.name}
-                </Card.Title>
+    <Col lg={6} className="mb-4">
+      <div className="club-card h-100 border-0 shadow-sm" role="article">
+        <div className="row g-0 h-100">
+          <div className="col-md-5 px-0">
+            <div className="club-image-container">
+              <SimpleImage
+                src={club.image}
+                alt={`${club.name} club activities`}
+                width={400}
+                height={300}
+                priority={index < 2} // First 2 load with priority
+              />
+            </div>
+          </div>
+          <div className="col-md-7">
+            <div className="p-3 p-lg-4">
+              <h3 className="fw-bold h6 mb-2" style={{ color: club.color }}>
+                {club.icon} {club.name}
+              </h3>
+              <p className="text-secondary small mb-2">{club.description}</p>
+              <h4 className="fw-bold small mb-2">Activities:</h4>
+              <div className="d-flex flex-wrap gap-1">
+                {club.activities.slice(0, 4).map((activity, idx) => (
+                  <span
+                    key={idx}
+                    className="badge px-2 py-1"
+                    style={{
+                      background: `${club.color}15`,
+                      color: club.color,
+                      fontSize: '0.7rem',
+                      borderRadius: '30px'
+                    }}
+                  >
+                    {activity}
+                  </span>
+                ))}
               </div>
-              <Card.Text className="text-secondary mb-2" style={{ color: '#4a4a4a !important' }}>
-                {club.description}
-              </Card.Text>
-              <div>
-                <h4 className="fw-bold small mb-2" style={{ color: '#212529' }} id={`${cardId}-activities`}>
-                  Activities:
-                  <span className="visually-hidden"> for {club.name}</span>
-                </h4>
-                <div 
-                  className="d-flex flex-wrap gap-1" 
-                  aria-labelledby={`${cardId}-activities`}
-                  role="list"
-                >
-                  {club.activities.slice(0, 4).map((activity, idx) => (
-                    <span 
-                      key={idx}
-                      className="badge activity-badge small px-2 py-1"
-                      style={{ 
-                        background: `${club.color}15`,
-                        color: club.color,
-                        fontSize: '0.7rem',
-                        fontWeight: '500'
-                      }}
-                      role="listitem"
-                    >
-                      {activity}
-                    </span>
-                  ))}
-                </div>
-              </div>
-            </Card.Body>
-          </Col>
-        </Row>
-      </Card>
+            </div>
+          </div>
+        </div>
+      </div>
     </Col>
   );
 });
 
 ClubCard.displayName = 'ClubCard';
 
-// Highlight card with proper contrast ratios
-const HighlightCard = memo(({ icon, title, text }) => (
-  <Col md={3} sm={6} className="mb-3">
-    <div 
-      className="club-highlight-card text-center p-3 h-100" 
-      role="article"
-      style={{ backgroundColor: '#f8f9fa', borderRadius: '8px' }}
-    >
-      <div className="highlight-icon fs-2 mb-2" style={{ color: '#132f66' }} aria-hidden="true">{icon}</div>
-      <h3 className="highlight-title h6 fw-bold mb-1" style={{ color: '#212529' }}>{title}</h3>
-      <p className="highlight-text small mb-0" style={{ color: '#495057' }}>{text}</p>
-    </div>
-  </Col>
-));
-
-HighlightCard.displayName = 'HighlightCard';
-
-// Benefit card with proper contrast ratios
-const BenefitCard = memo(({ icon, title, text }) => (
-  <Col md={4} className="mb-3">
-    <div className="benefit-card text-center p-3 h-100" role="article">
-      <div 
-        className="benefit-icon-wrapper mx-auto mb-3" 
-        style={{ 
-          width: '50px', 
-          height: '50px', 
-          borderRadius: '50%', 
-          display: 'flex', 
-          alignItems: 'center', 
-          justifyContent: 'center',
-          backgroundColor: '#132f66'
-        }}
-        aria-hidden="true"
-      >
-        <i className={`bi ${icon}`} style={{ fontSize: '1.5rem', color: '#ffffff' }}></i>
-      </div>
-      <h3 className="benefit-title h6 fw-bold mb-2" style={{ color: '#212529' }}>{title}</h3>
-      <p className="benefit-text small mb-0" style={{ color: '#495057' }}>{text}</p>
-    </div>
-  </Col>
-));
-
-BenefitCard.displayName = 'BenefitCard';
-
-// Optimized tab navigation with proper contrast
-const TabNav = memo(({ categories, activeTab, onTabChange }) => {
-  return (
-    <nav className="clubs-tab-nav d-flex flex-wrap justify-content-center gap-2 mb-4" aria-label="Club categories">
-      {categories.map(category => (
-        <button
-          key={category.id}
-          onClick={() => onTabChange(category.id)}
-          className={`btn ${activeTab === category.id ? 'btn-navy' : 'btn-outline-navy'}`}
-          style={{
-            padding: '0.5rem 1rem',
-            borderRadius: '40px',
-            fontSize: '0.9rem',
-            fontWeight: '500',
-            minHeight: '44px',
-            minWidth: '44px',
-            transition: 'background-color 0.2s ease, color 0.2s ease',
-            ...(activeTab === category.id 
-              ? { 
-                  backgroundColor: '#132f66', 
-                  color: '#ffffff',
-                  border: 'none'
-                } 
-              : { 
-                  backgroundColor: 'transparent', 
-                  color: '#132f66',
-                  border: '2px solid #132f66'
-                }
-            )
-          }}
-          aria-pressed={activeTab === category.id}
-          aria-current={activeTab === category.id ? 'true' : undefined}
-        >
-          <span className="me-1" aria-hidden="true">{category.icon}</span>
-          <span>{category.name}</span>
-        </button>
-      ))}
-    </nav>
-  );
-});
-
-TabNav.displayName = 'TabNav';
-
 function ClubsSocieties() {
   const [activeTab, setActiveTab] = useState("academic");
 
-  const handleTabChange = useCallback((tabId) => {
-    setActiveTab(tabId);
-  }, []);
-
-  // Memoize club data to prevent unnecessary re-renders
+  // Updated URLs - MANUALLY OPTIMIZED
   const clubsData = {
     academic: [
       {
         name: "Young Scientists Club",
-        description: "Fostering curiosity through hands-on experiments and environmental projects.",
-        activities: ["Science fairs", "Nature walks", "Experiments", "Conservation"],
-        image: "https://images.unsplash.com/photo-1532094349884-543bc11b234d?ixlib=rb-4.0.3&auto=format&fit=crop&w=600&q=80",
+        description: "Fostering curiosity through hands-on experiments.",
+        activities: ["Science fairs", "Nature walks", "Experiments"],
+        image: "https://images.unsplash.com/photo-1532094349884-543bc11b234d?w=400&q=75&auto=format",
         icon: "🔬",
         color: "#132f66"
       },
       {
         name: "Mathematics Club",
-        description: "Making math fun through puzzles, competitions, and problem-solving.",
-        activities: ["Math contests", "Puzzles", "Mental math", "Math games"],
-        image: "https://images.unsplash.com/photo-1635070041078-e363dbe005cb?ixlib=rb-4.0.3&auto=format&fit=crop&w=600&q=80",
+        description: "Making math fun through puzzles and competitions.",
+        activities: ["Math contests", "Puzzles", "Math games"],
+        image: "https://images.unsplash.com/photo-1635070041078-e363dbe005cb?w=400&q=75&auto=format",
         icon: "🧮",
         color: "#0a1f4d"
       },
       {
         name: "Reading Club",
-        description: "Cultivating love for reading through storytelling and book reviews.",
-        activities: ["Storytelling", "Book reviews", "Poetry", "Reading comps"],
-        image: "https://images.unsplash.com/photo-1526243741027-444d633d7365?ixlib=rb-4.0.3&auto=format&fit=crop&w=600&q=80",
+        description: "Cultivating love for reading and storytelling.",
+        activities: ["Storytelling", "Book reviews", "Poetry"],
+        image: "https://images.unsplash.com/photo-1526243741027-444d633d7365?w=400&q=75&auto=format",
         icon: "📚",
         color: "#132f66"
       },
       {
         name: "Computer Club",
-        description: "Introducing digital literacy and basic programming in a fun environment.",
-        activities: ["Coding basics", "Typing", "Digital art", "Internet safety"],
-        image: "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='400' height='300' viewBox='0 0 400 300'%3E%3Crect width='400' height='300' fill='%23132f66'/%3E%3Ctext x='200' y='150' font-family='Arial' font-size='16' fill='white' text-anchor='middle'%3EComputer Club%3C/text%3E%3C/svg%3E",
+        description: "Digital literacy and basic programming.",
+        activities: ["Coding basics", "Digital art", "Internet safety"],
+        image: "https://images.unsplash.com/photo-1517694712202-14dd9538aa97?w=400&q=75&auto=format", // Better image
         icon: "💻",
         color: "#0a1f4d"
       },
       {
         name: "Chinese Language Club",
-        description: "Learning Mandarin and exploring China's rich culture and traditions.",
-        activities: ["Mandarin", "Calligraphy", "Festivals", "Songs"],
-        image: "https://images.unsplash.com/photo-1524593689594-aae2f26b75ab?ixlib=rb-4.0.3&auto=format&fit=crop&w=600&q=80",
+        description: "Learning Mandarin and Chinese culture.",
+        activities: ["Mandarin", "Calligraphy", "Festivals"],
+        image: "https://images.unsplash.com/photo-1524593689594-aae2f26b75ab?w=400&q=75&auto=format",
         icon: "🇨🇳",
         color: "#132f66"
       }
@@ -285,41 +110,41 @@ function ClubsSocieties() {
     cultural: [
       {
         name: "Kenyan Traditional Dance",
-        description: "Celebrating Kenya's rich cultural heritage through traditional dances.",
-        activities: ["Dances", "Festivals", "Drumming", "Traditional attire"],
-        image: "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='400' height='300' viewBox='0 0 400 300'%3E%3Crect width='400' height='300' fill='%23132f66'/%3E%3Ctext x='200' y='150' font-family='Arial' font-size='16' fill='white' text-anchor='middle'%3EKenyan Dance%3C/text%3E%3C/svg%3E",
+        description: "Celebrating Kenya's rich cultural heritage.",
+        activities: ["Dances", "Drumming", "Festivals"],
+        image: "https://images.unsplash.com/photo-1547156979-4e72c2c8b1a3?w=400&q=75&auto=format", // Better image
         icon: "💃",
         color: "#132f66"
       },
       {
         name: "School Band",
-        description: "Learn musical instruments and perform at school events together.",
-        activities: ["Brass", "Percussion", "Marching band", "Performances"],
-        image: "https://images.unsplash.com/photo-1458560871784-56d23406c091?ixlib=rb-4.0.3&auto=format&fit=crop&w=600&q=80",
+        description: "Learn musical instruments and perform.",
+        activities: ["Brass", "Percussion", "Performances"],
+        image: "https://images.unsplash.com/photo-1458560871784-56d23406c091?w=400&q=75&auto=format",
         icon: "🎺",
         color: "#8b4513"
       },
       {
         name: "Music Club",
-        description: "Developing musical talents through choir and instruments.",
-        activities: ["Choir", "Instrument lessons", "Festivals", "Songs"],
-        image: "https://images.unsplash.com/photo-1511671782779-c97d3d27a1d4?ixlib=rb-4.0.3&auto=format&fit=crop&w=600&q=80",
+        description: "Developing musical talents.",
+        activities: ["Choir", "Instrument lessons", "Festivals"],
+        image: "https://images.unsplash.com/photo-1511671782779-c97d3d27a1d4?w=400&q=75&auto=format",
         icon: "🎵",
         color: "#0a1f4d"
       },
       {
         name: "Journalism Club",
-        description: "Developing young writers through news writing and school magazine.",
-        activities: ["News writing", "Magazine", "Interviewing", "Photography"],
-        image: "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='400' height='300' viewBox='0 0 400 300'%3E%3Crect width='400' height='300' fill='%23132f66'/%3E%3Ctext x='200' y='150' font-family='Arial' font-size='16' fill='white' text-anchor='middle'%3EJournalism Club%3C/text%3E%3C/svg%3E",
+        description: "Developing young writers.",
+        activities: ["News writing", "Interviewing", "Photography"],
+        image: "https://images.unsplash.com/photo-1504711434969-e33886168f5c?w=400&q=75&auto=format", // Better image
         icon: "📰",
         color: "#132f66"
       },
       {
         name: "Drama Club",
-        description: "Nurturing creativity through plays, skits, and performances.",
-        activities: ["Stage plays", "Role play", "Puppetry", "Productions"],
-        image: "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='400' height='300' viewBox='0 0 400 300'%3E%3Crect width='400' height='300' fill='%230a1f4d'/%3E%3Ctext x='200' y='150' font-family='Arial' font-size='16' fill='white' text-anchor='middle'%3EDrama Club%3C/text%3E%3C/svg%3E",
+        description: "Nurturing creativity through performances.",
+        activities: ["Stage plays", "Role play", "Puppetry"],
+        image: "https://images.unsplash.com/photo-1503095396549-807759245b35?w=400&q=75&auto=format", // Better image
         icon: "🎭",
         color: "#0a1f4d"
       }
@@ -327,83 +152,75 @@ function ClubsSocieties() {
     talent: [
       {
         name: "Football Academy",
-        description: "Developing soccer skills, teamwork, and sportsmanship.",
-        activities: ["Training", "Matches", "Tournaments", "Skills clinics"],
-        image: "https://images.unsplash.com/photo-1543326727-cf6c39e8f84c?ixlib=rb-4.0.3&auto=format&fit=crop&w=600&q=80",
+        description: "Developing soccer skills and teamwork.",
+        activities: ["Training", "Matches", "Tournaments"],
+        image: "https://images.unsplash.com/photo-1543326727-cf6c39e8f84c?w=400&q=75&auto=format",
         icon: "⚽",
         color: "#132f66"
       },
       {
         name: "Athletics Club",
-        description: "Building endurance and speed in track and field events.",
-        activities: ["Track", "Field events", "Cross country", "Sports day"],
-        image: "https://images.unsplash.com/photo-1461896836934-ffe607ba8211?ixlib=rb-4.0.3&auto=format&fit=crop&w=600&q=80",
+        description: "Track and field events.",
+        activities: ["Track", "Field events", "Cross country"],
+        image: "https://images.unsplash.com/photo-1461896836934-ffe607ba8211?w=400&q=75&auto=format",
         icon: "🏃",
         color: "#0a1f4d"
       },
       {
         name: "Netball Club",
-        description: "Teaching fundamentals of netball, teamwork, and fair play.",
-        activities: ["Skills", "Position play", "Matches", "Tournaments"],
-        image: "https://images.unsplash.com/photo-1552674605-d67e0ee90881?ixlib=rb-4.0.3&auto=format&fit=crop&w=600&q=80",
+        description: "Netball skills and teamwork.",
+        activities: ["Skills", "Matches", "Tournaments"],
+        image: "https://images.unsplash.com/photo-1552674605-d67e0ee90881?w=400&q=75&auto=format",
         icon: "🏐",
         color: "#132f66"
       },
       {
         name: "Art & Craft Club",
-        description: "Exploring creativity through drawing, painting, and crafts.",
-        activities: ["Drawing", "Beadwork", "Clay", "Recycled art"],
-        image: "https://images.unsplash.com/photo-1460661419201-fd4cecdf8a8b?ixlib=rb-4.0.3&auto=format&fit=crop&w=600&q=80",
+        description: "Exploring creativity through art.",
+        activities: ["Drawing", "Painting", "Crafts"],
+        image: "https://images.unsplash.com/photo-1460661419201-fd4cecdf8a8b?w=400&q=75&auto=format",
         icon: "🎨",
         color: "#0a1f4d"
       },
       {
         name: "Swimming Club",
-        description: "Learn swimming techniques, water safety, and compete in galas.",
-        activities: ["Techniques", "Water safety", "Galas", "Life saving"],
-        image: "https://images.unsplash.com/photo-1530549387789-4c1017266635?ixlib=rb-4.0.3&auto=format&fit=crop&w=600&q=80",
+        description: "Learn swimming techniques and water safety.",
+        activities: ["Techniques", "Water safety", "Galas"],
+        image: "https://images.unsplash.com/photo-1530549387789-4c1017266635?w=400&q=75&auto=format",
         icon: "🏊",
         color: "#0066b3"
-      },
-      {
-        name: "Indoor Games Club",
-        description: "Enjoy table tennis, chess, scrabble, carrom, and more.",
-        activities: ["Table tennis", "Chess", "Scrabble", "Carrom"],
-        image: "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='400' height='300' viewBox='0 0 400 300'%3E%3Crect width='400' height='300' fill='%230a1f4d'/%3E%3Ctext x='200' y='150' font-family='Arial' font-size='16' fill='white' text-anchor='middle'%3EIndoor Games%3C/text%3E%3C/svg%3E",
-        icon: "🎯",
-        color: "#0a1f4d"
       }
     ],
     service: [
       {
-        name: "Wildlife/Environmental Club",
-        description: "Creating awareness about Kenya's wildlife and conservation.",
-        activities: ["Park visits", "Conservation", "Tree planting", "Wildlife talks"],
-        image: "https://images.unsplash.com/photo-1516426122078-c23e76319801?ixlib=rb-4.0.3&auto=format&fit=crop&w=600&q=80",
+        name: "Wildlife Club",
+        description: "Kenya's wildlife and conservation.",
+        activities: ["Park visits", "Conservation", "Tree planting"],
+        image: "https://images.unsplash.com/photo-1516426122078-c23e76319801?w=400&q=75&auto=format",
         icon: "🦁",
         color: "#132f66"
       },
       {
         name: "Scouts & Guides",
-        description: "Building character and leadership through scouting activities.",
-        activities: ["Camping", "Community service", "First aid", "Outdoor skills"],
-        image: "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='400' height='300' viewBox='0 0 400 300'%3E%3Crect width='400' height='300' fill='%230a1f4d'/%3E%3Ctext x='200' y='150' font-family='Arial' font-size='16' fill='white' text-anchor='middle'%3EScouts %26 Guides%3C/text%3E%3C/svg%3E",
+        description: "Leadership through scouting.",
+        activities: ["Camping", "Community service", "First aid"],
+        image: "https://images.unsplash.com/photo-1551632811-561732d4b307?w=400&q=75&auto=format", // Better image
         icon: "⛺",
         color: "#0a1f4d"
       },
       {
         name: "Young Farmers Club",
-        description: "Introducing agriculture through school gardening projects.",
-        activities: ["School garden", "Animal care", "Composting", "Market days"],
-        image: "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='400' height='300' viewBox='0 0 400 300'%3E%3Crect width='400' height='300' fill='%23132f66'/%3E%3Ctext x='200' y='150' font-family='Arial' font-size='16' fill='white' text-anchor='middle'%3EYoung Farmers%3C/text%3E%3C/svg%3E",
+        description: "Agriculture through gardening.",
+        activities: ["School garden", "Animal care", "Composting"],
+        image: "https://images.unsplash.com/photo-1464226184884-fa280b87c399?w=400&q=75&auto=format", // Better image
         icon: "🌱",
         color: "#132f66"
       },
       {
         name: "Red Cross Society",
-        description: "Promoting health, first aid, and humanitarian values.",
-        activities: ["First aid", "Health campaigns", "Fundraising", "Peer support"],
-        image: "https://images.unsplash.com/photo-1584515933487-779824d29309?ixlib=rb-4.0.3&auto=format&fit=crop&w=600&q=80",
+        description: "Health, first aid, and humanitarian values.",
+        activities: ["First aid", "Health campaigns", "Fundraising"],
+        image: "https://images.unsplash.com/photo-1584515933487-779824d29309?w=400&q=75&auto=format",
         icon: "❤️",
         color: "#0a1f4d"
       }
@@ -425,152 +242,97 @@ function ClubsSocieties() {
   ];
 
   const benefits = [
-    { icon: "bi-people", title: "Social Skills", text: "Make friends, learn teamwork, and develop communication skills." },
-    { icon: "bi-star", title: "Talent Discovery", text: "Explore interests and discover hidden talents." },
-    { icon: "bi-trophy", title: "Leadership", text: "Take on responsibilities and build confidence." }
+    { icon: "bi-people", title: "Social Skills", text: "Make friends and learn teamwork." },
+    { icon: "bi-star", title: "Talent Discovery", text: "Explore your interests." },
+    { icon: "bi-trophy", title: "Leadership", text: "Build confidence and responsibility." }
   ];
 
-  // Preconnect to external domains
-  useEffect(() => {
-    const domains = ['https://images.unsplash.com'];
-    domains.forEach(domain => {
-      if (!document.querySelector(`link[rel="preconnect"][href="${domain}"]`)) {
-        const link = document.createElement('link');
-        link.rel = 'preconnect';
-        link.href = domain;
-        document.head.appendChild(link);
-      }
-    });
+  const handleTabChange = useCallback((tabId) => {
+    setActiveTab(tabId);
   }, []);
 
   return (
     <>
       <Helmet>
         <title>Clubs & Societies | Kitale Progressive School</title>
-        <meta 
-          name="description" 
-          content="Explore our diverse clubs and societies at Kitale Progressive School. From academic to cultural, sports to service - discover your passion." 
-        />
+        <meta name="description" content="Explore our diverse clubs and societies." />
         <link rel="preconnect" href="https://images.unsplash.com" />
       </Helmet>
       
-      {/* Page Header - H1 */}
-      <section 
-        style={{ 
-          background: 'linear-gradient(135deg, #132f66 0%, #0a1f4d 100%)',
-          color: 'white',
-          paddingTop: '120px',
-          paddingBottom: '60px',
-          textAlign: 'center',
-          width: '100%'
-        }}
-        aria-labelledby="page-title"
-      >
+      <section style={{ 
+        background: 'linear-gradient(135deg, #132f66 0%, #0a1f4d 100%)',
+        color: 'white',
+        padding: '120px 0 60px',
+        textAlign: 'center'
+      }}>
         <Container>
-          <h1 id="page-title" style={{ 
-            fontSize: 'clamp(2rem, 5vw, 3rem)',
-            fontWeight: 'bold',
-            marginBottom: '1rem',
-            color: '#ffffff'
-          }}>
+          <h1 style={{ fontSize: 'clamp(2rem, 5vw, 3rem)', marginBottom: '1rem' }}>
             Clubs & Societies
           </h1>
-          <p style={{ 
-            fontSize: 'clamp(1rem, 4vw, 1.2rem)',
-            maxWidth: '700px',
-            margin: '0 auto',
-            color: '#ffffff',
-            opacity: 0.95
-          }}>
+          <p style={{ fontSize: 'clamp(1rem, 4vw, 1.2rem)' }}>
             Discover Your Passion, Develop Your Talents
           </p>
         </Container>
       </section>
       
-      {/* Introduction Section - H2 */}
-      <section className="section-padding bg-light-custom py-5" aria-labelledby="intro-heading">
+      <section className="py-5 bg-light">
         <Container>
-          <Row className="text-center mb-4">
-            <Col lg={8} className="mx-auto">
-              <h2 id="intro-heading" className="section-heading h3 mb-3" style={{ color: '#212529' }}>Where Talents Blossom</h2>
-              <p className="small" style={{ color: '#495057' }}>
-                At Kitale Progressive School, we believe education extends beyond the classroom. 
-                Our vibrant clubs and societies provide students with opportunities to explore interests, 
-                develop skills, and build lasting friendships.
-              </p>
-            </Col>
-          </Row>
+          <h2 className="text-center h3 mb-4">Where Talents Blossom</h2>
+          <p className="text-center text-secondary small mb-5">
+            At Kitale Progressive School, we believe education extends beyond the classroom.
+          </p>
 
-          {/* Highlights Cards - H3 headings inside */}
-          <Row className="mb-4 g-3" aria-label="Club highlights">
-            {highlights.map((item, index) => (
-              <HighlightCard key={`highlight-${index}`} {...item} />
+          <div className="text-center mb-4">
+            {categories.map(category => (
+              <button
+                key={category.id}
+                onClick={() => handleTabChange(category.id)}
+                className={`btn m-1 ${activeTab === category.id ? 'btn-navy' : 'btn-outline-navy'}`}
+                style={{ padding: '0.5rem 1rem', borderRadius: '40px' }}
+              >
+                {category.icon} {category.name}
+              </button>
             ))}
-          </Row>
-        </Container>
-      </section>
-
-      {/* Clubs Listing with Tabs - H2 (visually hidden) */}
-      <section className="section-padding bg-white py-5" aria-labelledby="clubs-heading">
-        <Container>
-          <h2 id="clubs-heading" className="visually-hidden">Clubs by Category</h2>
-          
-          {/* Screen reader announcer for tab changes */}
-          <div id="tab-announcer" className="visually-hidden" role="status" aria-live="polite">
-            {`Showing ${categories.find(c => c.id === activeTab)?.name} clubs`}
           </div>
-          
-          <TabNav categories={categories} activeTab={activeTab} onTabChange={handleTabChange} />
 
-          <Row className="g-4" role="list" aria-label={`${categories.find(c => c.id === activeTab)?.name} clubs`}>
+          <Row className="g-4">
             {clubsData[activeTab]?.map((club, index) => (
-              <ClubCard key={`club-${activeTab}-${index}`} club={club} index={index} />
+              <ClubCard key={index} club={club} index={index} />
             ))}
           </Row>
         </Container>
       </section>
 
-      {/* Benefits Section - H2 */}
-      <section className="section-padding bg-light-custom py-5" aria-labelledby="benefits-heading">
+      <section className="py-5">
         <Container>
-          <Row className="text-center mb-4">
-            <Col lg={8} className="mx-auto">
-              <h2 id="benefits-heading" className="section-heading h3 mb-3" style={{ color: '#212529' }}>Benefits of Joining</h2>
-              <p className="small" style={{ color: '#495057' }}>
-                Participation in clubs and societies helps students develop holistically
-              </p>
-            </Col>
-          </Row>
-          
-          <Row className="g-4" role="list" aria-label="Benefits of joining clubs">
+          <h2 className="text-center h3 mb-4">Benefits of Joining</h2>
+          <Row>
             {benefits.map((item, index) => (
-              <BenefitCard key={`benefit-${index}`} {...item} />
+              <Col md={4} key={index} className="mb-3">
+                <div className="text-center p-3">
+                  <div className="bg-navy text-white rounded-circle mx-auto mb-3" 
+                       style={{ width: '50px', height: '50px', lineHeight: '50px' }}>
+                    <i className={`bi ${item.icon}`}></i>
+                  </div>
+                  <h3 className="h6 fw-bold mb-2">{item.title}</h3>
+                  <p className="small text-secondary mb-0">{item.text}</p>
+                </div>
+              </Col>
             ))}
           </Row>
         </Container>
       </section>
 
-      {/* Call to Action - H2 */}
-      <section className="cta-section py-5" style={{ backgroundColor: '#132f66' }} aria-labelledby="cta-heading">
+      <section className="py-5" style={{ backgroundColor: '#132f66' }}>
         <Container className="text-center">
-          <h2 id="cta-heading" className="h3 fw-bold mb-2" style={{ color: '#ffffff' }}>Ready to Join Us?</h2>
-          <p className="small mb-3" style={{ color: '#ffffff', opacity: 0.95 }}>
-            Every term, students can choose up to two clubs. Discover your passion today!
+          <h2 className="h3 fw-bold text-white mb-2">Ready to Join Us?</h2>
+          <p className="small text-white mb-3" style={{ opacity: 0.95 }}>
+            Every term, students can choose up to two clubs.
           </p>
           <a 
             href="/admissions/apply"
-            className="btn btn-light px-4 py-2 d-inline-block"
-            style={{
-              backgroundColor: '#ffffff',
-              color: '#132f66',
-              borderRadius: '40px',
-              fontWeight: '600',
-              border: 'none',
-              minHeight: '44px',
-              minWidth: '44px',
-              textDecoration: 'none'
-            }}
-            aria-label="Apply for admission now"
+            className="btn btn-light px-4 py-2"
+            style={{ borderRadius: '40px', fontWeight: '600' }}
           >
             Apply Now
           </a>
@@ -580,91 +342,6 @@ function ClubsSocieties() {
       <Suspense fallback={null}>
         <GetInTouch />
       </Suspense>
-
-      {/* Critical CSS inline with accessibility improvements */}
-      <style dangerouslySetInnerHTML={{ __html: `
-        .club-card {
-          transition: transform 0.2s ease, box-shadow 0.2s ease;
-          border-radius: 12px;
-          overflow: hidden;
-        }
-        .club-card:hover,
-        .club-card:focus-within {
-          transform: translateY(-4px);
-          box-shadow: 0 10px 30px rgba(0,0,0,0.1) !important;
-        }
-        .club-image-container {
-          overflow: hidden;
-          height: 100%;
-          min-height: 180px;
-          background-color: #f0f0f0;
-        }
-        .club-image {
-          transition: transform 0.3s ease;
-        }
-        .club-card:hover .club-image,
-        .club-card:focus-within .club-image {
-          transform: scale(1.05);
-        }
-        .activity-badge {
-          background: #f0f0f0;
-          padding: 0.25rem 0.75rem;
-          border-radius: 30px;
-          font-size: 0.75rem;
-          white-space: nowrap;
-          color: #212529 !important;
-        }
-        .btn-outline-navy {
-          background: transparent;
-          min-height: 44px;
-          min-width: 44px;
-        }
-        .btn-outline-navy:hover,
-        .btn-outline-navy:focus-visible {
-          background: #132f66;
-          color: white;
-          outline: 3px solid #cebd04;
-          outline-offset: 2px;
-        }
-        .btn-navy:focus-visible {
-          outline: 3px solid #cebd04;
-          outline-offset: 2px;
-        }
-        .club-highlight-card {
-          transition: transform 0.2s ease;
-          border-radius: 8px;
-        }
-        .club-highlight-card:hover,
-        .benefit-card:hover {
-          transform: translateY(-2px);
-          background: #f8f9fa;
-        }
-        .visually-hidden {
-          position: absolute;
-          width: 1px;
-          height: 1px;
-          padding: 0;
-          margin: -1px;
-          overflow: hidden;
-          clip: rect(0, 0, 0, 0);
-          border: 0;
-        }
-        @keyframes shimmer {
-          0% { background-position: 200% 0; }
-          100% { background-position: -200% 0; }
-        }
-        @media (max-width: 768px) {
-          .club-image-container {
-            min-height: 150px;
-          }
-        }
-        @media (prefers-reduced-motion: reduce) {
-          .club-card, .club-image, * {
-            transition: none !important;
-            animation: none !important;
-          }
-        }
-      `}} />
     </>
   );
 }
