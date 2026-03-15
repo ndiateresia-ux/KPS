@@ -1,19 +1,23 @@
-import { Helmet } from "react-helmet-async";
-import { Container, Row, Col, Card, Button } from "react-bootstrap";
-import { Link, useLocation } from "react-router-dom";
-import { useEffect, useState, lazy, Suspense, memo, useCallback, useMemo } from "react";
+import { lazy, Suspense, memo, useCallback, useMemo, useEffect, useState } from "react";
+import { useLocation } from "react-router-dom";
+import Container from 'react-bootstrap/Container';
+import Row from 'react-bootstrap/Row';
+import Col from 'react-bootstrap/Col';
+import Card from 'react-bootstrap/Card';
+import Button from 'react-bootstrap/Button';
 
-// Lazy load non-critical components
+// Lazy load heavy components
 const GetInTouch = lazy(() => import("../components/GetInTouch"));
+const Helmet = lazy(() => import("react-helmet-async").then(mod => ({ default: mod.Helmet })));
 
-// Fallback images
+// Optimized image URLs with lower quality and responsive parameters
 const FALLBACK_IMAGES = {
-  ecde: "https://images.unsplash.com/photo-1503676260728-517c89092e3c?ixlib=rb-4.0.3&auto=format&fit=crop&w=600&q=80",
-  primary: "https://images.unsplash.com/photo-1509062522246-3755977927d7?ixlib=rb-4.0.3&auto=format&fit=crop&w=600&q=80",
-  jss: "https://images.unsplash.com/photo-1523050854058-8df90110c9f1?ixlib=rb-4.0.3&auto=format&fit=crop&w=600&q=80"
+  ecde: "https://images.unsplash.com/photo-1503676260728-517c89092e3c?w=400&q=60&auto=format&fit=crop",
+  primary: "https://images.unsplash.com/photo-1509062522246-3755977927d7?w=400&q=60&auto=format&fit=crop",
+  jss: "https://images.unsplash.com/photo-1523050854058-8df90110c9f1?w=400&q=60&auto=format&fit=crop"
 };
 
-// Memoized stat item component with enhanced accessibility
+// Memoized stat item component
 const StatItem = memo(({ value, label }) => (
   <Col xs={6} md={3}>
     <div className="curriculum-stat-badge" role="article">
@@ -26,7 +30,7 @@ const StatItem = memo(({ value, label }) => (
 
 StatItem.displayName = 'StatItem';
 
-// Memoized pillar item component with enhanced accessibility
+// Memoized pillar item component
 const PillarItem = memo(({ icon, label }) => (
   <Col md={3} sm={6}>
     <div className="pillar-item text-center p-3" role="article">
@@ -39,7 +43,7 @@ const PillarItem = memo(({ icon, label }) => (
 
 PillarItem.displayName = 'PillarItem';
 
-// Memoized navigation card component with enhanced accessibility
+// Optimized navigation card component with responsive images
 const NavCard = memo(({ data, onClick }) => {
   const cardId = `nav-card-${data.id}`;
   
@@ -49,7 +53,13 @@ const NavCard = memo(({ data, onClick }) => {
         <div className="curriculum-card-img-wrapper" style={{ aspectRatio: '16/9', overflow: 'hidden' }}>
           <Card.Img 
             variant="top" 
-            src={data.image} 
+            src={`${data.image}?w=400&q=60&auto=format`}
+            srcSet={`
+              ${data.image}?w=400&q=60&auto=format 400w,
+              ${data.image}?w=600&q=60&auto=format 600w,
+              ${data.image}?w=800&q=60&auto=format 800w
+            `}
+            sizes="(max-width: 768px) 400px, (max-width: 1200px) 600px, 800px"
             alt={`${data.badge} level learning activities`}
             className="curriculum-card-img"
             loading="lazy"
@@ -83,7 +93,7 @@ const NavCard = memo(({ data, onClick }) => {
 
 NavCard.displayName = 'NavCard';
 
-// Optimized image component with lazy loading and accessibility
+// Optimized image component with responsive images and loading states
 const CurriculumImage = memo(({ data }) => {
   const [imgSrc, setImgSrc] = useState(data.image);
   const [loaded, setLoaded] = useState(false);
@@ -98,6 +108,7 @@ const CurriculumImage = memo(({ data }) => {
     }}>
       {!loaded && (
         <div 
+          className="image-skeleton"
           style={{
             position: 'absolute',
             top: 0,
@@ -112,7 +123,13 @@ const CurriculumImage = memo(({ data }) => {
         />
       )}
       <img 
-        src={imgSrc} 
+        src={`${imgSrc}?w=600&q=60&auto=format`}
+        srcSet={`
+          ${imgSrc}?w=400&q=60&auto=format 400w,
+          ${imgSrc}?w=600&q=60&auto=format 600w,
+          ${imgSrc}?w=800&q=60&auto=format 800w
+        `}
+        sizes="(max-width: 768px) 400px, (max-width: 1200px) 600px, 800px"
         alt={`${data.title} - ${data.imageTag} illustration`}
         className={`curriculum-image ${loaded ? 'loaded' : ''}`}
         loading="lazy"
@@ -133,6 +150,7 @@ const CurriculumImage = memo(({ data }) => {
         }}
       />
       <div 
+        className="image-tag"
         style={{
           position: 'absolute',
           bottom: '15px',
@@ -157,7 +175,7 @@ const CurriculumImage = memo(({ data }) => {
 
 CurriculumImage.displayName = 'CurriculumImage';
 
-// Optimized curriculum section component with enhanced accessibility
+// Optimized curriculum section component
 const CurriculumSection = memo(({ data, isReversed = false }) => {
   const sectionId = `${data.id}-section`;
   
@@ -189,17 +207,17 @@ const CurriculumSection = memo(({ data, isReversed = false }) => {
               <h2 id={`${data.id}-heading`} className="curriculum-title h3 fw-bold mb-2" style={{ color: '#132f66' }}>
                 {data.title}
               </h2>
-              <h5 className="curriculum-subtitle text-muted mb-2 small">{data.subtitle}</h5>
+              <h3 className="curriculum-subtitle text-muted mb-2 small">{data.subtitle}</h3>
               <p className="curriculum-age-range mb-3 fw-medium" style={{ color: '#cebd04' }}>{data.ageRange}</p>
               <p className="curriculum-description mb-3 text-muted">{data.description}</p>
             </div>
             
             <Row xs={1} md={2} className="g-3">
               <Col>
-                <h6 className="fw-bold mb-2" style={{ color: '#132f66', fontSize: '0.9rem' }}>
+                <h4 className="fw-bold mb-2" style={{ color: '#132f66', fontSize: '0.9rem' }}>
                   <i className="fas fa-check-circle me-2" style={{ color: '#cebd04' }} aria-hidden="true"></i>
                   Learning Areas:
-                </h6>
+                </h4>
                 <ul className="list-unstyled small" aria-label={`Learning areas for ${data.badge}`}>
                   {data.learningAreas?.slice(0, 5).map((item, index) => (
                     <li key={index} className="mb-1 ps-2" style={{ color: '#4a5568' }}>• {item}</li>
@@ -207,10 +225,10 @@ const CurriculumSection = memo(({ data, isReversed = false }) => {
                 </ul>
               </Col>
               <Col>
-                <h6 className="fw-bold mb-2" style={{ color: '#132f66', fontSize: '0.9rem' }}>
+                <h4 className="fw-bold mb-2" style={{ color: '#132f66', fontSize: '0.9rem' }}>
                   <i className="fas fa-star me-2" style={{ color: '#cebd04' }} aria-hidden="true"></i>
                   Competencies:
-                </h6>
+                </h4>
                 <ul className="list-unstyled small" aria-label={`Key competencies for ${data.badge}`}>
                   {data.keyCompetencies?.slice(0, 4).map((item, index) => (
                     <li key={index} className="mb-1 ps-2" style={{ color: '#4a5568' }}>• {item}</li>
@@ -219,13 +237,12 @@ const CurriculumSection = memo(({ data, isReversed = false }) => {
               </Col>
             </Row>
 
-            {/* Optional Subjects - Only show if they exist */}
             {data.optionalSubjects && (
               <div className="mt-3">
-                <h6 className="fw-bold mb-2" style={{ color: '#132f66', fontSize: '0.9rem' }}>
+                <h4 className="fw-bold mb-2" style={{ color: '#132f66', fontSize: '0.9rem' }}>
                   <i className="fas fa-plus-circle me-2" style={{ color: '#cebd04' }} aria-hidden="true"></i>
                   Optional Subjects:
-                </h6>
+                </h4>
                 <ul className="list-unstyled small" aria-label={`Optional subjects for ${data.badge}`}>
                   {data.optionalSubjects.slice(0, 5).map((item, index) => (
                     <li key={index} className="mb-1 ps-2" style={{ color: '#4a5568' }}>• {item}</li>
@@ -248,31 +265,27 @@ CurriculumSection.displayName = 'CurriculumSection';
 function Curriculum() {
   const location = useLocation();
 
-  // Handle scrolling to section when coming from home page with hash
+  // Handle scrolling to section
   useEffect(() => {
     if (location.hash) {
-      // Small delay to ensure DOM is ready
-      setTimeout(() => {
+      const timer = setTimeout(() => {
         const section = document.getElementById(location.hash.substring(1));
         if (section) {
           section.scrollIntoView({ behavior: 'smooth', block: 'start' });
-          // Set focus to section for keyboard users
           section.setAttribute('tabindex', '-1');
           section.focus({ preventScroll: true });
         }
       }, 100);
+      return () => clearTimeout(timer);
     } else {
-      // Scroll to top when navigating to the page
       window.scrollTo(0, 0);
     }
   }, [location]);
 
-  // Memoize handlers
   const handleNavClick = useCallback((sectionId) => {
     const section = document.getElementById(sectionId);
     if (section) {
       section.scrollIntoView({ behavior: 'smooth', block: 'start' });
-      // Set focus to section for keyboard users
       section.setAttribute('tabindex', '-1');
       section.focus({ preventScroll: true });
     }
@@ -285,22 +298,16 @@ function Curriculum() {
       title: "ECDE (Early Childhood Development Education)",
       subtitle: "Playgroup • Pre-Primary 1 • Pre-Primary 2",
       ageRange: "Ages 2-5 years",
-      image: "/images/ecde.jpg",
+      image: "/images/ecde",
       fallbackImage: FALLBACK_IMAGES.ecde,
-      description: "The ECDE level focuses on foundational learning through play-based activities that develop curiosity, creativity, and social skills. Our youngest learners explore, discover, and build confidence in a nurturing environment.",
+      description: "The ECDE level focuses on foundational learning through play-based activities that develop curiosity, creativity, and social skills.",
       learningAreas: [
-        "Language Activities",
-        "Mathematical Activities",
-        "Environmental Activities",
-        "Psychomotor and Creative Activities",
-        "Religious Education"
+        "Language Activities", "Mathematical Activities", "Environmental Activities",
+        "Psychomotor and Creative Activities", "Religious Education"
       ],
       keyCompetencies: [
-        "Communication skills",
-        "Basic numeracy",
-        "Social skills",
-        "Fine and gross motor skills",
-        "Creativity and imagination"
+        "Communication skills", "Basic numeracy", "Social skills",
+        "Fine and gross motor skills", "Creativity"
       ],
       imageTag: "Play-based Learning",
       imageIcon: "fa-child"
@@ -311,25 +318,16 @@ function Curriculum() {
       title: "Primary School",
       subtitle: "Grades 1 - 6",
       ageRange: "Ages 6-11 years",
-      image: "/images/primary.jpg",
+      image: "/images/primary",
       fallbackImage: FALLBACK_IMAGES.primary,
-      description: "The Primary level builds on foundational skills and introduces more structured learning. Learners develop competencies across various subjects while values education remains integral to their holistic development.",
+      description: "The Primary level builds on foundational skills and introduces more structured learning.",
       learningAreas: [
-        "English",
-        "Kiswahili",
-        "Mathematics",
-        "Science and Technology",
-        "Social Studies",
-        "Religious Education",
-        "Creative Arts",
-        "Physical and Health Education"
+        "English", "Kiswahili", "Mathematics", "Science and Technology",
+        "Social Studies", "Religious Education", "Creative Arts", "Physical Education"
       ],
       keyCompetencies: [
-        "Critical thinking",
-        "Problem solving",
-        "Digital literacy",
-        "Collaboration",
-        "Self-awareness"
+        "Critical thinking", "Problem solving", "Digital literacy",
+        "Collaboration", "Self-awareness"
       ],
       imageTag: "Structured Learning",
       imageIcon: "fa-book-open"
@@ -340,37 +338,21 @@ function Curriculum() {
       title: "Junior Secondary School (JSS)",
       subtitle: "Grades 7 - 9",
       ageRange: "Ages 12-14 years",
-      image: "/images/jss.jpg",
+      image: "/images/jss",
       fallbackImage: FALLBACK_IMAGES.jss,
-      description: "Junior Secondary prepares learners for senior school while helping them explore their talents and interests. The curriculum offers core and optional subjects, allowing students to begin specializing in areas of strength.",
+      description: "Junior Secondary prepares learners for senior school while helping them explore their talents and interests.",
       learningAreas: [
-        "English",
-        "Kiswahili",
-        "Mathematics",
-        "Integrated Science",
-        "Social Studies",
-        "Religious Education",
-        "Business Studies",
-        "Agriculture",
-        "Pre-Technical Studies",
-        "Creative Arts and Sports"
+        "English", "Kiswahili", "Mathematics", "Integrated Science",
+        "Social Studies", "Religious Education", "Business Studies",
+        "Agriculture", "Pre-Technical Studies", "Creative Arts"
       ],
       optionalSubjects: [
-        "Foreign Languages (French/German)",
-        "Kenyan Sign Language",
-        "Indigenous Languages",
-        "Visual Arts",
-        "Performing Arts",
-        "Home Science",
-        "Computer Science"
+        "Foreign Languages", "Kenyan Sign Language", "Indigenous Languages",
+        "Visual Arts", "Performing Arts", "Home Science", "Computer Science"
       ],
       keyCompetencies: [
-        "Critical thinking and problem solving",
-        "Creativity and imagination",
-        "Communication and collaboration",
-        "Digital literacy",
-        "Citizenship",
-        "Self-efficacy"
+        "Critical thinking", "Creativity", "Communication",
+        "Digital literacy", "Citizenship", "Self-efficacy"
       ],
       imageTag: "Specialized Learning",
       imageIcon: "fa-flask"
@@ -397,18 +379,17 @@ function Curriculum() {
 
   return (
     <>
-      <Helmet>
-        <title>Curriculum | Kitale Progressive School</title>
-        <meta
-          name="description"
-          content="Explore our Competency-Based Curriculum (CBC) across ECDE, Primary, and Junior Secondary levels at Kitale Progressive School."
-        />
-        <link rel="preload" as="image" href="/images/ecde.jpg" />
-        <link rel="preload" as="image" href="/images/primary.jpg" />
-        <link rel="preload" as="image" href="/images/jss.jpg" />
-      </Helmet>
+      <Suspense fallback={null}>
+        <Helmet>
+          <title>Curriculum | Kitale Progressive School</title>
+          <meta
+            name="description"
+            content="Explore our Competency-Based Curriculum (CBC) across ECDE, Primary, and Junior Secondary levels."
+          />
+        </Helmet>
+      </Suspense>
       
-      {/* Page Header - with proper heading hierarchy */}
+      {/* Page Header */}
       <section 
         style={{
           background: 'linear-gradient(135deg, #132f66 0%, #0a1f4d 100%)',
@@ -457,8 +438,7 @@ function Curriculum() {
               </h2>
               <p className="text-muted">
                 At Kitale Progressive School, we follow the Competency-Based Curriculum (CBC) 
-                approved by the Kenya Institute of Curriculum Development (KICD). Our approach 
-                focuses on developing learners' competencies, values, and skills for the 21st century.
+                approved by the Kenya Institute of Curriculum Development (KICD).
               </p>
             </Col>
           </Row>
@@ -500,8 +480,8 @@ function Curriculum() {
           <p className="mb-4" style={{ opacity: 0.95 }}>
             Enroll your child today and give them the gift of quality CBC education.
           </p>
-          <Link 
-            to="/admissions/apply" 
+          <a 
+            href="/admissions/apply" 
             className="btn btn-light px-4 py-2"
             style={{
               backgroundColor: '#cebd04',
@@ -513,7 +493,9 @@ function Curriculum() {
               display: 'inline-block',
               transition: 'all 0.3s ease',
               minHeight: '44px',
-              minWidth: '44px'
+              minWidth: '44px',
+              lineHeight: '44px',
+              textAlign: 'center'
             }}
             onMouseEnter={(e) => {
               e.target.style.backgroundColor = '#b09e03';
@@ -528,7 +510,7 @@ function Curriculum() {
             aria-label="Apply for admission now"
           >
             Apply Now
-          </Link>
+          </a>
         </Container>
       </section>
 
@@ -536,7 +518,7 @@ function Curriculum() {
         <GetInTouch />
       </Suspense>
 
-      {/* Critical CSS inline with accessibility improvements */}
+      {/* Only critical CSS inline, rest should be in themes.css */}
       <style dangerouslySetInnerHTML={{ __html: `
         @keyframes shimmer {
           0% { background-position: -200% 0; }
@@ -552,98 +534,15 @@ function Curriculum() {
           clip: rect(0, 0, 0, 0);
           border: 0;
         }
-        .curriculum-image-wrapper {
-          overflow: hidden;
-        }
-        .curriculum-image-wrapper:hover img,
-        .curriculum-image-wrapper:focus-within img {
-          transform: scale(1.05);
-        }
-        .curriculum-stat-badge {
-          text-align: center;
-          padding: 1rem;
-          background: rgba(255,255,255,0.1);
-          border-radius: 8px;
-          backdrop-filter: blur(5px);
-          transition: transform 0.2s ease;
-        }
-        .curriculum-stat-badge:hover {
-          transform: translateY(-2px);
-        }
-        .stat-number {
-          font-size: clamp(1.5rem, 5vw, 2.2rem);
-          line-height: 1.2;
-          color: #cebd04;
-          font-weight: bold;
-        }
-        .stat-label {
-          font-size: 0.8rem;
-          color: rgba(255,255,255,0.7);
-          text-transform: uppercase;
-          letter-spacing: 0.5px;
-        }
-        .pillar-item {
-          padding: 1rem;
-          background: #f8f9fa;
-          border-radius: 8px;
-          transition: transform 0.2s ease, box-shadow 0.2s ease;
-        }
-        .pillar-item:hover,
-        .pillar-item:focus-within {
-          transform: translateY(-4px);
-          box-shadow: 0 10px 20px rgba(0,0,0,0.1);
-        }
-        .btn-outline-navy {
-          border: 2px solid #132f66;
-          color: #132f66;
-          background: transparent;
-          transition: all 0.2s ease;
-          min-height: 44px;
-          min-width: 44px;
-        }
-        .btn-outline-navy:hover,
-        .btn-outline-navy:focus-visible {
-          background: #132f66;
-          color: white;
-          outline: 3px solid #cebd04;
-          outline-offset: 2px;
-        }
-        .curriculum-badge {
-          transition: transform 0.2s ease;
-        }
-        .curriculum-badge:hover {
-          transform: scale(1.05);
-        }
         [tabindex="-1"]:focus {
           outline: 3px solid #cebd04;
           outline-offset: 2px;
         }
-        @media (max-width: 768px) {
-          .curriculum-stat-badge {
-            padding: 0.75rem;
-          }
-          .stat-number {
-            font-size: 1.5rem;
-          }
-        }
-        @media (max-width: 576px) {
-          .curriculum-stat-badge {
-            padding: 0.5rem;
-          }
-        }
         @media (prefers-reduced-motion: reduce) {
           * {
-            animation: none !important;
-            transition: none !important;
-          }
-          .curriculum-image-wrapper:hover img {
-            transform: none !important;
-          }
-          .pillar-item:hover {
-            transform: none !important;
-          }
-          .btn-outline-navy:hover {
-            transform: none !important;
+            animation-duration: 0.01ms !important;
+            animation-iteration-count: 1 !important;
+            transition-duration: 0.01ms !important;
           }
         }
       `}} />

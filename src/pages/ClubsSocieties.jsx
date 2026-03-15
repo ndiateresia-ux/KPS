@@ -1,78 +1,143 @@
 import { Helmet } from "react-helmet-async";
 import { Container, Row, Col, Card } from "react-bootstrap";
-import { useState, lazy, Suspense, memo, useCallback } from "react";
+import { useState, lazy, Suspense, memo, useCallback, useEffect } from "react";
 
-// Lazy load non-critical components
+// Lazy load non-critical components with named export
 const GetInTouch = lazy(() => import("../components/GetInTouch"));
 
+// Optimized image component with proper error handling and sizing
+const OptimizedImage = memo(({ src, alt, width, height, color }) => {
+  const [imgSrc, setImgSrc] = useState(src);
+  const [isLoaded, setIsLoaded] = useState(false);
+  
+  // Fallback image based on category color
+  const fallbackImage = `data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='${width}' height='${height}' viewBox='0 0 ${width} ${height}'%3E%3Crect width='${width}' height='${height}' fill='%23${color?.replace('#', '') || 'f0f0f0'}'/%3E%3Ctext x='50%25' y='50%25' font-family='Arial' font-size='14' fill='%23999' text-anchor='middle' dy='.3em'%3E${alt}%3C/text%3E%3C/svg%3E`;
+
+  return (
+    <div className="club-image-container" style={{ 
+      aspectRatio: '4/3', 
+      backgroundColor: color || '#f0f0f0',
+      position: 'relative',
+      overflow: 'hidden'
+    }}>
+      {!isLoaded && (
+        <div style={{
+          position: 'absolute',
+          top: 0,
+          left: 0,
+          right: 0,
+          bottom: 0,
+          background: `linear-gradient(90deg, ${color}15 25%, ${color}25 50%, ${color}15 75%)`,
+          backgroundSize: '200% 100%',
+          animation: 'shimmer 1.5s infinite'
+        }} />
+      )}
+      <img
+        src={imgSrc}
+        alt={alt}
+        loading="lazy"
+        decoding="async"
+        width={width}
+        height={height}
+        onLoad={() => setIsLoaded(true)}
+        onError={() => {
+          setIsLoaded(true);
+          setImgSrc(fallbackImage);
+        }}
+        style={{
+          width: '100%',
+          height: '100%',
+          objectFit: 'cover',
+          opacity: isLoaded ? 1 : 0,
+          transition: 'opacity 0.3s ease'
+        }}
+      />
+    </div>
+  );
+});
+
+OptimizedImage.displayName = 'OptimizedImage';
+
 // Memoized club card component with enhanced accessibility
-const ClubCard = memo(({ club, index }) => (
-  <Col lg={6} className="mb-4" key={index}>
-    <Card className="h-100 border-0 shadow-sm club-card">
-      <Row className="g-0 h-100">
-        <Col md={5} className="px-0">
-          <div className="club-image-container" style={{ aspectRatio: '4/3', backgroundColor: '#f0f0f0' }}>
-            <Card.Img 
+const ClubCard = memo(({ club, index }) => {
+  const cardId = `club-${index}-${club.name.toLowerCase().replace(/\s+/g, '-')}`;
+  
+  return (
+    <Col lg={6} className="mb-4" key={cardId}>
+      <Card 
+        className="h-100 border-0 shadow-sm club-card"
+        as="article"
+        aria-labelledby={`${cardId}-title`}
+      >
+        <Row className="g-0 h-100">
+          <Col md={5} className="px-0">
+            <OptimizedImage 
               src={club.image} 
-              alt={`${club.name} club activities`}
-              className="club-image"
-              loading="lazy"
-              decoding="async"
+              alt={`${club.name} club members participating in activities`}
               width="400"
               height="300"
-              style={{ width: '100%', height: '100%', objectFit: 'cover' }}
-              onError={(e) => {
-                e.target.onerror = null;
-                e.target.src = "https://images.unsplash.com/photo-1541339907198-e08756dedf3f?ixlib=rb-4.0.3&auto=format&fit=crop&w=600&q=80";
-              }}
+              color={club.color}
             />
-          </div>
-        </Col>
-        <Col md={7}>
-          <Card.Body className="p-3 p-lg-4">
-            <div className="d-flex align-items-center mb-2">
-              <span className="club-icon fs-4 me-2" aria-hidden="true">{club.icon}</span>
-              <Card.Title as="h3" className="fw-bold h6 mb-0" style={{ color: club.color }}>
-                {club.name}
-              </Card.Title>
-            </div>
-            <Card.Text className="text-muted small mb-2">
-              {club.description}
-            </Card.Text>
-            <div>
-              <h4 className="fw-bold small mb-2 clubs-activities-title">
-                Activities:
-                <span className="visually-hidden"> for {club.name}</span>
-              </h4>
-              <div className="d-flex flex-wrap gap-1" aria-label={`Activities for ${club.name}`}>
-                {club.activities.slice(0, 4).map((activity, idx) => (
-                  <span 
-                    key={idx}
-                    className="badge activity-badge small px-2 py-1"
-                    style={{ 
-                      background: `${club.color}15`,
-                      color: club.color,
-                      fontSize: '0.7rem'
-                    }}
-                  >
-                    {activity}
-                  </span>
-                ))}
+          </Col>
+          <Col md={7}>
+            <Card.Body className="p-3 p-lg-4">
+              <div className="d-flex align-items-center mb-2">
+                <span className="club-icon fs-4 me-2" aria-hidden="true">{club.icon}</span>
+                <Card.Title 
+                  as="h3" 
+                  id={`${cardId}-title`}
+                  className="fw-bold h6 mb-0"
+                  style={{ color: club.color }}
+                >
+                  {club.name}
+                </Card.Title>
               </div>
-            </div>
-          </Card.Body>
-        </Col>
-      </Row>
-    </Card>
-  </Col>
-));
+              <Card.Text className="text-muted small mb-2">
+                {club.description}
+              </Card.Text>
+              <div>
+                <h4 className="fw-bold small mb-2 clubs-activities-title" id={`${cardId}-activities`}>
+                  Activities:
+                  <span className="visually-hidden"> for {club.name}</span>
+                </h4>
+                <div 
+                  className="d-flex flex-wrap gap-1" 
+                  aria-labelledby={`${cardId}-activities`}
+                  role="list"
+                >
+                  {club.activities.slice(0, 4).map((activity, idx) => (
+                    <span 
+                      key={idx}
+                      className="badge activity-badge small px-2 py-1"
+                      style={{ 
+                        background: `${club.color}15`,
+                        color: club.color,
+                        fontSize: '0.7rem'
+                      }}
+                      role="listitem"
+                    >
+                      {activity}
+                    </span>
+                  ))}
+                </div>
+              </div>
+            </Card.Body>
+          </Col>
+        </Row>
+      </Card>
+    </Col>
+  );
+});
 
 ClubCard.displayName = 'ClubCard';
 
-// Memoized highlight card with enhanced accessibility
+// Simplified highlight card with better semantics
 const HighlightCard = memo(({ icon, title, text }) => (
   <Col md={3} sm={6} className="mb-3">
-    <div className="club-highlight-card text-center p-3" tabIndex="0" role="article">
+    <div 
+      className="club-highlight-card text-center p-3" 
+      role="article"
+    >
       <div className="highlight-icon fs-2 mb-2" aria-hidden="true">{icon}</div>
       <h3 className="highlight-title h6 fw-bold mb-1">{title}</h3>
       <p className="highlight-text small text-muted mb-0">{text}</p>
@@ -82,7 +147,7 @@ const HighlightCard = memo(({ icon, title, text }) => (
 
 HighlightCard.displayName = 'HighlightCard';
 
-// Memoized benefit card with enhanced accessibility
+// Simplified benefit card
 const BenefitCard = memo(({ icon, title, text }) => (
   <Col md={4} className="mb-3">
     <div className="benefit-card text-center p-3" role="article">
@@ -108,38 +173,34 @@ const BenefitCard = memo(({ icon, title, text }) => (
 
 BenefitCard.displayName = 'BenefitCard';
 
-// Tab navigation component with enhanced accessibility
-const TabNav = memo(({ categories, activeTab, onTabChange }) => (
-  <nav className="clubs-tab-nav d-flex flex-wrap justify-content-center gap-2 mb-4" aria-label="Club categories">
-    {categories.map(category => (
-      <button
-        key={category.id}
-        onClick={() => onTabChange(category.id)}
-        className={`btn ${activeTab === category.id ? 'btn-navy text-white' : 'btn-outline-navy'}`}
-        style={{
-          padding: '0.5rem 1rem',
-          borderRadius: '40px',
-          fontSize: '0.9rem',
-          fontWeight: '500',
-          border: activeTab === category.id ? 'none' : '2px solid #132f66',
-          backgroundColor: activeTab === category.id ? '#132f66' : 'transparent',
-          color: activeTab === category.id ? 'white' : '#132f66',
-          transition: 'all 0.2s ease',
-          minHeight: '44px', // Touch target size
-          minWidth: '44px'
-        }}
-        aria-pressed={activeTab === category.id}
-        aria-current={activeTab === category.id ? 'true' : undefined}
-      >
-        <span className="me-1" aria-hidden="true">{category.icon}</span>
-        <span>{category.name}</span>
-        {activeTab === category.id && (
-          <span className="visually-hidden"> (active category)</span>
-        )}
-      </button>
-    ))}
-  </nav>
-));
+// Optimized tab navigation with reduced re-renders
+const TabNav = memo(({ categories, activeTab, onTabChange }) => {
+  return (
+    <nav className="clubs-tab-nav d-flex flex-wrap justify-content-center gap-2 mb-4" aria-label="Club categories">
+      {categories.map(category => (
+        <button
+          key={category.id}
+          onClick={() => onTabChange(category.id)}
+          className={`btn ${activeTab === category.id ? 'btn-navy text-white' : 'btn-outline-navy'}`}
+          style={{
+            padding: '0.5rem 1rem',
+            borderRadius: '40px',
+            fontSize: '0.9rem',
+            fontWeight: '500',
+            minHeight: '44px',
+            minWidth: '44px',
+            transition: 'background-color 0.2s ease, color 0.2s ease'
+          }}
+          aria-pressed={activeTab === category.id}
+          aria-current={activeTab === category.id ? 'true' : undefined}
+        >
+          <span className="me-1" aria-hidden="true">{category.icon}</span>
+          <span>{category.name}</span>
+        </button>
+      ))}
+    </nav>
+  );
+});
 
 TabNav.displayName = 'TabNav';
 
@@ -148,14 +209,9 @@ function ClubsSocieties() {
 
   const handleTabChange = useCallback((tabId) => {
     setActiveTab(tabId);
-    // Announce tab change to screen readers
-    const announcement = document.getElementById('tab-announcer');
-    if (announcement) {
-      const categoryName = categories.find(c => c.id === tabId)?.name || tabId;
-      announcement.textContent = `Showing ${categoryName} clubs`;
-    }
   }, []);
 
+  // Memoize club data to prevent unnecessary re-renders
   const clubsData = {
     academic: [
       {
@@ -186,7 +242,7 @@ function ClubsSocieties() {
         name: "Computer Club",
         description: "Introducing digital literacy and basic programming in a fun environment.",
         activities: ["Coding basics", "Typing", "Digital art", "Internet safety"],
-        image: "/images/computer1.jpg",
+        image: "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='400' height='300' viewBox='0 0 400 300'%3E%3Crect width='400' height='300' fill='%23132f66'/%3E%3Ctext x='200' y='150' font-family='Arial' font-size='16' fill='white' text-anchor='middle'%3EComputer Club%3C/text%3E%3C/svg%3E",
         icon: "💻",
         color: "#0a1f4d"
       },
@@ -204,7 +260,7 @@ function ClubsSocieties() {
         name: "Kenyan Traditional Dance",
         description: "Celebrating Kenya's rich cultural heritage through traditional dances.",
         activities: ["Dances", "Festivals", "Drumming", "Traditional attire"],
-        image: "/images/extracurricular1.jpg",
+        image: "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='400' height='300' viewBox='0 0 400 300'%3E%3Crect width='400' height='300' fill='%23132f66'/%3E%3Ctext x='200' y='150' font-family='Arial' font-size='16' fill='white' text-anchor='middle'%3EKenyan Dance%3C/text%3E%3C/svg%3E",
         icon: "💃",
         color: "#132f66"
       },
@@ -228,7 +284,7 @@ function ClubsSocieties() {
         name: "Journalism Club",
         description: "Developing young writers through news writing and school magazine.",
         activities: ["News writing", "Magazine", "Interviewing", "Photography"],
-        image: "/images/journalism.jpg",
+        image: "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='400' height='300' viewBox='0 0 400 300'%3E%3Crect width='400' height='300' fill='%23132f66'/%3E%3Ctext x='200' y='150' font-family='Arial' font-size='16' fill='white' text-anchor='middle'%3EJournalism Club%3C/text%3E%3C/svg%3E",
         icon: "📰",
         color: "#132f66"
       },
@@ -236,7 +292,7 @@ function ClubsSocieties() {
         name: "Drama Club",
         description: "Nurturing creativity through plays, skits, and performances.",
         activities: ["Stage plays", "Role play", "Puppetry", "Productions"],
-        image: "/images/drama.jpg",
+        image: "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='400' height='300' viewBox='0 0 400 300'%3E%3Crect width='400' height='300' fill='%230a1f4d'/%3E%3Ctext x='200' y='150' font-family='Arial' font-size='16' fill='white' text-anchor='middle'%3EDrama Club%3C/text%3E%3C/svg%3E",
         icon: "🎭",
         color: "#0a1f4d"
       }
@@ -286,7 +342,7 @@ function ClubsSocieties() {
         name: "Indoor Games Club",
         description: "Enjoy table tennis, chess, scrabble, carrom, and more.",
         activities: ["Table tennis", "Chess", "Scrabble", "Carrom"],
-        image: "/images/chess.jpg",
+        image: "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='400' height='300' viewBox='0 0 400 300'%3E%3Crect width='400' height='300' fill='%230a1f4d'/%3E%3Ctext x='200' y='150' font-family='Arial' font-size='16' fill='white' text-anchor='middle'%3EIndoor Games%3C/text%3E%3C/svg%3E",
         icon: "🎯",
         color: "#0a1f4d"
       }
@@ -304,7 +360,7 @@ function ClubsSocieties() {
         name: "Scouts & Guides",
         description: "Building character and leadership through scouting activities.",
         activities: ["Camping", "Community service", "First aid", "Outdoor skills"],
-        image: "/images/scouts.jpg",
+        image: "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='400' height='300' viewBox='0 0 400 300'%3E%3Crect width='400' height='300' fill='%230a1f4d'/%3E%3Ctext x='200' y='150' font-family='Arial' font-size='16' fill='white' text-anchor='middle'%3EScouts %26 Guides%3C/text%3E%3C/svg%3E",
         icon: "⛺",
         color: "#0a1f4d"
       },
@@ -312,7 +368,7 @@ function ClubsSocieties() {
         name: "Young Farmers Club",
         description: "Introducing agriculture through school gardening projects.",
         activities: ["School garden", "Animal care", "Composting", "Market days"],
-        image: "/images/practicals2.jpg",
+        image: "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='400' height='300' viewBox='0 0 400 300'%3E%3Crect width='400' height='300' fill='%23132f66'/%3E%3Ctext x='200' y='150' font-family='Arial' font-size='16' fill='white' text-anchor='middle'%3EYoung Farmers%3C/text%3E%3C/svg%3E",
         icon: "🌱",
         color: "#132f66"
       },
@@ -347,6 +403,19 @@ function ClubsSocieties() {
     { icon: "bi-trophy", title: "Leadership", text: "Take on responsibilities and build confidence." }
   ];
 
+  // Preconnect to external domains
+  useEffect(() => {
+    const domains = ['https://images.unsplash.com'];
+    domains.forEach(domain => {
+      if (!document.querySelector(`link[rel="preconnect"][href="${domain}"]`)) {
+        const link = document.createElement('link');
+        link.rel = 'preconnect';
+        link.href = domain;
+        document.head.appendChild(link);
+      }
+    });
+  }, []);
+
   return (
     <>
       <Helmet>
@@ -358,7 +427,7 @@ function ClubsSocieties() {
         <link rel="preconnect" href="https://images.unsplash.com" />
       </Helmet>
       
-      {/* Page Header - with proper heading hierarchy */}
+      {/* Page Header */}
       <section 
         style={{ 
           background: 'linear-gradient(135deg, #132f66 0%, #0a1f4d 100%)',
@@ -390,7 +459,7 @@ function ClubsSocieties() {
         </Container>
       </section>
       
-      {/* Introduction - with proper heading hierarchy */}
+      {/* Introduction Section */}
       <section className="section-padding bg-light-custom py-5" aria-labelledby="intro-heading">
         <Container>
           <Row className="text-center mb-4">
@@ -407,7 +476,7 @@ function ClubsSocieties() {
           {/* Highlights Cards */}
           <Row className="mb-4 g-3" aria-label="Club highlights">
             {highlights.map((item, index) => (
-              <HighlightCard key={index} {...item} />
+              <HighlightCard key={`highlight-${index}`} {...item} />
             ))}
           </Row>
         </Container>
@@ -419,13 +488,15 @@ function ClubsSocieties() {
           <h2 id="clubs-heading" className="visually-hidden">Clubs by Category</h2>
           
           {/* Screen reader announcer for tab changes */}
-          <div id="tab-announcer" className="visually-hidden" role="status" aria-live="polite"></div>
+          <div id="tab-announcer" className="visually-hidden" role="status" aria-live="polite">
+            {`Showing ${categories.find(c => c.id === activeTab)?.name} clubs`}
+          </div>
           
           <TabNav categories={categories} activeTab={activeTab} onTabChange={handleTabChange} />
 
           <Row className="g-4" role="list" aria-label={`${categories.find(c => c.id === activeTab)?.name} clubs`}>
             {clubsData[activeTab]?.map((club, index) => (
-              <ClubCard key={index} club={club} index={index} />
+              <ClubCard key={`club-${activeTab}-${index}`} club={club} index={index} />
             ))}
           </Row>
         </Container>
@@ -445,7 +516,7 @@ function ClubsSocieties() {
           
           <Row className="g-4" role="list" aria-label="Benefits of joining clubs">
             {benefits.map((item, index) => (
-              <BenefitCard key={index} {...item} />
+              <BenefitCard key={`benefit-${index}`} {...item} />
             ))}
           </Row>
         </Container>
@@ -458,9 +529,9 @@ function ClubsSocieties() {
           <p className="small mb-3">
             Every term, students can choose up to two clubs. Discover your passion today!
           </p>
-          <button 
-            className="btn btn-light px-4 py-2"
-            onClick={() => window.location.href = '/admissions/apply'}
+          <a 
+            href="/admissions/apply"
+            className="btn btn-light px-4 py-2 d-inline-block"
             style={{
               backgroundColor: 'white',
               color: '#132f66',
@@ -468,12 +539,13 @@ function ClubsSocieties() {
               fontWeight: '600',
               border: 'none',
               minHeight: '44px',
-              minWidth: '44px'
+              minWidth: '44px',
+              textDecoration: 'none'
             }}
             aria-label="Apply for admission now"
           >
             Apply Now
-          </button>
+          </a>
         </Container>
       </section>
       
@@ -481,7 +553,7 @@ function ClubsSocieties() {
         <GetInTouch />
       </Suspense>
 
-      {/* Critical CSS inline with accessibility improvements */}
+      {/* Critical CSS inline */}
       <style dangerouslySetInnerHTML={{ __html: `
         .club-card {
           transition: transform 0.2s ease, box-shadow 0.2s ease;
@@ -527,6 +599,11 @@ function ClubsSocieties() {
           outline: 3px solid #cebd04;
           outline-offset: 2px;
         }
+        .btn-navy {
+          background: #132f66;
+          color: white;
+          border: none;
+        }
         .btn-navy:focus-visible {
           outline: 3px solid #cebd04;
           outline-offset: 2px;
@@ -534,15 +611,12 @@ function ClubsSocieties() {
         .club-highlight-card,
         .benefit-card {
           transition: transform 0.2s ease;
+          border-radius: 8px;
         }
         .club-highlight-card:hover,
         .benefit-card:hover {
           transform: translateY(-2px);
-        }
-        .club-highlight-card:focus,
-        .benefit-card:focus {
-          outline: 3px solid #132f66;
-          outline-offset: 2px;
+          background: #f8f9fa;
         }
         .visually-hidden {
           position: absolute;
@@ -553,6 +627,10 @@ function ClubsSocieties() {
           overflow: hidden;
           clip: rect(0, 0, 0, 0);
           border: 0;
+        }
+        @keyframes shimmer {
+          0% { background-position: 200% 0; }
+          100% { background-position: -200% 0; }
         }
         @media (max-width: 768px) {
           .club-image-container {
