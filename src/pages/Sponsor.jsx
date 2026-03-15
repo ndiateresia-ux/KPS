@@ -70,19 +70,20 @@ const CountUp = ({ end, duration = 2, suffix = "" }) => {
   return <span ref={ref}>{count}{suffix}</span>;
 };
 
-// Memoized stat card component
+// Memoized stat card component with accessibility
 const StatCard = memo(({ stat, index }) => {
   const [ref, inView] = useInView({ threshold: 0.3, triggerOnce: true });
+  const cardId = `stat-${index}`;
   
   return (
     <Col md={3} key={index} className="text-center mb-3">
-      <div ref={ref}>
-        <h2 style={{
+      <div ref={ref} role="article" aria-labelledby={cardId}>
+        <h2 id={cardId} style={{
           fontSize: 'clamp(1.5rem, 4vw, 2.5rem)',
           fontWeight: 'bold',
           color: '#cebd04',
           marginBottom: '0.25rem'
-        }}>
+        }} aria-hidden="true">
           {inView ? (
             <CountUp end={stat.value} suffix={stat.suffix} />
           ) : (
@@ -90,6 +91,7 @@ const StatCard = memo(({ stat, index }) => {
           )}
         </h2>
         <p style={{ fontSize: '0.9rem', color: 'rgba(255,255,255,0.9)' }}>{stat.label}</p>
+        <span className="visually-hidden">{stat.value}{stat.suffix} {stat.label}</span>
       </div>
     </Col>
   );
@@ -97,45 +99,60 @@ const StatCard = memo(({ stat, index }) => {
 
 StatCard.displayName = 'StatCard';
 
-// Memoized sponsor card component
-const SponsorCard = memo(({ icon, title, description }) => (
-  <Col md={4} className="mb-3">
-    <div
-      style={{
-        backgroundColor: 'white',
-        borderRadius: '12px',
-        padding: '1.5rem',
-        textAlign: 'center',
-        height: '100%',
-        boxShadow: '0 4px 12px rgba(0,0,0,0.05)',
-        transition: 'transform 0.3s ease, box-shadow 0.3s ease'
-      }}
-      onMouseEnter={(e) => {
-        e.currentTarget.style.transform = 'translateY(-4px)';
-        e.currentTarget.style.boxShadow = '0 8px 24px rgba(0,0,0,0.1)';
-      }}
-      onMouseLeave={(e) => {
-        e.currentTarget.style.transform = 'translateY(0)';
-        e.currentTarget.style.boxShadow = '0 4px 12px rgba(0,0,0,0.05)';
-      }}
-    >
-      <div style={{ fontSize: '2.5rem', marginBottom: '1rem' }}>{icon}</div>
-      <h5 style={{ fontSize: '1.1rem', fontWeight: 'bold', color: '#132f66', marginBottom: '0.5rem' }}>
-        {title}
-      </h5>
-      <p style={{ fontSize: '0.9rem', color: '#4a5568', marginBottom: 0 }}>{description}</p>
-    </div>
-  </Col>
-));
+// Memoized sponsor card component with accessibility
+const SponsorCard = memo(({ icon, title, description }) => {
+  const cardId = `sponsor-${title.replace(/\s+/g, '-').toLowerCase()}`;
+  
+  return (
+    <Col md={4} className="mb-3">
+      <div
+        role="article"
+        aria-labelledby={cardId}
+        style={{
+          backgroundColor: 'white',
+          borderRadius: '12px',
+          padding: '1.5rem',
+          textAlign: 'center',
+          height: '100%',
+          boxShadow: '0 4px 12px rgba(0,0,0,0.05)',
+          transition: 'transform 0.3s ease, box-shadow 0.3s ease'
+        }}
+        onMouseEnter={(e) => {
+          e.currentTarget.style.transform = 'translateY(-4px)';
+          e.currentTarget.style.boxShadow = '0 8px 24px rgba(0,0,0,0.1)';
+        }}
+        onMouseLeave={(e) => {
+          e.currentTarget.style.transform = 'translateY(0)';
+          e.currentTarget.style.boxShadow = '0 4px 12px rgba(0,0,0,0.05)';
+        }}
+        onFocus={(e) => {
+          e.currentTarget.style.transform = 'translateY(-4px)';
+          e.currentTarget.style.boxShadow = '0 8px 24px rgba(0,0,0,0.1)';
+        }}
+        onBlur={(e) => {
+          e.currentTarget.style.transform = 'translateY(0)';
+          e.currentTarget.style.boxShadow = '0 4px 12px rgba(0,0,0,0.05)';
+        }}
+        tabIndex={0}
+      >
+        <div style={{ fontSize: '2.5rem', marginBottom: '1rem' }} aria-hidden="true">{icon}</div>
+        <h3 id={cardId} style={{ fontSize: '1.1rem', fontWeight: 'bold', color: '#132f66', marginBottom: '0.5rem' }}>
+          {title}
+        </h3>
+        <p style={{ fontSize: '0.9rem', color: '#4a5568', marginBottom: 0 }}>{description}</p>
+      </div>
+    </Col>
+  );
+});
 
 SponsorCard.displayName = 'SponsorCard';
 
-// Alert component
+// Alert component with accessibility
 const Alert = memo(({ show, success, message, onClose }) => {
   if (!show) return null;
   
   return (
-    <div className="mb-3">
+    <div className="mb-3" role="alert" aria-live="polite">
       <div style={{
         backgroundColor: success ? '#d4edda' : '#f8d7da',
         color: success ? '#155724' : '#721c24',
@@ -146,18 +163,27 @@ const Alert = memo(({ show, success, message, onClose }) => {
         justifyContent: 'space-between'
       }}>
         <div className="d-flex align-items-center gap-2">
-          <i className={`fas ${success ? 'fa-check-circle' : 'fa-exclamation-circle'}`} style={{ fontSize: '1.2rem' }}></i>
+          <i className={`fas ${success ? 'fa-check-circle' : 'fa-exclamation-circle'}`} style={{ fontSize: '1.2rem' }} aria-hidden="true"></i>
           <span>{message}</span>
         </div>
         <button
           onClick={onClose}
+          onKeyDown={(e) => {
+            if (e.key === 'Enter' || e.key === ' ') {
+              e.preventDefault();
+              onClose();
+            }
+          }}
           style={{
             background: 'none',
             border: 'none',
             fontSize: '1.2rem',
             cursor: 'pointer',
-            color: success ? '#155724' : '#721c24'
+            color: success ? '#155724' : '#721c24',
+            minHeight: '44px',
+            minWidth: '44px'
           }}
+          aria-label="Close alert"
         >
           ×
         </button>
@@ -168,14 +194,16 @@ const Alert = memo(({ show, success, message, onClose }) => {
 
 Alert.displayName = 'Alert';
 
-// Form input component
+// Form input component with accessibility
 const FormInput = memo(({ label, type = "text", name, value, onChange, placeholder, required = false, feedback, as, rows, options }) => {
   const id = `input-${name}`;
+  const errorId = `${id}-error`;
   
   return (
     <div className="mb-3">
       <label htmlFor={id} style={{ fontSize: '0.9rem', fontWeight: '600', color: '#132f66', marginBottom: '0.3rem', display: 'block' }}>
-        {label} {required && <span style={{ color: '#dc3545' }}>*</span>}
+        {label} {required && <span style={{ color: '#dc3545' }} aria-hidden="true">*</span>}
+        {required && <span className="visually-hidden"> (required)</span>}
       </label>
       {as === 'select' ? (
         <select
@@ -184,12 +212,15 @@ const FormInput = memo(({ label, type = "text", name, value, onChange, placehold
           value={value}
           onChange={onChange}
           required={required}
+          aria-invalid={required && !value ? "true" : "false"}
+          aria-describedby={required && !value ? errorId : undefined}
           style={{
             width: '100%',
             padding: '0.6rem 1rem',
             border: '1px solid #dee2e6',
             borderRadius: '8px',
-            fontSize: '0.9rem'
+            fontSize: '0.9rem',
+            minHeight: '44px'
           }}
         >
           <option value="">Select an option</option>
@@ -206,13 +237,16 @@ const FormInput = memo(({ label, type = "text", name, value, onChange, placehold
           placeholder={placeholder}
           required={required}
           rows={rows}
+          aria-invalid={required && !value ? "true" : "false"}
+          aria-describedby={required && !value ? errorId : undefined}
           style={{
             width: '100%',
             padding: '0.6rem 1rem',
             border: '1px solid #dee2e6',
             borderRadius: '8px',
             fontSize: '0.9rem',
-            fontFamily: 'inherit'
+            fontFamily: 'inherit',
+            minHeight: '44px'
           }}
         />
       ) : (
@@ -224,17 +258,20 @@ const FormInput = memo(({ label, type = "text", name, value, onChange, placehold
           onChange={onChange}
           placeholder={placeholder}
           required={required}
+          aria-invalid={required && !value ? "true" : "false"}
+          aria-describedby={required && !value ? errorId : undefined}
           style={{
             width: '100%',
             padding: '0.6rem 1rem',
             border: '1px solid #dee2e6',
             borderRadius: '8px',
-            fontSize: '0.9rem'
+            fontSize: '0.9rem',
+            minHeight: '44px'
           }}
         />
       )}
       {required && feedback && (
-        <div style={{ color: '#dc3545', fontSize: '0.8rem', marginTop: '0.2rem' }}>{feedback}</div>
+        <div id={errorId} style={{ color: '#dc3545', fontSize: '0.8rem', marginTop: '0.2rem' }} role="alert">{feedback}</div>
       )}
     </div>
   );
@@ -534,19 +571,22 @@ This inquiry was sent from the Kitale Progressive School website.
         />
       </Helmet>
 
-      {/* Hero Section */}
-      <section style={{
-        position: 'relative',
-        height: '400px',
-        backgroundImage: 'linear-gradient(135deg, #132f66 0%, #0a1f4d 100%)',
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'center',
-        textAlign: 'center',
-        color: 'white'
-      }}>
+      {/* Hero Section with proper heading hierarchy */}
+      <section 
+        style={{
+          position: 'relative',
+          height: '400px',
+          backgroundImage: 'linear-gradient(135deg, #132f66 0%, #0a1f4d 100%)',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          textAlign: 'center',
+          color: 'white'
+        }}
+        aria-labelledby="hero-title"
+      >
         <Container>
-          <h1 style={{
+          <h1 id="hero-title" style={{
             fontSize: 'clamp(2rem, 5vw, 3rem)',
             fontWeight: 'bold',
             marginBottom: '1rem'
@@ -566,8 +606,10 @@ This inquiry was sent from the Kitale Progressive School website.
       </section>
 
       {/* Main Content */}
-      <section className="py-5">
+      <section className="py-5" aria-labelledby="main-heading">
         <Container>
+          <h2 id="main-heading" className="visually-hidden">Sponsorship Information and Form</h2>
+          
           {/* Intro */}
           <Row className="mb-4">
             <Col lg={10} className="mx-auto text-center">
@@ -586,20 +628,26 @@ This inquiry was sent from the Kitale Progressive School website.
           </Row>
 
           {/* Sponsor Cards */}
-          <Row className="mb-4 g-3">
+          <Row className="mb-4 g-3" role="list" aria-label="Sponsorship options">
             {sponsorCards.map((card, index) => (
-              <SponsorCard key={index} icon={card.icon} title={card.title} description={card.description} />
+              <Col md={4} key={index} role="listitem">
+                <SponsorCard icon={card.icon} title={card.title} description={card.description} />
+              </Col>
             ))}
           </Row>
 
           {/* Statistics Section */}
-          <div style={{
-            background: 'linear-gradient(135deg, #132f66 0%, #0a1f4d 100%)',
-            padding: '2rem 1rem',
-            borderRadius: '12px',
-            marginBottom: '2rem'
-          }}>
-            <Row className="justify-content-center g-3">
+          <div 
+            style={{
+              background: 'linear-gradient(135deg, #132f66 0%, #0a1f4d 100%)',
+              padding: '2rem 1rem',
+              borderRadius: '12px',
+              marginBottom: '2rem'
+            }}
+            aria-labelledby="stats-heading"
+          >
+            <h3 id="stats-heading" className="visually-hidden">Sponsorship Impact Statistics</h3>
+            <Row className="justify-content-center g-3" role="list" aria-label="Impact statistics">
               {sponsorStats.map((stat, index) => (
                 <StatCard key={index} stat={stat} index={index} />
               ))}
@@ -633,7 +681,7 @@ This inquiry was sent from the Kitale Progressive School website.
                   Partner With Us Today
                 </h3>
 
-                <form onSubmit={handleSubmit} noValidate>
+                <form onSubmit={handleSubmit} noValidate aria-label="Sponsorship inquiry form">
                   <FormInput
                     label="Full Name"
                     name="fullName"
@@ -657,27 +705,31 @@ This inquiry was sent from the Kitale Progressive School website.
 
                   {/* Phone Input */}
                   <div className="mb-3">
-                    <label style={{ fontSize: '0.9rem', fontWeight: '600', color: '#132f66', marginBottom: '0.3rem', display: 'block' }}>
+                    <label htmlFor="phone" style={{ fontSize: '0.9rem', fontWeight: '600', color: '#132f66', marginBottom: '0.3rem', display: 'block' }}>
                       Phone Number
                     </label>
                     <PhoneInput
+                      id="phone"
                       international
                       defaultCountry="KE"
                       value={phone}
                       onChange={handlePhoneChange}
                       placeholder="712345678"
+                      aria-invalid={phoneError ? "true" : "false"}
+                      aria-describedby={phoneError ? "phone-error" : "phone-help"}
                       style={{
                         width: '100%',
                         padding: '0.6rem 1rem',
                         border: '1px solid #dee2e6',
                         borderRadius: '8px',
-                        fontSize: '0.9rem'
+                        fontSize: '0.9rem',
+                        minHeight: '44px'
                       }}
                     />
                     {phoneError && (
-                      <div style={{ color: '#dc3545', fontSize: '0.8rem', marginTop: '0.2rem' }}>{phoneError}</div>
+                      <div id="phone-error" style={{ color: '#dc3545', fontSize: '0.8rem', marginTop: '0.2rem' }} role="alert">{phoneError}</div>
                     )}
-                    <div style={{ fontSize: '0.8rem', color: '#718096', marginTop: '0.2rem' }}>
+                    <div id="phone-help" style={{ fontSize: '0.8rem', color: '#718096', marginTop: '0.2rem' }}>
                       Enter exactly 9 digits after country code (e.g., 712345678)
                     </div>
                   </div>
@@ -726,6 +778,7 @@ This inquiry was sent from the Kitale Progressive School website.
                         checked={formData.agreeToTerms}
                         onChange={handleChange}
                         required
+                        aria-required="true"
                       />
                       <span style={{ fontSize: '0.9rem' }}>
                         I agree to the{' '}
@@ -736,6 +789,7 @@ This inquiry was sent from the Kitale Progressive School website.
                         <Link to="/terms-of-service" target="_blank" style={{ color: '#132f66', textDecoration: 'underline' }}>
                           Terms of Service
                         </Link>
+                        <span className="visually-hidden"> (required)</span>
                       </span>
                     </label>
                   </div>
@@ -754,7 +808,9 @@ This inquiry was sent from the Kitale Progressive School website.
                         fontWeight: '600',
                         cursor: submitting ? 'not-allowed' : 'pointer',
                         opacity: submitting ? 0.7 : 1,
-                        transition: 'all 0.3s ease'
+                        transition: 'all 0.3s ease',
+                        minHeight: '44px',
+                        minWidth: '44px'
                       }}
                       onMouseEnter={(e) => {
                         if (!submitting) {
@@ -768,11 +824,13 @@ This inquiry was sent from the Kitale Progressive School website.
                         e.target.style.transform = 'translateY(0)';
                         e.target.style.boxShadow = 'none';
                       }}
+                      aria-label={submitting ? "Sending your inquiry" : "Become a sponsor or donate"}
                     >
                       {submitting ? (
                         <>
-                          <span className="spinner-border spinner-border-sm me-2" role="status"></span>
-                          Sending...
+                          <span className="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>
+                          <span>Sending...</span>
+                          <span className="visually-hidden">Please wait while we send your inquiry</span>
                         </>
                       ) : (
                         'Become a Sponsor / Donate'
@@ -787,7 +845,7 @@ This inquiry was sent from the Kitale Progressive School website.
                     marginBottom: 0,
                     textAlign: 'center'
                   }}>
-                    <i className="fas fa-lock me-1"></i>
+                    <i className="fas fa-lock me-1" aria-hidden="true"></i>
                     You'll sign in with Google to verify your identity
                   </p>
                 </form>
@@ -803,8 +861,8 @@ This inquiry was sent from the Kitale Progressive School website.
                 borderRadius: '16px',
                 padding: '2rem',
                 textAlign: 'center'
-              }}>
-                <i className="fas fa-quote-left" style={{ fontSize: '2rem', color: '#cebd04', opacity: 0.5, marginBottom: '1rem' }}></i>
+              }} role="complementary" aria-label="Sponsor testimonial">
+                <i className="fas fa-quote-left" style={{ fontSize: '2rem', color: '#cebd04', opacity: 0.5, marginBottom: '1rem' }} aria-hidden="true"></i>
                 <p style={{ fontSize: '1.1rem', fontStyle: 'italic', marginBottom: '1rem' }}>
                   "Sponsoring a child at Kitale Progressive School has been one of the most rewarding experiences of my life. Seeing the joy and hope in their eyes is priceless."
                 </p>
@@ -818,15 +876,15 @@ This inquiry was sent from the Kitale Progressive School website.
 
           {/* Closing */}
           <div className="text-center">
-            <h5 style={{ fontSize: '1.1rem', fontWeight: 'bold', color: '#132f66', marginBottom: '0.5rem' }}>
+            <h4 style={{ fontSize: '1.1rem', fontWeight: 'bold', color: '#132f66', marginBottom: '0.5rem' }}>
               Together, we can nurture dreams and transform generations.
-            </h5>
+            </h4>
             <p style={{ color: '#4a5568', marginBottom: '1rem' }}>
               Thank you for choosing to invest in education and hope.
             </p>
             <div>
               <Link to="/privacy-policy" style={{ color: '#718096', marginRight: '0.5rem', fontSize: '0.9rem' }}>Privacy Policy</Link>
-              <span style={{ color: '#718096' }}>|</span>
+              <span style={{ color: '#718096' }} aria-hidden="true">|</span>
               <Link to="/terms-of-service" style={{ color: '#718096', marginLeft: '0.5rem', fontSize: '0.9rem' }}>Terms of Service</Link>
             </div>
           </div>
@@ -837,8 +895,18 @@ This inquiry was sent from the Kitale Progressive School website.
         <GetInTouch />
       </Suspense>
 
-      {/* Critical CSS inline */}
+      {/* Critical CSS inline with accessibility improvements */}
       <style dangerouslySetInnerHTML={{ __html: `
+        .visually-hidden {
+          position: absolute;
+          width: 1px;
+          height: 1px;
+          padding: 0;
+          margin: -1px;
+          overflow: hidden;
+          clip: rect(0, 0, 0, 0);
+          border: 0;
+        }
         .spinner-border {
           display: inline-block;
           width: 1rem;
@@ -851,6 +919,14 @@ This inquiry was sent from the Kitale Progressive School website.
         }
         @keyframes spinner-border {
           to { transform: rotate(360deg); }
+        }
+        button:focus-visible,
+        input:focus-visible,
+        select:focus-visible,
+        textarea:focus-visible,
+        [role="article"]:focus-visible {
+          outline: 3px solid #cebd04;
+          outline-offset: 2px;
         }
         @media (prefers-reduced-motion: reduce) {
           .spinner-border {

@@ -5,7 +5,7 @@ import { useState, lazy, Suspense, memo, useCallback } from "react";
 // Lazy load non-critical components
 const GetInTouch = lazy(() => import("../components/GetInTouch"));
 
-// Memoized club card component
+// Memoized club card component with enhanced accessibility
 const ClubCard = memo(({ club, index }) => (
   <Col lg={6} className="mb-4" key={index}>
     <Card className="h-100 border-0 shadow-sm club-card">
@@ -14,7 +14,7 @@ const ClubCard = memo(({ club, index }) => (
           <div className="club-image-container" style={{ aspectRatio: '4/3', backgroundColor: '#f0f0f0' }}>
             <Card.Img 
               src={club.image} 
-              alt={club.name}
+              alt={`${club.name} club activities`}
               className="club-image"
               loading="lazy"
               decoding="async"
@@ -32,7 +32,7 @@ const ClubCard = memo(({ club, index }) => (
           <Card.Body className="p-3 p-lg-4">
             <div className="d-flex align-items-center mb-2">
               <span className="club-icon fs-4 me-2" aria-hidden="true">{club.icon}</span>
-              <Card.Title className="fw-bold h6 mb-0" style={{ color: club.color }}>
+              <Card.Title as="h3" className="fw-bold h6 mb-0" style={{ color: club.color }}>
                 {club.name}
               </Card.Title>
             </div>
@@ -40,10 +40,11 @@ const ClubCard = memo(({ club, index }) => (
               {club.description}
             </Card.Text>
             <div>
-              <h6 className="fw-bold small mb-2 clubs-activities-title">
+              <h4 className="fw-bold small mb-2 clubs-activities-title">
                 Activities:
-              </h6>
-              <div className="d-flex flex-wrap gap-1">
+                <span className="visually-hidden"> for {club.name}</span>
+              </h4>
+              <div className="d-flex flex-wrap gap-1" aria-label={`Activities for ${club.name}`}>
                 {club.activities.slice(0, 4).map((activity, idx) => (
                   <span 
                     key={idx}
@@ -68,10 +69,10 @@ const ClubCard = memo(({ club, index }) => (
 
 ClubCard.displayName = 'ClubCard';
 
-// Memoized highlight card
+// Memoized highlight card with enhanced accessibility
 const HighlightCard = memo(({ icon, title, text }) => (
   <Col md={3} sm={6} className="mb-3">
-    <div className="club-highlight-card text-center p-3">
+    <div className="club-highlight-card text-center p-3" tabIndex="0" role="article">
       <div className="highlight-icon fs-2 mb-2" aria-hidden="true">{icon}</div>
       <h3 className="highlight-title h6 fw-bold mb-1">{title}</h3>
       <p className="highlight-text small text-muted mb-0">{text}</p>
@@ -81,14 +82,25 @@ const HighlightCard = memo(({ icon, title, text }) => (
 
 HighlightCard.displayName = 'HighlightCard';
 
-// Memoized benefit card
+// Memoized benefit card with enhanced accessibility
 const BenefitCard = memo(({ icon, title, text }) => (
   <Col md={4} className="mb-3">
-    <div className="benefit-card text-center p-3">
-      <div className="benefit-icon-wrapper bg-navy mx-auto mb-3" style={{ width: '50px', height: '50px', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-        <i className={`bi ${icon} text-white`} style={{ fontSize: '1.5rem' }} aria-hidden="true"></i>
+    <div className="benefit-card text-center p-3" role="article">
+      <div 
+        className="benefit-icon-wrapper bg-navy mx-auto mb-3" 
+        style={{ 
+          width: '50px', 
+          height: '50px', 
+          borderRadius: '50%', 
+          display: 'flex', 
+          alignItems: 'center', 
+          justifyContent: 'center' 
+        }}
+        aria-hidden="true"
+      >
+        <i className={`bi ${icon} text-white`} style={{ fontSize: '1.5rem' }}></i>
       </div>
-      <h5 className="benefit-title h6 fw-bold mb-2">{title}</h5>
+      <h3 className="benefit-title h6 fw-bold mb-2">{title}</h3>
       <p className="benefit-text small text-muted mb-0">{text}</p>
     </div>
   </Col>
@@ -96,9 +108,9 @@ const BenefitCard = memo(({ icon, title, text }) => (
 
 BenefitCard.displayName = 'BenefitCard';
 
-// Tab navigation component
+// Tab navigation component with enhanced accessibility
 const TabNav = memo(({ categories, activeTab, onTabChange }) => (
-  <div className="clubs-tab-nav d-flex flex-wrap justify-content-center gap-2 mb-4">
+  <nav className="clubs-tab-nav d-flex flex-wrap justify-content-center gap-2 mb-4" aria-label="Club categories">
     {categories.map(category => (
       <button
         key={category.id}
@@ -112,14 +124,21 @@ const TabNav = memo(({ categories, activeTab, onTabChange }) => (
           border: activeTab === category.id ? 'none' : '2px solid #132f66',
           backgroundColor: activeTab === category.id ? '#132f66' : 'transparent',
           color: activeTab === category.id ? 'white' : '#132f66',
-          transition: 'all 0.2s ease'
+          transition: 'all 0.2s ease',
+          minHeight: '44px', // Touch target size
+          minWidth: '44px'
         }}
+        aria-pressed={activeTab === category.id}
+        aria-current={activeTab === category.id ? 'true' : undefined}
       >
         <span className="me-1" aria-hidden="true">{category.icon}</span>
-        {category.name}
+        <span>{category.name}</span>
+        {activeTab === category.id && (
+          <span className="visually-hidden"> (active category)</span>
+        )}
       </button>
     ))}
-  </div>
+  </nav>
 ));
 
 TabNav.displayName = 'TabNav';
@@ -129,6 +148,12 @@ function ClubsSocieties() {
 
   const handleTabChange = useCallback((tabId) => {
     setActiveTab(tabId);
+    // Announce tab change to screen readers
+    const announcement = document.getElementById('tab-announcer');
+    if (announcement) {
+      const categoryName = categories.find(c => c.id === tabId)?.name || tabId;
+      announcement.textContent = `Showing ${categoryName} clubs`;
+    }
   }, []);
 
   const clubsData = {
@@ -333,17 +358,20 @@ function ClubsSocieties() {
         <link rel="preconnect" href="https://images.unsplash.com" />
       </Helmet>
       
-      {/* Page Header - Always Visible */}
-      <section style={{ 
-        background: 'linear-gradient(135deg, #132f66 0%, #0a1f4d 100%)',
-        color: 'white',
-        paddingTop: '120px',
-        paddingBottom: '60px',
-        textAlign: 'center',
-        width: '100%'
-      }}>
+      {/* Page Header - with proper heading hierarchy */}
+      <section 
+        style={{ 
+          background: 'linear-gradient(135deg, #132f66 0%, #0a1f4d 100%)',
+          color: 'white',
+          paddingTop: '120px',
+          paddingBottom: '60px',
+          textAlign: 'center',
+          width: '100%'
+        }}
+        aria-labelledby="page-title"
+      >
         <Container>
-          <h1 style={{ 
+          <h1 id="page-title" style={{ 
             fontSize: 'clamp(2rem, 5vw, 3rem)',
             fontWeight: 'bold',
             marginBottom: '1rem',
@@ -362,12 +390,12 @@ function ClubsSocieties() {
         </Container>
       </section>
       
-      {/* Introduction */}
-      <section className="section-padding bg-light-custom py-5">
+      {/* Introduction - with proper heading hierarchy */}
+      <section className="section-padding bg-light-custom py-5" aria-labelledby="intro-heading">
         <Container>
           <Row className="text-center mb-4">
             <Col lg={8} className="mx-auto">
-              <h2 className="section-heading h3 mb-3">Where Talents Blossom</h2>
+              <h2 id="intro-heading" className="section-heading h3 mb-3">Where Talents Blossom</h2>
               <p className="small">
                 At Kitale Progressive School, we believe education extends beyond the classroom. 
                 Our vibrant clubs and societies provide students with opportunities to explore interests, 
@@ -377,7 +405,7 @@ function ClubsSocieties() {
           </Row>
 
           {/* Highlights Cards */}
-          <Row className="mb-4 g-3">
+          <Row className="mb-4 g-3" aria-label="Club highlights">
             {highlights.map((item, index) => (
               <HighlightCard key={index} {...item} />
             ))}
@@ -386,11 +414,16 @@ function ClubsSocieties() {
       </section>
 
       {/* Clubs Listing with Tabs */}
-      <section className="section-padding bg-white py-5">
+      <section className="section-padding bg-white py-5" aria-labelledby="clubs-heading">
         <Container>
+          <h2 id="clubs-heading" className="visually-hidden">Clubs by Category</h2>
+          
+          {/* Screen reader announcer for tab changes */}
+          <div id="tab-announcer" className="visually-hidden" role="status" aria-live="polite"></div>
+          
           <TabNav categories={categories} activeTab={activeTab} onTabChange={handleTabChange} />
 
-          <Row className="g-4">
+          <Row className="g-4" role="list" aria-label={`${categories.find(c => c.id === activeTab)?.name} clubs`}>
             {clubsData[activeTab]?.map((club, index) => (
               <ClubCard key={index} club={club} index={index} />
             ))}
@@ -399,18 +432,18 @@ function ClubsSocieties() {
       </section>
 
       {/* Benefits Section */}
-      <section className="section-padding bg-light-custom py-5">
+      <section className="section-padding bg-light-custom py-5" aria-labelledby="benefits-heading">
         <Container>
           <Row className="text-center mb-4">
             <Col lg={8} className="mx-auto">
-              <h2 className="section-heading h3 mb-3">Benefits of Joining</h2>
+              <h2 id="benefits-heading" className="section-heading h3 mb-3">Benefits of Joining</h2>
               <p className="small">
                 Participation in clubs and societies helps students develop holistically
               </p>
             </Col>
           </Row>
           
-          <Row className="g-4">
+          <Row className="g-4" role="list" aria-label="Benefits of joining clubs">
             {benefits.map((item, index) => (
               <BenefitCard key={index} {...item} />
             ))}
@@ -419,7 +452,7 @@ function ClubsSocieties() {
       </section>
 
       {/* Call to Action */}
-      <section className="cta-section bg-navy text-white text-center py-5">
+      <section className="cta-section bg-navy text-white text-center py-5" aria-label="Call to action">
         <Container>
           <h2 className="h3 fw-bold mb-2">Ready to Join Us?</h2>
           <p className="small mb-3">
@@ -433,8 +466,11 @@ function ClubsSocieties() {
               color: '#132f66',
               borderRadius: '40px',
               fontWeight: '600',
-              border: 'none'
+              border: 'none',
+              minHeight: '44px',
+              minWidth: '44px'
             }}
+            aria-label="Apply for admission now"
           >
             Apply Now
           </button>
@@ -445,14 +481,15 @@ function ClubsSocieties() {
         <GetInTouch />
       </Suspense>
 
-      {/* Critical CSS inline */}
+      {/* Critical CSS inline with accessibility improvements */}
       <style dangerouslySetInnerHTML={{ __html: `
         .club-card {
           transition: transform 0.2s ease, box-shadow 0.2s ease;
           border-radius: 12px;
           overflow: hidden;
         }
-        .club-card:hover {
+        .club-card:hover,
+        .club-card:focus-within {
           transform: translateY(-4px);
           box-shadow: 0 10px 30px rgba(0,0,0,0.1) !important;
         }
@@ -465,7 +502,8 @@ function ClubsSocieties() {
         .club-image {
           transition: transform 0.3s ease;
         }
-        .club-card:hover .club-image {
+        .club-card:hover .club-image,
+        .club-card:focus-within .club-image {
           transform: scale(1.05);
         }
         .activity-badge {
@@ -479,10 +517,42 @@ function ClubsSocieties() {
           border: 2px solid #132f66;
           background: transparent;
           color: #132f66;
+          min-height: 44px;
+          min-width: 44px;
         }
-        .btn-outline-navy:hover {
+        .btn-outline-navy:hover,
+        .btn-outline-navy:focus-visible {
           background: #132f66;
           color: white;
+          outline: 3px solid #cebd04;
+          outline-offset: 2px;
+        }
+        .btn-navy:focus-visible {
+          outline: 3px solid #cebd04;
+          outline-offset: 2px;
+        }
+        .club-highlight-card,
+        .benefit-card {
+          transition: transform 0.2s ease;
+        }
+        .club-highlight-card:hover,
+        .benefit-card:hover {
+          transform: translateY(-2px);
+        }
+        .club-highlight-card:focus,
+        .benefit-card:focus {
+          outline: 3px solid #132f66;
+          outline-offset: 2px;
+        }
+        .visually-hidden {
+          position: absolute;
+          width: 1px;
+          height: 1px;
+          padding: 0;
+          margin: -1px;
+          overflow: hidden;
+          clip: rect(0, 0, 0, 0);
+          border: 0;
         }
         @media (max-width: 768px) {
           .club-image-container {

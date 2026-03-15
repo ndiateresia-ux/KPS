@@ -12,14 +12,25 @@ const FALLBACK_IMAGES = {
   blog: "https://images.unsplash.com/photo-1499750310107-5fef28a66643?ixlib=rb-4.0.3&auto=format&fit=crop&w=600&q=80"
 };
 
-// Memoized newsletter card component
+// Memoized newsletter card component with accessibility
 const NewsletterCard = memo(({ newsletter, onClick, onDownload }) => {
   const [imgSrc, setImgSrc] = useState(newsletter.image);
   const [loaded, setLoaded] = useState(false);
+  const cardId = `newsletter-${newsletter.id}`;
 
   return (
     <div
+      id={cardId}
       onClick={() => onClick(newsletter)}
+      onKeyDown={(e) => {
+        if (e.key === 'Enter' || e.key === ' ') {
+          e.preventDefault();
+          onClick(newsletter);
+        }
+      }}
+      role="article"
+      tabIndex={0}
+      aria-label={`Newsletter: ${newsletter.title}`}
       style={{
         backgroundColor: 'white',
         borderRadius: '12px',
@@ -54,11 +65,11 @@ const NewsletterCard = memo(({ newsletter, onClick, onDownload }) => {
             background: 'linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%)',
             backgroundSize: '200% 100%',
             animation: 'shimmer 1.5s infinite'
-          }} />
+          }} aria-hidden="true" />
         )}
         <img
           src={imgSrc}
-          alt={newsletter.title}
+          alt={`Cover image for ${newsletter.title}`}
           loading="lazy"
           decoding="async"
           onLoad={() => setLoaded(true)}
@@ -85,7 +96,7 @@ const NewsletterCard = memo(({ newsletter, onClick, onDownload }) => {
           fontSize: '0.8rem',
           fontWeight: '600',
           zIndex: 2
-        }}>
+        }} aria-hidden="true">
           {newsletter.term} {newsletter.year}
         </div>
       </div>
@@ -120,6 +131,13 @@ const NewsletterCard = memo(({ newsletter, onClick, onDownload }) => {
             e.stopPropagation();
             onDownload(newsletter.pdf, newsletter.title);
           }}
+          onKeyDown={(e) => {
+            if (e.key === 'Enter' || e.key === ' ') {
+              e.preventDefault();
+              e.stopPropagation();
+              onDownload(newsletter.pdf, newsletter.title);
+            }
+          }}
           style={{
             backgroundColor: 'transparent',
             border: '2px solid #132f66',
@@ -130,7 +148,9 @@ const NewsletterCard = memo(({ newsletter, onClick, onDownload }) => {
             fontWeight: '600',
             cursor: 'pointer',
             transition: 'all 0.3s ease',
-            width: '100%'
+            width: '100%',
+            minHeight: '44px',
+            minWidth: '44px'
           }}
           onMouseEnter={(e) => {
             e.target.style.backgroundColor = '#132f66';
@@ -140,8 +160,9 @@ const NewsletterCard = memo(({ newsletter, onClick, onDownload }) => {
             e.target.style.backgroundColor = 'transparent';
             e.target.style.color = '#132f66';
           }}
+          aria-label={`Download ${newsletter.title} PDF`}
         >
-          <i className="fas fa-download me-2"></i>
+          <i className="fas fa-download me-2" aria-hidden="true"></i>
           Download PDF
         </button>
       </div>
@@ -151,14 +172,25 @@ const NewsletterCard = memo(({ newsletter, onClick, onDownload }) => {
 
 NewsletterCard.displayName = 'NewsletterCard';
 
-// Memoized blog card component
+// Memoized blog card component with accessibility
 const BlogCard = memo(({ post, onClick }) => {
   const [imgSrc, setImgSrc] = useState(post.image);
   const [loaded, setLoaded] = useState(false);
+  const cardId = `blog-${post.id}`;
 
   return (
     <div
+      id={cardId}
       onClick={() => onClick(post)}
+      onKeyDown={(e) => {
+        if (e.key === 'Enter' || e.key === ' ') {
+          e.preventDefault();
+          onClick(post);
+        }
+      }}
+      role="article"
+      tabIndex={0}
+      aria-label={`Blog post: ${post.title}`}
       style={{
         backgroundColor: 'white',
         borderRadius: '12px',
@@ -195,11 +227,11 @@ const BlogCard = memo(({ post, onClick }) => {
             background: 'linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%)',
             backgroundSize: '200% 100%',
             animation: 'shimmer 1.5s infinite'
-          }} />
+          }} aria-hidden="true" />
         )}
         <img
           src={imgSrc}
-          alt={post.title}
+          alt={`Featured image for blog: ${post.title}`}
           loading="lazy"
           decoding="async"
           onLoad={() => setLoaded(true)}
@@ -226,7 +258,7 @@ const BlogCard = memo(({ post, onClick }) => {
           fontSize: '0.8rem',
           fontWeight: '600',
           zIndex: 2
-        }}>
+        }} aria-label={`Category: ${post.category}`}>
           {post.category}
         </div>
       </div>
@@ -241,10 +273,12 @@ const BlogCard = memo(({ post, onClick }) => {
           color: '#718096'
         }}>
           <span>
-            <i className="far fa-calendar-alt me-1"></i> {post.date}
+            <i className="far fa-calendar-alt me-1" aria-hidden="true"></i> 
+            <span className="visually-hidden">Published: </span>{post.date}
           </span>
           <span>
-            <i className="far fa-clock me-1"></i> {post.readTime}
+            <i className="far fa-clock me-1" aria-hidden="true"></i> 
+            <span className="visually-hidden">Read time: </span>{post.readTime}
           </span>
         </div>
 
@@ -288,7 +322,7 @@ const BlogCard = memo(({ post, onClick }) => {
             justifyContent: 'center',
             fontSize: '1rem',
             fontWeight: 'bold'
-          }}>
+          }} aria-hidden="true">
             {post.author.charAt(0)}
           </div>
           <div>
@@ -312,7 +346,9 @@ const BlogCard = memo(({ post, onClick }) => {
             fontWeight: '600',
             cursor: 'pointer',
             transition: 'all 0.3s ease',
-            width: '100%'
+            width: '100%',
+            minHeight: '44px',
+            minWidth: '44px'
           }}
           onMouseEnter={(e) => {
             e.target.style.backgroundColor = '#132f66';
@@ -322,8 +358,9 @@ const BlogCard = memo(({ post, onClick }) => {
             e.target.style.backgroundColor = 'transparent';
             e.target.style.color = '#132f66';
           }}
+          aria-label={`Read full article: ${post.title}`}
         >
-          Read Full Article <i className="fas fa-arrow-right ms-2"></i>
+          Read Full Article <i className="fas fa-arrow-right ms-2" aria-hidden="true"></i>
         </button>
       </div>
     </div>
@@ -332,9 +369,15 @@ const BlogCard = memo(({ post, onClick }) => {
 
 BlogCard.displayName = 'BlogCard';
 
-// Modal component
-const Modal = ({ show, onClose, children }) => {
+// Modal component with accessibility
+const Modal = ({ show, onClose, children, title }) => {
   if (!show) return null;
+
+  const handleKeyDown = (e) => {
+    if (e.key === 'Escape') {
+      onClose();
+    }
+  };
 
   return (
     <div
@@ -353,6 +396,11 @@ const Modal = ({ show, onClose, children }) => {
         overflowY: 'auto'
       }}
       onClick={onClose}
+      onKeyDown={handleKeyDown}
+      role="dialog"
+      aria-modal="true"
+      aria-label={title || "Modal dialog"}
+      tabIndex={-1}
     >
       <div
         style={{
@@ -368,6 +416,12 @@ const Modal = ({ show, onClose, children }) => {
       >
         <button
           onClick={onClose}
+          onKeyDown={(e) => {
+            if (e.key === 'Enter' || e.key === ' ') {
+              e.preventDefault();
+              onClose();
+            }
+          }}
           style={{
             position: 'absolute',
             top: '1rem',
@@ -375,8 +429,8 @@ const Modal = ({ show, onClose, children }) => {
             background: 'white',
             border: 'none',
             borderRadius: '50%',
-            width: '36px',
-            height: '36px',
+            width: '44px',
+            height: '44px',
             fontSize: '1.2rem',
             cursor: 'pointer',
             display: 'flex',
@@ -385,8 +439,10 @@ const Modal = ({ show, onClose, children }) => {
             boxShadow: '0 2px 8px rgba(0,0,0,0.1)',
             zIndex: 10
           }}
+          aria-label="Close modal"
         >
           ✕
+          <span className="visually-hidden">Close</span>
         </button>
         {children}
       </div>
@@ -538,6 +594,7 @@ function News() {
     link.download = `${title.replace(/\s+/g, '_')}.pdf`;
     link.target = '_blank';
     link.rel = 'noopener noreferrer';
+    link.setAttribute('aria-label', `Download ${title} PDF`);
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
@@ -553,16 +610,19 @@ function News() {
         />
       </Helmet>
 
-      {/* Page Header - Always Visible */}
-      <section style={{
-        background: 'linear-gradient(135deg, #132f66 0%, #0a1f4d 100%)',
-        color: 'white',
-        paddingTop: '120px',
-        paddingBottom: '40px',
-        textAlign: 'center'
-      }}>
+      {/* Page Header with proper heading hierarchy */}
+      <section 
+        style={{
+          background: 'linear-gradient(135deg, #132f66 0%, #0a1f4d 100%)',
+          color: 'white',
+          paddingTop: '120px',
+          paddingBottom: '40px',
+          textAlign: 'center'
+        }}
+        aria-labelledby="page-title"
+      >
         <Container>
-          <h1 style={{
+          <h1 id="page-title" style={{
             fontSize: 'clamp(2rem, 5vw, 2.5rem)',
             fontWeight: 'bold',
             marginBottom: '1rem',
@@ -582,10 +642,10 @@ function News() {
       </section>
 
       {/* Termly Newsletters Section */}
-      <section className="py-5 bg-light-custom">
+      <section className="py-5 bg-light-custom" aria-labelledby="newsletters-heading">
         <Container>
           <div className="text-center mb-5">
-            <h2 style={{
+            <h2 id="newsletters-heading" style={{
               fontSize: 'clamp(1.5rem, 4vw, 2rem)',
               fontWeight: 'bold',
               color: '#132f66',
@@ -603,28 +663,33 @@ function News() {
             </p>
           </div>
 
-          <div style={{
-            display: 'grid',
-            gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))',
-            gap: '2rem'
-          }}>
+          <div 
+            style={{
+              display: 'grid',
+              gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))',
+              gap: '2rem'
+            }}
+            role="list"
+            aria-label="Newsletters"
+          >
             {newsletters.map((newsletter) => (
-              <NewsletterCard
-                key={newsletter.id}
-                newsletter={newsletter}
-                onClick={handleNewsletterClick}
-                onDownload={handleDownload}
-              />
+              <div key={newsletter.id} role="listitem">
+                <NewsletterCard
+                  newsletter={newsletter}
+                  onClick={handleNewsletterClick}
+                  onDownload={handleDownload}
+                />
+              </div>
             ))}
           </div>
         </Container>
       </section>
 
       {/* Blog Section */}
-      <section id="blog-section" className="py-5 bg-white">
+      <section id="blog-section" className="py-5 bg-white" aria-labelledby="blog-heading">
         <Container>
           <div className="text-center mb-5">
-            <h2 style={{
+            <h2 id="blog-heading" style={{
               fontSize: 'clamp(1.5rem, 4vw, 2rem)',
               fontWeight: 'bold',
               color: '#132f66',
@@ -642,24 +707,29 @@ function News() {
             </p>
           </div>
 
-          <div style={{
-            display: 'grid',
-            gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))',
-            gap: '2rem'
-          }}>
+          <div 
+            style={{
+              display: 'grid',
+              gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))',
+              gap: '2rem'
+            }}
+            role="list"
+            aria-label="Blog posts"
+          >
             {blogPosts.map((post) => (
-              <BlogCard
-                key={post.id}
-                post={post}
-                onClick={handleBlogClick}
-              />
+              <div key={post.id} role="listitem">
+                <BlogCard
+                  post={post}
+                  onClick={handleBlogClick}
+                />
+              </div>
             ))}
           </div>
         </Container>
       </section>
 
       {/* Newsletter Modal */}
-      <Modal show={showNewsletterModal} onClose={handleCloseModal}>
+      <Modal show={showNewsletterModal} onClose={handleCloseModal} title={selectedNewsletter?.title}>
         {selectedNewsletter && (
           <div style={{ padding: '2rem' }}>
             <h2 style={{
@@ -673,7 +743,7 @@ function News() {
             
             <img
               src={selectedNewsletter.image}
-              alt={selectedNewsletter.title}
+              alt={`Cover image for ${selectedNewsletter.title}`}
               style={{
                 width: '100%',
                 maxHeight: '300px',
@@ -706,6 +776,12 @@ function News() {
             
             <button
               onClick={() => handleDownload(selectedNewsletter.pdf, selectedNewsletter.title)}
+              onKeyDown={(e) => {
+                if (e.key === 'Enter' || e.key === ' ') {
+                  e.preventDefault();
+                  handleDownload(selectedNewsletter.pdf, selectedNewsletter.title);
+                }
+              }}
               style={{
                 backgroundColor: '#132f66',
                 border: 'none',
@@ -716,7 +792,9 @@ function News() {
                 fontWeight: '600',
                 cursor: 'pointer',
                 transition: 'all 0.3s ease',
-                width: '100%'
+                width: '100%',
+                minHeight: '44px',
+                minWidth: '44px'
               }}
               onMouseEnter={(e) => {
                 e.target.style.backgroundColor = '#0a1f4d';
@@ -726,8 +804,9 @@ function News() {
                 e.target.style.backgroundColor = '#132f66';
                 e.target.style.transform = 'translateY(0)';
               }}
+              aria-label={`Download ${selectedNewsletter.title} PDF`}
             >
-              <i className="fas fa-download me-2"></i>
+              <i className="fas fa-download me-2" aria-hidden="true"></i>
               Download PDF
             </button>
           </div>
@@ -735,7 +814,7 @@ function News() {
       </Modal>
 
       {/* Blog Modal */}
-      <Modal show={showBlogModal} onClose={handleCloseModal}>
+      <Modal show={showBlogModal} onClose={handleCloseModal} title={selectedBlog?.title}>
         {selectedBlog && (
           <div style={{ padding: '2rem' }}>
             <h2 style={{
@@ -753,7 +832,8 @@ function News() {
               gap: '1rem',
               marginBottom: '1.5rem',
               fontSize: '0.9rem',
-              color: '#718096'
+              color: '#718096',
+              flexWrap: 'wrap'
             }}>
               <span className="badge" style={{
                 backgroundColor: '#cebd04',
@@ -765,16 +845,18 @@ function News() {
                 {selectedBlog.category}
               </span>
               <span>
-                <i className="far fa-clock me-1"></i> {selectedBlog.readTime}
+                <i className="far fa-clock me-1" aria-hidden="true"></i> 
+                <span className="visually-hidden">Read time: </span>{selectedBlog.readTime}
               </span>
               <span>
-                <i className="far fa-calendar-alt me-1"></i> {selectedBlog.date}
+                <i className="far fa-calendar-alt me-1" aria-hidden="true"></i> 
+                <span className="visually-hidden">Published: </span>{selectedBlog.date}
               </span>
             </div>
 
             <img
               src={selectedBlog.image}
-              alt={selectedBlog.title}
+              alt={`Featured image for ${selectedBlog.title}`}
               style={{
                 width: '100%',
                 maxHeight: '300px',
@@ -808,7 +890,7 @@ function News() {
                 justifyContent: 'center',
                 fontSize: '1.2rem',
                 fontWeight: 'bold'
-              }}>
+              }} aria-hidden="true">
                 {selectedBlog.author.charAt(0)}
               </div>
               <div>
@@ -834,6 +916,12 @@ function News() {
             <div className="text-center mt-4">
               <button
                 onClick={handleCloseModal}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter' || e.key === ' ') {
+                    e.preventDefault();
+                    handleCloseModal();
+                  }
+                }}
                 style={{
                   backgroundColor: 'transparent',
                   border: '2px solid #132f66',
@@ -843,7 +931,9 @@ function News() {
                   fontSize: '0.9rem',
                   fontWeight: '600',
                   cursor: 'pointer',
-                  transition: 'all 0.3s ease'
+                  transition: 'all 0.3s ease',
+                  minHeight: '44px',
+                  minWidth: '44px'
                 }}
                 onMouseEnter={(e) => {
                   e.target.style.backgroundColor = '#132f66';
@@ -853,6 +943,7 @@ function News() {
                   e.target.style.backgroundColor = 'transparent';
                   e.target.style.color = '#132f66';
                 }}
+                aria-label="Close blog post"
               >
                 Close
               </button>
@@ -865,11 +956,21 @@ function News() {
         <GetInTouch />
       </Suspense>
 
-      {/* Critical CSS inline */}
+      {/* Critical CSS inline with accessibility improvements */}
       <style dangerouslySetInnerHTML={{ __html: `
         @keyframes shimmer {
           0% { background-position: -200% 0; }
           100% { background-position: 200% 0; }
+        }
+        .visually-hidden {
+          position: absolute;
+          width: 1px;
+          height: 1px;
+          padding: 0;
+          margin: -1px;
+          overflow: hidden;
+          clip: rect(0, 0, 0, 0);
+          border: 0;
         }
         .blog-content h2 {
           font-size: 1.5rem;
@@ -893,6 +994,11 @@ function News() {
         }
         .blog-content li {
           margin-bottom: 0.5rem;
+        }
+        button:focus-visible,
+        [role="article"]:focus-visible {
+          outline: 3px solid #cebd04;
+          outline-offset: 2px;
         }
         @media (max-width: 768px) {
           .blog-content h2 {

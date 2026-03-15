@@ -8,7 +8,7 @@ const GetInTouch = lazy(() => import("../components/GetInTouch"));
 
 // Loading fallback
 const SectionLoader = () => (
-  <div style={{ height: '200px', background: '#f8fafc' }}></div>
+  <div style={{ height: '200px', background: '#f8fafc' }} aria-hidden="true"></div>
 );
 
 // Custom hook for count-up animation with intersection observer
@@ -65,20 +65,20 @@ const useCountUp = (end, duration = 2000) => {
   return { count, elementRef };
 };
 
-// Simple Stat Component
+// Simple Stat Component with accessibility
 const StatItem = ({ value, label, suffix = "" }) => {
   const { count, elementRef } = useCountUp(value);
   
   return (
     <Col md={3} sm={6} className="mb-4">
-      <div ref={elementRef} className="text-center">
+      <div ref={elementRef} className="text-center" role="article">
         <h3 style={{ 
           fontSize: 'clamp(2.5rem, 5vw, 3.5rem)', 
           fontWeight: '800', 
           color: '#132f66',
           lineHeight: 1.2,
           marginBottom: '0.25rem'
-        }}>
+        }} aria-hidden="true">
           {count}{suffix}
         </h3>
         <p style={{ 
@@ -91,6 +91,7 @@ const StatItem = ({ value, label, suffix = "" }) => {
         }}>
           {label}
         </p>
+        <span className="visually-hidden">{count}{suffix} {label}</span>
       </div>
     </Col>
   );
@@ -108,6 +109,9 @@ function Home() {
       if (contactSection) {
         requestAnimationFrame(() => {
           contactSection.scrollIntoView({ behavior: 'smooth' });
+          // Set focus for keyboard users
+          contactSection.setAttribute('tabindex', '-1');
+          contactSection.focus({ preventScroll: true });
         });
       }
     } else {
@@ -211,7 +215,7 @@ function Home() {
       </Helmet>
 
       {/* HERO CAROUSEL - LCP element with zoom effect */}
-      <section className="hero-carousel-section">
+      <section className="hero-carousel-section" aria-label="Hero carousel showcasing school facilities">
         <Carousel   
           fade 
           interval={5000}
@@ -241,13 +245,13 @@ function Home() {
         </Carousel>
         
         {/* Overlay table */}
-        <div className="carousel-overlay-table">
+        <div className="carousel-overlay-table" aria-label="Quick access to school information">
           <div className="welcome-header">
             <h2 className="welcome-title-overlay">Welcome to Kitale Progressive School</h2>
             <p className="welcome-subtitle-overlay">Excellence in Education Since 2004</p>
           </div>
           
-          <div className="pathways-table-overlay">
+          <div className="pathways-table-overlay" role="region" aria-label="Academic pathways">
             {/* ECDE Row */}
             <div className="table-row-overlay">
               <div className="pathway-info-overlay">
@@ -257,6 +261,7 @@ function Home() {
               <button 
                 onClick={() => handleLinkClick('/academics/curriculum#ecde-section')} 
                 className="pathway-link-overlay"
+                aria-label="Learn more about ECDE"
               >
                 Learn More →
               </button>
@@ -271,6 +276,7 @@ function Home() {
               <button 
                 onClick={() => handleLinkClick('/academics/curriculum#primary-section')} 
                 className="pathway-link-overlay"
+                aria-label="Learn more about Primary School"
               >
                 Learn More →
               </button>
@@ -285,6 +291,7 @@ function Home() {
               <button 
                 onClick={() => handleLinkClick('/academics/curriculum#junior-section')} 
                 className="pathway-link-overlay"
+                aria-label="Learn more about Junior Secondary"
               >
                 Learn More →
               </button>
@@ -295,12 +302,14 @@ function Home() {
               <button 
                 onClick={() => handleLinkClick('/admissions/apply')} 
                 className="apply-button-overlay"
+                aria-label="Apply for admission now"
               >
                 Apply Now
               </button>
               <button 
                 onClick={() => handleLinkClick('/contact')} 
                 className="contact-button-overlay"
+                aria-label="Contact us"
               >
                 Contact Us
               </button>
@@ -310,7 +319,7 @@ function Home() {
       </section>
 
       {/* ABOUT SECTION */}
-      <section className="about-section section-padding bg-white py-5">
+      <section className="about-section section-padding bg-white py-5" aria-labelledby="about-heading">
         <Container>
           <Row className="align-items-center g-4 g-lg-5">
             <Col lg={6} className="order-2 order-lg-1">
@@ -324,7 +333,7 @@ function Home() {
               />
             </Col>
             <Col lg={6} className="order-1 order-lg-2">
-              <h2 className="section-heading-left h1 h2-md">Welcome to Kitale Progressive School</h2>
+              <h2 id="about-heading" className="section-heading-left h1 h2-md">Welcome to Kitale Progressive School</h2>
               <p className="lead lead-sm">
                 Kitale Progressive School is a premier Day and Boarding institution dedicated
                 to academic excellence and holistic child development. We follow the
@@ -344,18 +353,18 @@ function Home() {
       </section>
 
       {/* ACADEMIC PATHWAY */}
-      <section className="academic-pathway-section section-padding bg-white py-5">
+      <section className="academic-pathway-section section-padding bg-white py-5" aria-labelledby="pathway-heading">
         <Container>
-          <h2 className="section-heading h1 h2-md">Academic Pathway at KPS</h2>
-          <Row className="g-4">
+          <h2 id="pathway-heading" className="section-heading h1 h2-md">Academic Pathway at KPS</h2>
+          <Row className="g-4" role="list" aria-label="Academic pathways">
             {academicPathways.map((item, index) => (
-              <Col md={6} lg={4} key={index}>
+              <Col md={6} lg={4} key={index} role="listitem">
                 <Card className="card-custom h-100 border-0">
                   <div className="academic-image-container">
                     <Card.Img 
                       variant="top" 
                       src={item.image} 
-                      alt={item.level}
+                      alt={`${item.level} classroom activities`}
                       className="academic-card-image"
                       loading="lazy"
                       width="400"
@@ -363,7 +372,7 @@ function Home() {
                     />
                   </div>
                   <Card.Body className="d-flex flex-column">
-                    <Card.Title className="card-title-navy-large h4">
+                    <Card.Title as="h3" className="card-title-navy-large h4">
                       {item.level}
                     </Card.Title>
                     <Card.Text className="flex-grow-1">{item.summary}</Card.Text>
@@ -371,6 +380,8 @@ function Home() {
                       onClick={() => handleLinkClick(`/academics/curriculum#${item.section}`)} 
                       variant="warning"
                       className="mt-3 align-self-start"
+                      aria-label={`Learn more about ${item.level}`}
+                      style={{ minHeight: '44px', minWidth: '44px' }}
                     >
                       Read More
                     </Button>
@@ -383,19 +394,19 @@ function Home() {
       </section>
 
       {/* WHY CHOOSE US */}
-      <section className="why-choose-us-section section-padding bg-light-custom py-5">
+      <section className="why-choose-us-section section-padding bg-light-custom py-5" aria-labelledby="why-heading">
         <Container>
-          <h2 className="section-heading h1 h2-md">Why Choose Us</h2>
+          <h2 id="why-heading" className="section-heading h1 h2-md">Why Choose Us</h2>
           <p className="lead text-center mb-5 px-3 px-md-5" style={{ maxWidth: "900px", margin: "0 auto 3rem" }}>
             At <strong>Kitale Progressive School</strong>, every child's journey is at the heart of what we do. 
             We provide a nurturing and balanced environment where academics, creativity, and character development go hand in hand.
           </p>
-          <Row className="g-4">
+          <Row className="g-4" role="list" aria-label="Reasons to choose our school">
             {whyChooseUsItems.map((item, index) => (
-              <Col md={6} lg={4} key={index}>
+              <Col md={6} lg={4} key={index} role="listitem">
                 <Card className="card-custom h-100 border-0">
                   <Card.Body>
-                    <Card.Title className="card-title-navy h5">{item.title}</Card.Title>
+                    <Card.Title as="h3" className="card-title-navy h5">{item.title}</Card.Title>
                     <Card.Text className="small">{item.description}</Card.Text>
                   </Card.Body>
                 </Card>
@@ -406,8 +417,9 @@ function Home() {
       </section>
 
       {/* STATISTICS SECTION - Simple stats with animated counters */}
-      <section className="stats-section py-5" style={{ background: '#ece507' }}>
+      <section className="stats-section py-5" style={{ background: '#ece507' }} aria-labelledby="stats-heading">
         <Container>
+          <h2 id="stats-heading" className="visually-hidden">School Statistics</h2>
           <Row className="justify-content-center">
             {stats.map((stat, index) => (
               <StatItem 
@@ -422,18 +434,18 @@ function Home() {
       </section>
 
       {/* OUR LEARNING APPROACH */}
-      <section className="learning-approach-section section-padding bg-white py-5">
+      <section className="learning-approach-section section-padding bg-white py-5" aria-labelledby="approach-heading">
         <Container>
-          <h2 className="section-heading h1 h2-md">Our Learning Approach</h2>
+          <h2 id="approach-heading" className="section-heading h1 h2-md">Our Learning Approach</h2>
           <p className="text-center mb-5 px-3" style={{ maxWidth: "800px", margin: "0 auto 3rem" }}>
             At Kitale Progressive School, we use a blended, learner-centered approach to empower students to become confident, creative, and independent learners.
           </p>
-          <Row className="g-4">
+          <Row className="g-4" role="list" aria-label="Learning approaches">
             {learningApproaches.map((point, index) => (
-              <Col md={6} lg={3} key={index}>
+              <Col md={6} lg={3} key={index} role="listitem">
                 <Card className="card-custom border-0 text-center bg-light-custom h-100">
                   <Card.Body>
-                    <Card.Title className="card-title-navy h5" style={{ fontSize: "1.2rem" }}>
+                    <Card.Title as="h3" className="card-title-navy h5" style={{ fontSize: "1.2rem" }}>
                       {point.title}
                     </Card.Title>
                     <Card.Text className="small">{point.description}</Card.Text>
@@ -443,7 +455,13 @@ function Home() {
             ))}
           </Row>
           <div className="text-center mt-5">
-            <Button onClick={() => handleLinkClick('/academics/curriculum')} variant="outline-navy" className="px-4 px-md-5">
+            <Button 
+              onClick={() => handleLinkClick('/academics/curriculum')} 
+              variant="outline-navy" 
+              className="px-4 px-md-5"
+              aria-label="Explore full curriculum"
+              style={{ minHeight: '44px', minWidth: '44px' }}
+            >
               Explore Full Curriculum
             </Button>
           </div>
@@ -451,11 +469,11 @@ function Home() {
       </section>
 
       {/* YOUTUBE VIDEO SECTION */}
-      <section className="video-section py-5" style={{ background: '#f8fafc' }}>
+      <section className="video-section py-5" style={{ background: '#f8fafc' }} aria-labelledby="video-heading">
         <Container>
           <Row className="align-items-center">
             <Col lg={6} className="mb-4 mb-lg-0">
-              <h2 style={{
+              <h2 id="video-heading" style={{
                 fontSize: 'clamp(1.8rem, 5vw, 2.2rem)',
                 fontWeight: '700',
                 color: '#132f66',
@@ -480,7 +498,7 @@ function Home() {
               }}>
                 <iframe
                   src="https://www.youtube.com/embed/your-video-id"
-                  title="Kitale Progressive School Video"
+                  title="Kitale Progressive School Video - School Life Overview"
                   frameBorder="0"
                   allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
                   allowFullScreen
@@ -499,13 +517,13 @@ function Home() {
       </section>
 
       {/* Director SECTION */}
-      <section className="director-section section-padding bg-white py-5">
+      <section className="director-section section-padding bg-white py-5" aria-labelledby="director-heading">
         <Container>
           <Row className="align-items-center g-4 g-lg-5">
             <Col lg={6} className="order-2 order-lg-1">
               <img 
                 src="/images/director.jpg" 
-                alt="Director John Arthur Kabiro" 
+                alt="Director John Arthur Kabiro - Kitale Progressive School" 
                 className="img-fluid rounded shadow-custom w-100"
                 loading="lazy"
                 width="600"
@@ -513,7 +531,7 @@ function Home() {
               />
             </Col>
             <Col lg={6} className="order-1 order-lg-2">
-              <h2 className="section-heading-left h1 h2-md">Welcome Message from Director</h2>
+              <h2 id="director-heading" className="section-heading-left h1 h2-md">Welcome Message from Director</h2>
               
               <p className="lead lead-sm fw-semibold">Dear Prospective Parents and Guardians,</p>
 
@@ -535,13 +553,19 @@ function Home() {
       </section>
       
       {/* CALL TO ACTION */}
-      <section className="cta-section py-5" style={{ background: '#132f66' }}>
+      <section className="cta-section py-5" style={{ background: '#132f66' }} aria-label="Call to action">
         <Container className="text-center text-white">
           <h2 className="display-5 display-md-4 fw-bold mb-3 px-3">Ready to Join Kitale Progressive School?</h2>
           <p className="lead mb-4 px-3">Begin your child's journey toward excellence today.</p>
           <div className="d-flex justify-content-center gap-2 gap-md-3 flex-wrap px-3">
             <button 
               onClick={() => handleLinkClick('/admissions/apply')} 
+              onKeyDown={(e) => {
+                if (e.key === 'Enter' || e.key === ' ') {
+                  e.preventDefault();
+                  handleLinkClick('/admissions/apply');
+                }
+              }}
               style={{
                 backgroundColor: '#cebd04',
                 color: '#132f66',
@@ -551,7 +575,9 @@ function Home() {
                 fontWeight: '600',
                 fontSize: '1rem',
                 cursor: 'pointer',
-                transition: 'all 0.3s ease'
+                transition: 'all 0.3s ease',
+                minHeight: '44px',
+                minWidth: '44px'
               }}
               onMouseEnter={(e) => {
                 e.target.style.backgroundColor = '#b09e03';
@@ -563,11 +589,18 @@ function Home() {
                 e.target.style.transform = 'translateY(0)';
                 e.target.style.boxShadow = 'none';
               }}
+              aria-label="Apply for admission now"
             >
               Apply Now
             </button>
             <button 
               onClick={() => handleLinkClick('/contact')} 
+              onKeyDown={(e) => {
+                if (e.key === 'Enter' || e.key === ' ') {
+                  e.preventDefault();
+                  handleLinkClick('/contact');
+                }
+              }}
               style={{
                 backgroundColor: 'transparent',
                 color: 'white',
@@ -577,7 +610,9 @@ function Home() {
                 fontWeight: '600',
                 fontSize: '1rem',
                 cursor: 'pointer',
-                transition: 'all 0.3s ease'
+                transition: 'all 0.3s ease',
+                minHeight: '44px',
+                minWidth: '44px'
               }}
               onMouseEnter={(e) => {
                 e.target.style.backgroundColor = 'white';
@@ -589,11 +624,18 @@ function Home() {
                 e.target.style.color = 'white';
                 e.target.style.transform = 'translateY(0)';
               }}
+              aria-label="Contact us"
             >
               Contact Us
             </button>
             <button 
               onClick={() => handleLinkClick('/admissions/fee-structure')} 
+              onKeyDown={(e) => {
+                if (e.key === 'Enter' || e.key === ' ') {
+                  e.preventDefault();
+                  handleLinkClick('/admissions/fee-structure');
+                }
+              }}
               style={{
                 backgroundColor: 'transparent',
                 color: 'white',
@@ -603,7 +645,9 @@ function Home() {
                 fontWeight: '600',
                 fontSize: '1rem',
                 cursor: 'pointer',
-                transition: 'all 0.3s ease'
+                transition: 'all 0.3s ease',
+                minHeight: '44px',
+                minWidth: '44px'
               }}
               onMouseEnter={(e) => {
                 e.target.style.backgroundColor = 'white';
@@ -615,6 +659,7 @@ function Home() {
                 e.target.style.color = 'white';
                 e.target.style.transform = 'translateY(0)';
               }}
+              aria-label="View fee structure"
             >
               View Fees
             </button>
@@ -627,7 +672,7 @@ function Home() {
         <GetInTouch />
       </Suspense>
 
-      {/* Critical CSS for animations */}
+      {/* Critical CSS for animations and accessibility */}
       <style dangerouslySetInnerHTML={{ __html: `
         @keyframes zoomOut {
           0% { transform: scale(1.2); }
@@ -638,6 +683,17 @@ function Home() {
           0%, 20%, 50%, 80%, 100% { transform: translateX(-50%) translateY(0); }
           40% { transform: translateX(-50%) translateY(-20px); }
           60% { transform: translateX(-50%) translateY(-10px); }
+        }
+        
+        .visually-hidden {
+          position: absolute;
+          width: 1px;
+          height: 1px;
+          padding: 0;
+          margin: -1px;
+          overflow: hidden;
+          clip: rect(0, 0, 0, 0);
+          border: 0;
         }
         
         .carousel-image-wrapper {
@@ -655,9 +711,25 @@ function Home() {
           overflow: hidden;
         }
         
-        .card-custom:hover {
+        .card-custom:hover,
+        .card-custom:focus-within {
           transform: translateY(-5px);
           box-shadow: 0 20px 40px rgba(0,0,0,0.1) !important;
+        }
+        
+        button:focus-visible {
+          outline: 3px solid #cebd04;
+          outline-offset: 2px;
+        }
+        
+        [role="button"]:focus-visible {
+          outline: 3px solid #cebd04;
+          outline-offset: 2px;
+        }
+        
+        a:focus-visible {
+          outline: 3px solid #cebd04;
+          outline-offset: 2px;
         }
         
         @media (max-width: 768px) {
@@ -672,6 +744,12 @@ function Home() {
           }
           .card-custom:hover {
             transform: none !important;
+          }
+          button:hover {
+            transform: none !important;
+          }
+          * {
+            transition: none !important;
           }
         }
       `}} />

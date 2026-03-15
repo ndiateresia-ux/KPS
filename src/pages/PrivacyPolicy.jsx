@@ -17,17 +17,20 @@ function PrivacyPolicy() {
         />
       </Helmet>
 
-      {/* Page Header - Optimized with inline styles for immediate visibility */}
-      <section style={{
-        background: 'linear-gradient(135deg, #132f66 0%, #0a1f4d 100%)',
-        color: 'white',
-        paddingTop: '120px',
-        paddingBottom: '40px',
-        textAlign: 'center',
-        width: '100%'
-      }}>
+      {/* Page Header with proper heading hierarchy */}
+      <section 
+        style={{
+          background: 'linear-gradient(135deg, #132f66 0%, #0a1f4d 100%)',
+          color: 'white',
+          paddingTop: '120px',
+          paddingBottom: '40px',
+          textAlign: 'center',
+          width: '100%'
+        }}
+        aria-labelledby="page-title"
+      >
         <Container>
-          <h1 style={{
+          <h1 id="page-title" style={{
             fontSize: 'clamp(2rem, 5vw, 2.5rem)',
             fontWeight: 'bold',
             marginBottom: '0.5rem',
@@ -47,7 +50,7 @@ function PrivacyPolicy() {
       </section>
 
       {/* Main Content */}
-      <section style={{ padding: '3rem 0', backgroundColor: 'white' }}>
+      <section style={{ padding: '3rem 0', backgroundColor: 'white' }} aria-labelledby="policy-content-heading">
         <Container>
           <Row className="justify-content-center">
             <Col lg={10}>
@@ -55,23 +58,29 @@ function PrivacyPolicy() {
                 maxWidth: '800px',
                 margin: '0 auto'
               }}>
+                <h2 id="policy-content-heading" className="visually-hidden">Privacy Policy Content</h2>
+                
                 {/* Last Updated */}
-                <div style={{
-                  backgroundColor: '#f8fafc',
-                  padding: '1rem 1.5rem',
-                  borderRadius: '8px',
-                  marginBottom: '2rem',
-                  border: '1px solid #e9ecef'
-                }}>
+                <div 
+                  style={{
+                    backgroundColor: '#f8fafc',
+                    padding: '1rem 1.5rem',
+                    borderRadius: '8px',
+                    marginBottom: '2rem',
+                    border: '1px solid #e9ecef'
+                  }}
+                  role="status"
+                  aria-live="polite"
+                >
                   <p style={{ margin: 0, color: '#132f66', fontWeight: '500' }}>
-                    <i className="fas fa-calendar-alt me-2" style={{ color: '#cebd04' }}></i>
-                    Last Updated: March 2026
+                    <i className="fas fa-calendar-alt me-2" style={{ color: '#cebd04' }} aria-hidden="true"></i>
+                    <span>Last Updated: March 2026</span>
                   </p>
                 </div>
 
                 {/* Policy Sections */}
-                <div style={{ marginBottom: '2rem' }}>
-                  <h5 style={{
+                <section aria-labelledby="section1-heading" style={{ marginBottom: '2rem' }}>
+                  <h3 id="section1-heading" style={{
                     fontSize: '1.1rem',
                     fontWeight: 'bold',
                     color: '#132f66',
@@ -79,7 +88,7 @@ function PrivacyPolicy() {
                     marginTop: '1.5rem'
                   }}>
                     1. Introduction
-                  </h5>
+                  </h3>
                   <p style={{
                     fontSize: '0.95rem',
                     lineHeight: '1.6',
@@ -90,10 +99,10 @@ function PrivacyPolicy() {
                     This Privacy Policy explains how we collect, use, disclose, and safeguard your information 
                     when you visit our website or use our services.
                   </p>
-                </div>
+                </section>
 
-                <div style={{ marginBottom: '2rem' }}>
-                  <h5 style={{
+                <section aria-labelledby="section2-heading" style={{ marginBottom: '2rem' }}>
+                  <h3 id="section2-heading" style={{
                     fontSize: '1.1rem',
                     fontWeight: 'bold',
                     color: '#132f66',
@@ -101,7 +110,7 @@ function PrivacyPolicy() {
                     marginTop: '1.5rem'
                   }}>
                     2. Information We Collect
-                  </h5>
+                  </h3>
                   <p style={{
                     fontSize: '0.95rem',
                     lineHeight: '1.6',
@@ -136,10 +145,10 @@ function PrivacyPolicy() {
                     <li style={{ fontSize: '0.95rem', lineHeight: '1.6', color: '#4a5568', marginBottom: '0.3rem' }}>Medical information (allergies, conditions)</li>
                     <li style={{ fontSize: '0.95rem', lineHeight: '1.6', color: '#4a5568', marginBottom: '0.3rem' }}>Payment information (processed securely through third-party providers)</li>
                   </ul>
-                </div>
+                </section>
 
-                <div style={{ marginBottom: '2rem' }}>
-                  <h5 style={{
+                <section aria-labelledby="section3-heading" style={{ marginBottom: '2rem' }}>
+                  <h3 id="section3-heading" style={{
                     fontSize: '1.1rem',
                     fontWeight: 'bold',
                     color: '#132f66',
@@ -147,7 +156,7 @@ function PrivacyPolicy() {
                     marginTop: '1.5rem'
                   }}>
                     3. How We Use Your Information
-                  </h5>
+                  </h3>
                   <p style={{
                     fontSize: '0.95rem',
                     lineHeight: '1.6',
@@ -167,10 +176,10 @@ function PrivacyPolicy() {
                     <li style={{ fontSize: '0.95rem', lineHeight: '1.6', color: '#4a5568', marginBottom: '0.3rem' }}>Improve our website and services</li>
                     <li style={{ fontSize: '0.95rem', lineHeight: '1.6', color: '#4a5568', marginBottom: '0.3rem' }}>Comply with legal obligations</li>
                   </ul>
-                </div>
+                </section>
 
-                <div style={{ marginBottom: '2rem' }}>
-                  <h5 style={{
+                <section aria-labelledby="section4-heading" style={{ marginBottom: '2rem' }}>
+                  <h3 id="section4-heading" style={{
                     fontSize: '1.1rem',
                     fontWeight: 'bold',
                     color: '#132f66',
@@ -178,7 +187,7 @@ function PrivacyPolicy() {
                     marginTop: '1.5rem'
                   }}>
                     4. Google OAuth and Data Access
-                  </h5>
+                  </h3>
                   <p style={{
                     fontSize: '0.95rem',
                     lineHeight: '1.6',
@@ -196,10 +205,10 @@ function PrivacyPolicy() {
                     <li style={{ fontSize: '0.95rem', lineHeight: '1.6', color: '#4a5568', marginBottom: '0.3rem' }}>We do not access your emails or contacts</li>
                     <li style={{ fontSize: '0.95rem', lineHeight: '1.6', color: '#4a5568', marginBottom: '0.3rem' }}>You can revoke access at any time through your Google Account settings</li>
                   </ul>
-                </div>
+                </section>
 
-                <div style={{ marginBottom: '2rem' }}>
-                  <h5 style={{
+                <section aria-labelledby="section5-heading" style={{ marginBottom: '2rem' }}>
+                  <h3 id="section5-heading" style={{
                     fontSize: '1.1rem',
                     fontWeight: 'bold',
                     color: '#132f66',
@@ -207,7 +216,7 @@ function PrivacyPolicy() {
                     marginTop: '1.5rem'
                   }}>
                     5. Sharing Your Information
-                  </h5>
+                  </h3>
                   <p style={{
                     fontSize: '0.95rem',
                     lineHeight: '1.6',
@@ -224,10 +233,10 @@ function PrivacyPolicy() {
                     <li style={{ fontSize: '0.95rem', lineHeight: '1.6', color: '#4a5568', marginBottom: '0.3rem' }}>Service providers who assist in operating our website</li>
                     <li style={{ fontSize: '0.95rem', lineHeight: '1.6', color: '#4a5568', marginBottom: '0.3rem' }}>Legal authorities when required by law</li>
                   </ul>
-                </div>
+                </section>
 
-                <div style={{ marginBottom: '2rem' }}>
-                  <h5 style={{
+                <section aria-labelledby="section6-heading" style={{ marginBottom: '2rem' }}>
+                  <h3 id="section6-heading" style={{
                     fontSize: '1.1rem',
                     fontWeight: 'bold',
                     color: '#132f66',
@@ -235,7 +244,7 @@ function PrivacyPolicy() {
                     marginTop: '1.5rem'
                   }}>
                     6. Data Security
-                  </h5>
+                  </h3>
                   <p style={{
                     fontSize: '0.95rem',
                     lineHeight: '1.6',
@@ -245,10 +254,10 @@ function PrivacyPolicy() {
                     We implement appropriate technical and organizational measures to protect your personal information. 
                     However, no method of transmission over the Internet is 100% secure.
                   </p>
-                </div>
+                </section>
 
-                <div style={{ marginBottom: '2rem' }}>
-                  <h5 style={{
+                <section aria-labelledby="section7-heading" style={{ marginBottom: '2rem' }}>
+                  <h3 id="section7-heading" style={{
                     fontSize: '1.1rem',
                     fontWeight: 'bold',
                     color: '#132f66',
@@ -256,7 +265,7 @@ function PrivacyPolicy() {
                     marginTop: '1.5rem'
                   }}>
                     7. Your Rights
-                  </h5>
+                  </h3>
                   <p style={{
                     fontSize: '0.95rem',
                     lineHeight: '1.6',
@@ -274,10 +283,10 @@ function PrivacyPolicy() {
                     <li style={{ fontSize: '0.95rem', lineHeight: '1.6', color: '#4a5568', marginBottom: '0.3rem' }}>Request deletion of your information</li>
                     <li style={{ fontSize: '0.95rem', lineHeight: '1.6', color: '#4a5568', marginBottom: '0.3rem' }}>Withdraw consent at any time</li>
                   </ul>
-                </div>
+                </section>
 
-                <div style={{ marginBottom: '2rem' }}>
-                  <h5 style={{
+                <section aria-labelledby="section8-heading" style={{ marginBottom: '2rem' }}>
+                  <h3 id="section8-heading" style={{
                     fontSize: '1.1rem',
                     fontWeight: 'bold',
                     color: '#132f66',
@@ -285,7 +294,7 @@ function PrivacyPolicy() {
                     marginTop: '1.5rem'
                   }}>
                     8. Contact Us
-                  </h5>
+                  </h3>
                   <p style={{
                     fontSize: '0.95rem',
                     lineHeight: '1.6',
@@ -294,38 +303,54 @@ function PrivacyPolicy() {
                   }}>
                     If you have questions about this Privacy Policy, please contact us at:
                   </p>
-                  <div style={{
+                  <address style={{
                     backgroundColor: '#f8fafc',
                     padding: '1.5rem',
                     borderRadius: '8px',
-                    border: '1px solid #e9ecef'
+                    border: '1px solid #e9ecef',
+                    fontStyle: 'normal'
                   }}>
                     <p style={{ marginBottom: '0.3rem' }}>
                       <strong style={{ color: '#132f66' }}>Email:</strong>{' '}
-                      <a href="mailto:privacy@kitaleprogressiveschool.ac.ke" style={{ color: '#132f66', textDecoration: 'none' }}>
+                      <a 
+                        href="mailto:privacy@kitaleprogressiveschool.ac.ke" 
+                        style={{ color: '#132f66', textDecoration: 'none' }}
+                        aria-label="Send email to privacy@kitaleprogressiveschool.ac.ke"
+                      >
                         privacy@kitaleprogressiveschool.ac.ke
                       </a>
                     </p>
                     <p style={{ marginBottom: '0.3rem' }}>
-                      <strong style={{ color: '#132f66' }}>Phone:</strong> +254 722 631 433
+                      <strong style={{ color: '#132f66' }}>Phone:</strong>{' '}
+                      <a 
+                        href="tel:+254722631433" 
+                        style={{ color: '#132f66', textDecoration: 'none' }}
+                        aria-label="Call +254 722 631 433"
+                      >
+                        +254 722 631 433
+                      </a>
                     </p>
                     <p style={{ marginBottom: 0 }}>
                       <strong style={{ color: '#132f66' }}>Address:</strong> Kitale - Kapenguria Road, Kitale, Kenya
                     </p>
-                  </div>
-                </div>
+                  </address>
+                </section>
 
                 {/* Consent Statement */}
-                <div style={{
-                  backgroundColor: '#f8fafc',
-                  padding: '1.5rem',
-                  borderRadius: '8px',
-                  marginTop: '2rem',
-                  border: '1px solid #e9ecef',
-                  textAlign: 'center'
-                }}>
+                <div 
+                  style={{
+                    backgroundColor: '#f8fafc',
+                    padding: '1.5rem',
+                    borderRadius: '8px',
+                    marginTop: '2rem',
+                    border: '1px solid #e9ecef',
+                    textAlign: 'center'
+                  }}
+                  role="complementary"
+                  aria-label="Consent statement"
+                >
                   <p style={{ margin: 0, color: '#4a5568' }}>
-                    <i className="fas fa-check-circle me-2" style={{ color: '#cebd04' }}></i>
+                    <i className="fas fa-check-circle me-2" style={{ color: '#cebd04' }} aria-hidden="true"></i>
                     By using our website, you consent to our Privacy Policy.
                   </p>
                 </div>
@@ -343,7 +368,9 @@ function PrivacyPolicy() {
                       textDecoration: 'none',
                       fontSize: '0.9rem',
                       fontWeight: '500',
-                      transition: 'all 0.3s ease'
+                      transition: 'all 0.3s ease',
+                      minHeight: '44px',
+                      minWidth: '44px'
                     }}
                     onMouseEnter={(e) => {
                       e.target.style.backgroundColor = '#0a1f4d';
@@ -355,8 +382,9 @@ function PrivacyPolicy() {
                       e.target.style.transform = 'translateY(0)';
                       e.target.style.boxShadow = 'none';
                     }}
+                    aria-label="Return to home page"
                   >
-                    <i className="fas fa-arrow-left me-2"></i>
+                    <i className="fas fa-arrow-left me-2" aria-hidden="true"></i>
                     Back to Home
                   </Link>
                 </div>
@@ -370,8 +398,26 @@ function PrivacyPolicy() {
         <GetInTouch />
       </Suspense>
 
-      {/* Critical CSS inline */}
+      {/* Critical CSS inline with accessibility improvements */}
       <style dangerouslySetInnerHTML={{ __html: `
+        .visually-hidden {
+          position: absolute;
+          width: 1px;
+          height: 1px;
+          padding: 0;
+          margin: -1px;
+          overflow: hidden;
+          clip: rect(0, 0, 0, 0);
+          border: 0;
+        }
+        a:focus-visible,
+        button:focus-visible {
+          outline: 3px solid #cebd04;
+          outline-offset: 2px;
+        }
+        address {
+          font-style: normal;
+        }
         @media (max-width: 768px) {
           .policy-content h5 {
             font-size: 1rem;

@@ -3,7 +3,7 @@ import { Container, Row, Col, Form, Button, Alert } from "react-bootstrap";
 import { Link } from "react-router-dom";
 import { useGoogleLogin } from '@react-oauth/google';
 
-// Memoized form input component
+// Memoized form input component with accessibility improvements
 const FormInput = memo(({ 
   label, 
   type = "text", 
@@ -15,48 +15,67 @@ const FormInput = memo(({
   as,
   rows,
   feedback
-}) => (
-  <Form.Group className="mb-3">
-    <Form.Label className="form-label-custom">
-      {label} {required && <span className="text-danger">*</span>}
-    </Form.Label>
-    <Form.Control 
-      as={as}
-      type={type}
-      name={name}
-      value={value}
-      onChange={onChange}
-      placeholder={placeholder}
-      className="form-control-custom"
-      required={required}
-      rows={rows}
-    />
-    {required && (
-      <Form.Control.Feedback type="invalid">
-        {feedback || `Please enter your ${label.toLowerCase()}.`}
-      </Form.Control.Feedback>
-    )}
-  </Form.Group>
-));
+}) => {
+  const id = `input-${name}`;
+  const errorId = `${id}-error`;
+  
+  return (
+    <Form.Group className="mb-3" controlId={id}>
+      <Form.Label className="form-label-custom">
+        {label} {required && <span className="text-danger" aria-hidden="true">*</span>}
+        {required && <span className="visually-hidden"> (required)</span>}
+      </Form.Label>
+      <Form.Control 
+        as={as}
+        type={type}
+        name={name}
+        value={value}
+        onChange={onChange}
+        placeholder={placeholder}
+        className="form-control-custom"
+        required={required}
+        rows={rows}
+        aria-invalid={required && !value ? "true" : "false"}
+        aria-describedby={required && !value ? errorId : undefined}
+      />
+      {required && (
+        <Form.Control.Feedback type="invalid" id={errorId} role="alert">
+          {feedback || `Please enter your ${label.toLowerCase()}.`}
+        </Form.Control.Feedback>
+      )}
+    </Form.Group>
+  );
+});
 
 FormInput.displayName = 'FormInput';
 
-// Memoized contact info component
-const ContactInfo = memo(({ icon, label, value, isLight = false }) => (
-  <div className="d-flex align-items-center gap-3 mb-3">
-    <span className={`contact-icon-circle${isLight ? '-light' : ''}`}>
-      <i className={`bi ${icon}`} aria-hidden="true"></i>
-    </span>
-    <div>
-      <div className="contact-label small text-uppercase text-muted">{label}</div>
-      <div className="contact-value fw-medium">{value}</div>
+// Memoized contact info component with accessibility improvements
+const ContactInfo = memo(({ icon, label, value, isLight = false }) => {
+  const id = `contact-${label.toLowerCase().replace(/\s+/g, '-')}`;
+  
+  return (
+    <div className="d-flex align-items-center gap-3 mb-3" id={id}>
+      <span 
+        className={`contact-icon-circle${isLight ? '-light' : ''}`}
+        aria-hidden="true"
+      >
+        <i className={`bi ${icon}`} aria-hidden="true"></i>
+      </span>
+      <div>
+        <div className="contact-label small text-uppercase text-muted" id={`${id}-label`}>
+          {label}
+        </div>
+        <div className="contact-value fw-medium" aria-labelledby={`${id}-label`}>
+          {value}
+        </div>
+      </div>
     </div>
-  </div>
-));
+  );
+});
 
 ContactInfo.displayName = 'ContactInfo';
 
-// Memoized status alert component
+// Memoized status alert component with accessibility improvements
 const StatusAlert = memo(({ show, success, message, onClose }) => {
   if (!show) return null;
   
@@ -66,6 +85,8 @@ const StatusAlert = memo(({ show, success, message, onClose }) => {
       className="mb-4 fade-in"
       dismissible
       onClose={onClose}
+      role="alert"
+      aria-live="polite"
     >
       <div className="d-flex align-items-center">
         <i className={`fas ${success ? 'fa-check-circle' : 'fa-exclamation-circle'} me-3 fs-3`} aria-hidden="true"></i>
@@ -321,9 +342,9 @@ This message was sent from the Kitale Progressive School website contact form.
   ];
 
   return (
-    <section id="contact-section" className="section-padding bg-light-custom">
+    <section id="contact-section" className="section-padding bg-light-custom" aria-labelledby="contact-heading">
       <Container>
-        <h1 className="section-heading h2 mb-3">
+        <h1 id="contact-heading" className="section-heading h2 mb-3">
           GET IN TOUCH
         </h1>
 
@@ -353,15 +374,19 @@ This message was sent from the Kitale Progressive School website contact form.
 
             {/* Quick Links */}
             <div className="mt-4 pt-2">
-              <Link to="/privacy-policy" className="text-muted me-2 small">Privacy Policy</Link>
-              <span className="text-muted">|</span>
-              <Link to="/terms-of-service" className="text-muted ms-2 small">Terms of Service</Link>
+              <Link to="/privacy-policy" className="text-muted me-2 small" aria-label="Read our Privacy Policy">
+                Privacy Policy
+              </Link>
+              <span className="text-muted" aria-hidden="true">|</span>
+              <Link to="/terms-of-service" className="text-muted ms-2 small" aria-label="Read our Terms of Service">
+                Terms of Service
+              </Link>
             </div>
           </Col>
 
           <Col md={6}>
             <div className="form-container">
-              <Form noValidate validated={validated} onSubmit={handleSubmit}>
+              <Form noValidate validated={validated} onSubmit={handleSubmit} aria-label="Contact form">
                 <FormInput 
                   label="Your Full Name"
                   name="fullName"
@@ -409,6 +434,7 @@ This message was sent from the Kitale Progressive School website contact form.
                     required
                     type="checkbox"
                     name="agreeToTerms"
+                    id="agreeToTerms"
                     checked={formData.agreeToTerms}
                     onChange={handleChange}
                     label={
@@ -421,6 +447,7 @@ This message was sent from the Kitale Progressive School website contact form.
                         <Link to="/privacy-policy" target="_blank" className="text-navy text-decoration-underline">
                           Privacy Policy
                         </Link>
+                        <span className="visually-hidden"> (required)</span>
                       </span>
                     }
                     feedback="You must agree to the Terms and Privacy Policy."
@@ -431,11 +458,14 @@ This message was sent from the Kitale Progressive School website contact form.
                   type="submit" 
                   className="btn-navy w-100 w-md-auto"
                   disabled={submitting}
+                  aria-label={submitting ? "Sending message" : "Submit inquiry"}
+                  style={{ minHeight: '44px', minWidth: '44px' }}
                 >
                   {submitting ? (
                     <>
                       <span className="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>
-                      Sending...
+                      <span>Sending...</span>
+                      <span className="visually-hidden">Please wait while we send your message</span>
                     </>
                   ) : (
                     'SUBMIT INQUIRY'

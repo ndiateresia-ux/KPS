@@ -28,9 +28,19 @@ const Header = () => {
     if (expanded) {
       document.body.style.overflow = 'hidden';
       document.body.classList.add('menu-open');
+      // Announce menu open to screen readers
+      const announcer = document.getElementById('menu-announcer');
+      if (announcer) {
+        announcer.textContent = 'Mobile menu opened';
+      }
     } else {
       document.body.style.overflow = 'unset';
       document.body.classList.remove('menu-open');
+      // Announce menu close to screen readers
+      const announcer = document.getElementById('menu-announcer');
+      if (announcer) {
+        announcer.textContent = 'Mobile menu closed';
+      }
     }
     
     return () => {
@@ -39,13 +49,16 @@ const Header = () => {
     };
   }, [expanded]);
 
-  // Handle hash scrolling when coming from external link
+  // Handle hash scrolling when coming from external link with focus management
   useEffect(() => {
     if (location.pathname === '/' && location.hash === '#contact-section') {
       setTimeout(() => {
         const contactSection = document.getElementById('contact-section');
         if (contactSection) {
           contactSection.scrollIntoView({ behavior: 'smooth', block: 'start' });
+          // Set focus for keyboard users
+          contactSection.setAttribute('tabindex', '-1');
+          contactSection.focus({ preventScroll: true });
         }
       }, 100);
     } else if (location.pathname === '/school-life/news' && location.hash === '#blog-section') {
@@ -53,6 +66,9 @@ const Header = () => {
         const blogSection = document.getElementById('blog-section');
         if (blogSection) {
           blogSection.scrollIntoView({ behavior: 'smooth', block: 'start' });
+          // Set focus for keyboard users
+          blogSection.setAttribute('tabindex', '-1');
+          blogSection.focus({ preventScroll: true });
         }
       }, 100);
     } else {
@@ -72,6 +88,9 @@ const Header = () => {
           const contactSection = document.getElementById('contact-section');
           if (contactSection) {
             contactSection.scrollIntoView({ behavior: 'smooth', block: 'start' });
+            // Set focus for keyboard users
+            contactSection.setAttribute('tabindex', '-1');
+            contactSection.focus({ preventScroll: true });
           }
         }, 100);
       } else {
@@ -86,6 +105,9 @@ const Header = () => {
           const blogSection = document.getElementById('blog-section');
           if (blogSection) {
             blogSection.scrollIntoView({ behavior: 'smooth', block: 'start' });
+            // Set focus for keyboard users
+            blogSection.setAttribute('tabindex', '-1');
+            blogSection.focus({ preventScroll: true });
           }
         }, 100);
       } else {
@@ -110,6 +132,14 @@ const Header = () => {
     setExpanded(!expanded);
   };
 
+  // Handle keyboard navigation for menu toggle
+  const handleMenuKeyDown = (e) => {
+    if (e.key === 'Enter' || e.key === ' ') {
+      e.preventDefault();
+      toggleMenu();
+    }
+  };
+
   // Determine if a link is active
   const isActive = (path, hash = null) => {
     if (hash) {
@@ -119,140 +149,261 @@ const Header = () => {
   };
 
   return (
-    <header className={`main-header ${scrolled ? 'header-scrolled' : 'header-transparent'}`}>
-      <Navbar expanded={expanded} expand="lg" className="p-0">
-        <Container fluid>
-          <Link to="/" className="brand-container" onClick={() => handleNavigation('/')}>
-            <div className="logo-wrapper">
-              <img src="/images/logo.png" alt="Kitale Progressive School" loading="eager" />
-            </div>
-            <span className="brand-text">
-              KITALE PROGRESSIVE SCHOOL
-              <small>In Pursuit of Excellence</small>
-            </span>
-          </Link>
+    <>
+      {/* Screen reader announcer for menu state changes */}
+      <div id="menu-announcer" className="visually-hidden" role="status" aria-live="polite"></div>
+      
+      {/* Skip to content link for keyboard users */}
+      <a href="#main-content" className="skip-to-content-link">
+        Skip to main content
+      </a>
 
-          <button
-            onClick={toggleMenu}
-            className={`navbar-toggler custom-toggler ${expanded ? 'active' : ''}`}
-            type="button"
-            aria-label="Toggle navigation"
-            aria-expanded={expanded}
-          >
-            <span className="navbar-toggler-icon"></span>
-          </button>
+      <header className={`main-header ${scrolled ? 'header-scrolled' : 'header-transparent'}`} role="banner">
+        <Navbar expanded={expanded} expand="lg" className="p-0">
+          <Container fluid>
+            <Link 
+              to="/" 
+              className="brand-container" 
+              onClick={() => handleNavigation('/')}
+              aria-label="Kitale Progressive School - Return to home page"
+            >
+              <div className="logo-wrapper">
+                <img 
+                  src="/images/logo.png" 
+                  alt="" // Decorative image - logo text provides context
+                  aria-hidden="true"
+                  loading="eager" 
+                />
+              </div>
+              <span className="brand-text">
+                <span className="visually-hidden">Kitale Progressive School - </span>
+                KITALE PROGRESSIVE SCHOOL
+                <small>In Pursuit of Excellence</small>
+              </span>
+            </Link>
 
-          <div className={`navbar-collapse ${expanded ? 'show' : ''}`}>
-            <Nav className="ms-auto">
-              <Nav.Link 
-                onClick={() => handleNavigation('/')}
-                className={isActive('/') && !location.hash ? 'active' : ''}
-              >
-                Home
-              </Nav.Link>
-              
-              <NavDropdown 
-                title="Academics" 
-                id="academics-dropdown"
-                className="nav-dropdown-custom"
-              >
-                <NavDropdown.Item 
-                  onClick={() => handleNavigation('/academics/curriculum')}
-                >
-                  Curriculum
-                </NavDropdown.Item>
-                <NavDropdown.Item 
-                  onClick={() => handleNavigation('/academics/clubs-societies')}
-                >
-                  Clubs & Societies
-                </NavDropdown.Item>
-              </NavDropdown>
+            <button
+              onClick={toggleMenu}
+              onKeyDown={handleMenuKeyDown}
+              className={`navbar-toggler custom-toggler ${expanded ? 'active' : ''}`}
+              type="button"
+              aria-label="Toggle navigation menu"
+              aria-expanded={expanded}
+              aria-controls="navbar-collapse"
+              style={{ minHeight: '44px', minWidth: '44px' }}
+            >
+              <span className="navbar-toggler-icon" aria-hidden="true"></span>
+            </button>
 
-              <NavDropdown 
-                title="School Life" 
-                id="school-life-dropdown"
-                className="nav-dropdown-custom"
-              >
-                <NavDropdown.Item 
-                  onClick={() => handleNavigation('/school-life/news')}
+            <div 
+              id="navbar-collapse"
+              className={`navbar-collapse ${expanded ? 'show' : ''}`}
+              role="navigation"
+              aria-label="Main navigation"
+            >
+              <Nav className="ms-auto">
+                <Nav.Link 
+                  onClick={() => handleNavigation('/')}
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter' || e.key === ' ') {
+                      e.preventDefault();
+                      handleNavigation('/');
+                    }
+                  }}
+                  className={isActive('/') && !location.hash ? 'active' : ''}
+                  aria-current={isActive('/') && !location.hash ? 'page' : undefined}
                 >
-                  News
-                </NavDropdown.Item>
+                  Home
+                </Nav.Link>
                 
-                <NavDropdown.Item 
-                  onClick={() => handleNavigation('/school-life/news', false, true)}
-                  className={isActive('/school-life/news', '#blog-section') ? 'active' : ''}
+                <NavDropdown 
+                  title="Academics" 
+                  id="academics-dropdown"
+                  className="nav-dropdown-custom"
+                  renderMenuOnMount={false}
                 >
-                  Blog
-                </NavDropdown.Item>
-                
-                <NavDropdown.Item 
-                  onClick={() => handleNavigation('/school-life/events')}
-                >
-                  Events
-                </NavDropdown.Item>
-                <NavDropdown.Item 
-                  onClick={() => handleNavigation('/school-life/gallery')}
-                >
-                  Gallery
-                </NavDropdown.Item>
-                <NavDropdown.Item 
-                  onClick={() => handleNavigation('/school-life/facilities')}
-                >
-                  Facilities
-                </NavDropdown.Item>
-              </NavDropdown>
+                  <NavDropdown.Item 
+                    onClick={() => handleNavigation('/academics/curriculum')}
+                    onKeyDown={(e) => {
+                      if (e.key === 'Enter' || e.key === ' ') {
+                        e.preventDefault();
+                        handleNavigation('/academics/curriculum');
+                      }
+                    }}
+                  >
+                    Curriculum
+                  </NavDropdown.Item>
+                  <NavDropdown.Item 
+                    onClick={() => handleNavigation('/academics/clubs-societies')}
+                    onKeyDown={(e) => {
+                      if (e.key === 'Enter' || e.key === ' ') {
+                        e.preventDefault();
+                        handleNavigation('/academics/clubs-societies');
+                      }
+                    }}
+                  >
+                    Clubs & Societies
+                  </NavDropdown.Item>
+                </NavDropdown>
 
-              <NavDropdown 
-                title="Admissions" 
-                id="admissions-dropdown"
-                className="nav-dropdown-custom"
-              >
-                <NavDropdown.Item 
+                <NavDropdown 
+                  title="School Life" 
+                  id="school-life-dropdown"
+                  className="nav-dropdown-custom"
+                  renderMenuOnMount={false}
+                >
+                  <NavDropdown.Item 
+                    onClick={() => handleNavigation('/school-life/news')}
+                    onKeyDown={(e) => {
+                      if (e.key === 'Enter' || e.key === ' ') {
+                        e.preventDefault();
+                        handleNavigation('/school-life/news');
+                      }
+                    }}
+                  >
+                    News
+                  </NavDropdown.Item>
+                  
+                  <NavDropdown.Item 
+                    onClick={() => handleNavigation('/school-life/news', false, true)}
+                    onKeyDown={(e) => {
+                      if (e.key === 'Enter' || e.key === ' ') {
+                        e.preventDefault();
+                        handleNavigation('/school-life/news', false, true);
+                      }
+                    }}
+                    className={isActive('/school-life/news', '#blog-section') ? 'active' : ''}
+                    aria-current={isActive('/school-life/news', '#blog-section') ? 'page' : undefined}
+                  >
+                    Blog
+                  </NavDropdown.Item>
+                  
+                  <NavDropdown.Item 
+                    onClick={() => handleNavigation('/school-life/events')}
+                    onKeyDown={(e) => {
+                      if (e.key === 'Enter' || e.key === ' ') {
+                        e.preventDefault();
+                        handleNavigation('/school-life/events');
+                      }
+                    }}
+                  >
+                    Events
+                  </NavDropdown.Item>
+                  <NavDropdown.Item 
+                    onClick={() => handleNavigation('/school-life/gallery')}
+                    onKeyDown={(e) => {
+                      if (e.key === 'Enter' || e.key === ' ') {
+                        e.preventDefault();
+                        handleNavigation('/school-life/gallery');
+                      }
+                    }}
+                  >
+                    Gallery
+                  </NavDropdown.Item>
+                  <NavDropdown.Item 
+                    onClick={() => handleNavigation('/school-life/facilities')}
+                    onKeyDown={(e) => {
+                      if (e.key === 'Enter' || e.key === ' ') {
+                        e.preventDefault();
+                        handleNavigation('/school-life/facilities');
+                      }
+                    }}
+                  >
+                    Facilities
+                  </NavDropdown.Item>
+                </NavDropdown>
+
+                <NavDropdown 
+                  title="Admissions" 
+                  id="admissions-dropdown"
+                  className="nav-dropdown-custom"
+                  renderMenuOnMount={false}
+                >
+                  <NavDropdown.Item 
+                    onClick={() => handleNavigation('/admissions/apply')}
+                    onKeyDown={(e) => {
+                      if (e.key === 'Enter' || e.key === ' ') {
+                        e.preventDefault();
+                        handleNavigation('/admissions/apply');
+                      }
+                    }}
+                  >
+                    Apply Now
+                  </NavDropdown.Item>
+                  <NavDropdown.Item 
+                    onClick={() => handleNavigation('/admissions/fee-structure')}
+                    onKeyDown={(e) => {
+                      if (e.key === 'Enter' || e.key === ' ') {
+                        e.preventDefault();
+                        handleNavigation('/admissions/fee-structure');
+                      }
+                    }}
+                  >
+                    Fee Structure
+                  </NavDropdown.Item>
+                </NavDropdown>
+
+                <Nav.Link 
+                  onClick={() => handleNavigation('/faq')}
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter' || e.key === ' ') {
+                      e.preventDefault();
+                      handleNavigation('/faq');
+                    }
+                  }}
+                  className={isActive('/faq') ? 'active' : ''}
+                  aria-current={isActive('/faq') ? 'page' : undefined}
+                >
+                  FAQ
+                </Nav.Link>
+
+                <Nav.Link 
+                  onClick={() => handleNavigation('/sponsor')}
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter' || e.key === ' ') {
+                      e.preventDefault();
+                      handleNavigation('/sponsor');
+                    }
+                  }}
+                  className={isActive('/sponsor') ? 'active' : ''}
+                  aria-current={isActive('/sponsor') ? 'page' : undefined}
+                >
+                  Sponsors/Donors
+                </Nav.Link>
+
+                {/* Contact link with special handling */}
+                <Nav.Link 
+                  onClick={() => handleNavigation('/contact', true)}
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter' || e.key === ' ') {
+                      e.preventDefault();
+                      handleNavigation('/contact', true);
+                    }
+                  }}
+                  className={isActive('/contact') || isActive('/', '#contact-section') ? 'active' : ''}
+                  aria-current={isActive('/contact') || isActive('/', '#contact-section') ? 'page' : undefined}
+                >
+                  Contact
+                </Nav.Link>
+
+                <Nav.Link 
                   onClick={() => handleNavigation('/admissions/apply')}
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter' || e.key === ' ') {
+                      e.preventDefault();
+                      handleNavigation('/admissions/apply');
+                    }
+                  }}
+                  className="apply-btn"
                 >
                   Apply Now
-                </NavDropdown.Item>
-                <NavDropdown.Item 
-                  onClick={() => handleNavigation('/admissions/fee-structure')}
-                >
-                  Fee Structure
-                </NavDropdown.Item>
-              </NavDropdown>
-
-              <Nav.Link 
-                onClick={() => handleNavigation('/faq')}
-                className={isActive('/faq') ? 'active' : ''}
-              >
-                FAQ
-              </Nav.Link>
-
-              <Nav.Link 
-                onClick={() => handleNavigation('/sponsor')}
-                className={isActive('/sponsor') ? 'active' : ''}
-              >
-                Sponsors/Donors
-              </Nav.Link>
-
-              {/* Contact link with special handling */}
-              <Nav.Link 
-                onClick={() => handleNavigation('/contact', true)}
-                className={isActive('/contact') || isActive('/', '#contact-section') ? 'active' : ''}
-              >
-                Contact
-              </Nav.Link>
-
-              <Nav.Link 
-                onClick={() => handleNavigation('/admissions/apply')}
-                className="apply-btn"
-              >
-                Apply Now
-              </Nav.Link>
-            </Nav>
-          </div>
-        </Container>
-      </Navbar>
-    </header>
+                </Nav.Link>
+              </Nav>
+            </div>
+          </Container>
+        </Navbar>
+      </header>
+    </>
   );
 };
 

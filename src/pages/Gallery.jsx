@@ -8,15 +8,25 @@ const GetInTouch = lazy(() => import("../components/GetInTouch"));
 // Fallback image
 const FALLBACK_IMAGE = "https://images.unsplash.com/photo-1541339907198-e08756dedf3f?ixlib=rb-4.0.3&auto=format&fit=crop&w=600&q=80";
 
-// Memoized gallery image component
+// Memoized gallery image component with accessibility
 const GalleryImage = memo(({ image, onClick }) => {
   const [imgSrc, setImgSrc] = useState(image.src);
   const [loaded, setLoaded] = useState(false);
+  const imageId = `gallery-img-${image.id}`;
 
   return (
     <div
       className="gallery-item cursor-pointer"
       onClick={() => onClick(image)}
+      onKeyDown={(e) => {
+        if (e.key === 'Enter' || e.key === ' ') {
+          e.preventDefault();
+          onClick(image);
+        }
+      }}
+      role="button"
+      tabIndex={0}
+      aria-label={`View larger image of ${image.alt}`}
       style={{
         position: 'relative',
         borderRadius: '12px',
@@ -27,18 +37,22 @@ const GalleryImage = memo(({ image, onClick }) => {
       }}
     >
       {!loaded && (
-        <div style={{
-          position: 'absolute',
-          top: 0,
-          left: 0,
-          right: 0,
-          bottom: 0,
-          background: 'linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%)',
-          backgroundSize: '200% 100%',
-          animation: 'shimmer 1.5s infinite'
-        }} />
+        <div 
+          style={{
+            position: 'absolute',
+            top: 0,
+            left: 0,
+            right: 0,
+            bottom: 0,
+            background: 'linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%)',
+            backgroundSize: '200% 100%',
+            animation: 'shimmer 1.5s infinite'
+          }}
+          aria-hidden="true"
+        />
       )}
       <img
+        id={imageId}
         src={imgSrc}
         alt={image.alt}
         loading="lazy"
@@ -62,10 +76,18 @@ const GalleryImage = memo(({ image, onClick }) => {
 
 GalleryImage.displayName = 'GalleryImage';
 
-// Memoized filter button component
+// Memoized filter button component with accessibility
 const FilterButton = memo(({ category, isActive, onClick }) => (
   <button
     onClick={() => onClick(category.id)}
+    onKeyDown={(e) => {
+      if (e.key === 'Enter' || e.key === ' ') {
+        e.preventDefault();
+        onClick(category.id);
+      }
+    }}
+    aria-pressed={isActive}
+    aria-label={`${category.name} photos${isActive ? ', currently selected' : ''}`}
     style={{
       padding: '0.5rem 1rem',
       borderRadius: '40px',
@@ -79,15 +101,189 @@ const FilterButton = memo(({ category, isActive, onClick }) => (
       display: 'inline-flex',
       alignItems: 'center',
       gap: '0.5rem',
-      whiteSpace: 'nowrap'
+      whiteSpace: 'nowrap',
+      minHeight: '44px',
+      minWidth: '44px'
     }}
   >
-    <span style={{ fontSize: '1.1rem' }}>{category.icon}</span>
-    {category.name}
+    <span style={{ fontSize: '1.1rem' }} aria-hidden="true">{category.icon}</span>
+    <span>{category.name}</span>
+    {isActive && <span className="visually-hidden"> (selected)</span>}
   </button>
 ));
 
 FilterButton.displayName = 'FilterButton';
+
+// Memoized lightbox modal with accessibility
+const LightboxModal = memo(({ selectedImage, onClose, onPrev, onNext }) => {
+  if (!selectedImage) return null;
+
+  const handleKeyDown = useCallback((e) => {
+    if (e.key === 'Escape') {
+      onClose();
+    } else if (e.key === 'ArrowLeft') {
+      onPrev();
+    } else if (e.key === 'ArrowRight') {
+      onNext();
+    }
+  }, [onClose, onPrev, onNext]);
+
+  useEffect(() => {
+    document.addEventListener('keydown', handleKeyDown);
+    return () => document.removeEventListener('keydown', handleKeyDown);
+  }, [handleKeyDown]);
+
+  return (
+    <div
+      style={{
+        position: 'fixed',
+        top: 0,
+        left: 0,
+        right: 0,
+        bottom: 0,
+        backgroundColor: 'rgba(0,0,0,0.95)',
+        zIndex: 100000,
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        padding: '2rem'
+      }}
+      onClick={onClose}
+      onKeyDown={handleKeyDown}
+      role="dialog"
+      aria-modal="true"
+      aria-label="Image lightbox"
+      tabIndex={-1}
+    >
+      <button
+        onClick={onClose}
+        onKeyDown={(e) => {
+          if (e.key === 'Enter' || e.key === ' ') {
+            e.preventDefault();
+            onClose();
+          }
+        }}
+        style={{
+          position: 'absolute',
+          top: '20px',
+          right: '20px',
+          background: 'white',
+          border: 'none',
+          borderRadius: '50%',
+          width: '44px',
+          height: '44px',
+          fontSize: '1.2rem',
+          cursor: 'pointer',
+          zIndex: 100001,
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center'
+        }}
+        aria-label="Close lightbox"
+      >
+        ✕
+        <span className="visually-hidden">Close</span>
+      </button>
+      
+      <button
+        onClick={(e) => { e.stopPropagation(); onPrev(); }}
+        onKeyDown={(e) => {
+          if (e.key === 'Enter' || e.key === ' ') {
+            e.preventDefault();
+            onPrev();
+          }
+        }}
+        style={{
+          position: 'absolute',
+          left: '20px',
+          background: 'rgba(255,255,255,0.2)',
+          border: 'none',
+          borderRadius: '50%',
+          width: '50px',
+          height: '50px',
+          fontSize: '1.5rem',
+          cursor: 'pointer',
+          color: 'white',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          transition: 'all 0.3s ease',
+          minWidth: '44px',
+          minHeight: '44px'
+        }}
+        onMouseEnter={(e) => e.target.style.backgroundColor = 'rgba(255,255,255,0.3)'}
+        onMouseLeave={(e) => e.target.style.backgroundColor = 'rgba(255,255,255,0.2)'}
+        aria-label="Previous image"
+      >
+        ‹
+        <span className="visually-hidden">Previous</span>
+      </button>
+      
+      <button
+        onClick={(e) => { e.stopPropagation(); onNext(); }}
+        onKeyDown={(e) => {
+          if (e.key === 'Enter' || e.key === ' ') {
+            e.preventDefault();
+            onNext();
+          }
+        }}
+        style={{
+          position: 'absolute',
+          right: '20px',
+          background: 'rgba(255,255,255,0.2)',
+          border: 'none',
+          borderRadius: '50%',
+          width: '50px',
+          height: '50px',
+          fontSize: '1.5rem',
+          cursor: 'pointer',
+          color: 'white',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          transition: 'all 0.3s ease',
+          minWidth: '44px',
+          minHeight: '44px'
+        }}
+        onMouseEnter={(e) => e.target.style.backgroundColor = 'rgba(255,255,255,0.3)'}
+        onMouseLeave={(e) => e.target.style.backgroundColor = 'rgba(255,255,255,0.2)'}
+        aria-label="Next image"
+      >
+        ›
+        <span className="visually-hidden">Next</span>
+      </button>
+
+      <div
+        style={{
+          maxWidth: '90vw',
+          maxHeight: '90vh'
+        }}
+        onClick={(e) => e.stopPropagation()}
+      >
+        <img
+          src={selectedImage.src}
+          alt={selectedImage.alt}
+          style={{
+            maxWidth: '100%',
+            maxHeight: '90vh',
+            objectFit: 'contain',
+            borderRadius: '8px'
+          }}
+        />
+        <p style={{ 
+          color: 'white', 
+          textAlign: 'center', 
+          marginTop: '1rem',
+          fontSize: '0.9rem'
+        }}>
+          {selectedImage.alt}
+        </p>
+      </div>
+    </div>
+  );
+});
+
+LightboxModal.displayName = 'LightboxModal';
 
 function Gallery() {
   const [selectedImage, setSelectedImage] = useState(null);
@@ -165,7 +361,13 @@ function Gallery() {
   // Reset visible images when category changes
   useEffect(() => {
     setVisibleImages(8);
-  }, [activeCategory]);
+    // Announce category change to screen readers
+    const announcer = document.getElementById('gallery-announcer');
+    if (announcer) {
+      const categoryName = categories.find(c => c.id === activeCategory)?.name || activeCategory;
+      announcer.textContent = `Showing ${categoryName} photos`;
+    }
+  }, [activeCategory, categories]);
 
   const openLightbox = useCallback((image) => {
     setSelectedImage(image);
@@ -218,16 +420,19 @@ function Gallery() {
         />
       </Helmet>
 
-      {/* Page Title - Always Visible */}
-      <section style={{
-        background: 'linear-gradient(135deg, #132f66 0%, #0a1f4d 100%)',
-        color: 'white',
-        paddingTop: '120px',
-        paddingBottom: '40px',
-        textAlign: 'center'
-      }}>
+      {/* Page Title with proper heading hierarchy */}
+      <section 
+        style={{
+          background: 'linear-gradient(135deg, #132f66 0%, #0a1f4d 100%)',
+          color: 'white',
+          paddingTop: '120px',
+          paddingBottom: '40px',
+          textAlign: 'center'
+        }}
+        aria-labelledby="page-title"
+      >
         <Container>
-          <h1 style={{
+          <h1 id="page-title" style={{
             fontSize: 'clamp(2rem, 5vw, 2.5rem)',
             fontWeight: 'bold',
             marginBottom: '1rem',
@@ -247,32 +452,48 @@ function Gallery() {
       </section>
 
       {/* Gallery Section */}
-      <section className="py-5">
+      <section className="py-5" aria-labelledby="gallery-heading">
         <Container>
-          {/* Category Filter - Fits in one line */}
-          <div className="d-flex justify-content-center gap-2 mb-5" style={{ flexWrap: 'wrap' }}>
+          <h2 id="gallery-heading" className="visually-hidden">Photo Gallery</h2>
+          
+          {/* Screen reader announcer for category changes */}
+          <div id="gallery-announcer" className="visually-hidden" role="status" aria-live="polite"></div>
+
+          {/* Category Filter */}
+          <div 
+            className="d-flex justify-content-center gap-2 mb-5" 
+            style={{ flexWrap: 'wrap' }}
+            role="tablist"
+            aria-label="Photo categories"
+          >
             {categories.map(category => (
-              <FilterButton
-                key={category.id}
-                category={category}
-                isActive={activeCategory === category.id}
-                onClick={handleCategoryChange}
-              />
+              <div key={category.id} role="tab" style={{ display: 'inline-block' }}>
+                <FilterButton
+                  category={category}
+                  isActive={activeCategory === category.id}
+                  onClick={handleCategoryChange}
+                />
+              </div>
             ))}
           </div>
 
           {/* Photo Grid */}
-          <div style={{
-            display: 'grid',
-            gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))',
-            gap: '1.5rem'
-          }}>
+          <div
+            style={{
+              display: 'grid',
+              gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))',
+              gap: '1.5rem'
+            }}
+            role="list"
+            aria-label="Gallery images"
+          >
             {displayedImages.map((image, index) => (
-              <GalleryImage
-                key={image.id}
-                image={image}
-                onClick={openLightbox}
-              />
+              <div key={image.id} role="listitem">
+                <GalleryImage
+                  image={image}
+                  onClick={openLightbox}
+                />
+              </div>
             ))}
           </div>
 
@@ -281,6 +502,12 @@ function Gallery() {
             <div className="text-center mt-5">
               <button
                 onClick={handleLoadMore}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter' || e.key === ' ') {
+                    e.preventDefault();
+                    handleLoadMore();
+                  }
+                }}
                 disabled={loading}
                 style={{
                   backgroundColor: '#132f66',
@@ -292,7 +519,9 @@ function Gallery() {
                   fontSize: '1rem',
                   cursor: 'pointer',
                   transition: 'all 0.3s ease',
-                  opacity: loading ? 0.8 : 1
+                  opacity: loading ? 0.8 : 1,
+                  minHeight: '44px',
+                  minWidth: '44px'
                 }}
                 onMouseEnter={(e) => {
                   if (!loading) {
@@ -306,15 +535,17 @@ function Gallery() {
                   e.target.style.transform = 'translateY(0)';
                   e.target.style.boxShadow = 'none';
                 }}
+                aria-label="Load more photos"
               >
                 {loading ? (
                   <>
-                    <i className="fas fa-spinner fa-spin me-2"></i>
-                    Loading...
+                    <i className="fas fa-spinner fa-spin me-2" aria-hidden="true"></i>
+                    <span>Loading...</span>
+                    <span className="visually-hidden">Loading more photos</span>
                   </>
                 ) : (
                   <>
-                    <i className="fas fa-sync-alt me-2"></i>
+                    <i className="fas fa-sync-alt me-2" aria-hidden="true"></i>
                     Load More Photos
                   </>
                 )}
@@ -325,11 +556,11 @@ function Gallery() {
       </section>
 
       {/* Featured Video Section */}
-      <section className="py-5 bg-light-custom">
+      <section className="py-5 bg-light-custom" aria-labelledby="video-heading">
         <Container>
           <Row className="align-items-center g-4">
             <Col lg={6}>
-              <h2 style={{
+              <h2 id="video-heading" style={{
                 fontSize: 'clamp(1.5rem, 4vw, 2rem)',
                 fontWeight: 'bold',
                 color: '#132f66',
@@ -339,18 +570,21 @@ function Gallery() {
                 Watch our school video to see the vibrant life at Kitale Progressive School. 
                 From classroom activities to sports events and cultural celebrations.
               </p>
-              <div style={{ display: 'flex', gap: '2rem', flexWrap: 'wrap' }}>
-                <div>
-                  <span style={{ fontSize: '1.8rem', fontWeight: 'bold', color: '#cebd04' }}>20+</span>
+              <div style={{ display: 'flex', gap: '2rem', flexWrap: 'wrap' }} role="list" aria-label="School statistics">
+                <div role="listitem">
+                  <span style={{ fontSize: '1.8rem', fontWeight: 'bold', color: '#cebd04' }} aria-hidden="true">20+</span>
                   <span style={{ display: 'block', fontSize: '0.9rem', color: '#718096' }}>Years of Excellence</span>
+                  <span className="visually-hidden">20+ Years of Excellence</span>
                 </div>
-                <div>
-                  <span style={{ fontSize: '1.8rem', fontWeight: 'bold', color: '#cebd04' }}>500+</span>
+                <div role="listitem">
+                  <span style={{ fontSize: '1.8rem', fontWeight: 'bold', color: '#cebd04' }} aria-hidden="true">500+</span>
                   <span style={{ display: 'block', fontSize: '0.9rem', color: '#718096' }}>Happy Students</span>
+                  <span className="visually-hidden">500+ Happy Students</span>
                 </div>
-                <div>
-                  <span style={{ fontSize: '1.8rem', fontWeight: 'bold', color: '#cebd04' }}>50+</span>
+                <div role="listitem">
+                  <span style={{ fontSize: '1.8rem', fontWeight: 'bold', color: '#cebd04' }} aria-hidden="true">50+</span>
                   <span style={{ display: 'block', fontSize: '0.9rem', color: '#718096' }}>Expert Teachers</span>
+                  <span className="visually-hidden">50+ Expert Teachers</span>
                 </div>
               </div>
             </Col>
@@ -365,7 +599,7 @@ function Gallery() {
               }}>
                 <iframe
                   src="https://www.youtube.com/embed/your-video-id"
-                  title="School Life Video"
+                  title="School Life Video - Kitale Progressive School"
                   frameBorder="0"
                   allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
                   allowFullScreen
@@ -383,134 +617,52 @@ function Gallery() {
         </Container>
       </section>
 
-      {/* Lightbox Modal */}
-      {selectedImage && (
-        <div
-          style={{
-            position: 'fixed',
-            top: 0,
-            left: 0,
-            right: 0,
-            bottom: 0,
-            backgroundColor: 'rgba(0,0,0,0.95)',
-            zIndex: 100000,
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            padding: '2rem'
-          }}
-          onClick={closeLightbox}
-        >
-          <button
-            onClick={closeLightbox}
-            style={{
-              position: 'absolute',
-              top: '20px',
-              right: '20px',
-              background: 'white',
-              border: 'none',
-              borderRadius: '50%',
-              width: '40px',
-              height: '40px',
-              fontSize: '1.2rem',
-              cursor: 'pointer',
-              zIndex: 100001,
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center'
-            }}
-          >
-            ✕
-          </button>
-          
-          <button
-            onClick={(e) => { e.stopPropagation(); handlePrevImage(); }}
-            style={{
-              position: 'absolute',
-              left: '20px',
-              background: 'rgba(255,255,255,0.2)',
-              border: 'none',
-              borderRadius: '50%',
-              width: '50px',
-              height: '50px',
-              fontSize: '1.5rem',
-              cursor: 'pointer',
-              color: 'white',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              transition: 'all 0.3s ease'
-            }}
-            onMouseEnter={(e) => e.target.style.backgroundColor = 'rgba(255,255,255,0.3)'}
-            onMouseLeave={(e) => e.target.style.backgroundColor = 'rgba(255,255,255,0.2)'}
-          >
-            ‹
-          </button>
-          
-          <button
-            onClick={(e) => { e.stopPropagation(); handleNextImage(); }}
-            style={{
-              position: 'absolute',
-              right: '20px',
-              background: 'rgba(255,255,255,0.2)',
-              border: 'none',
-              borderRadius: '50%',
-              width: '50px',
-              height: '50px',
-              fontSize: '1.5rem',
-              cursor: 'pointer',
-              color: 'white',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              transition: 'all 0.3s ease'
-            }}
-            onMouseEnter={(e) => e.target.style.backgroundColor = 'rgba(255,255,255,0.3)'}
-            onMouseLeave={(e) => e.target.style.backgroundColor = 'rgba(255,255,255,0.2)'}
-          >
-            ›
-          </button>
-
-          <div
-            style={{
-              maxWidth: '90vw',
-              maxHeight: '90vh'
-            }}
-            onClick={(e) => e.stopPropagation()}
-          >
-            <img
-              src={selectedImage.src}
-              alt={selectedImage.alt}
-              style={{
-                maxWidth: '100%',
-                maxHeight: '90vh',
-                objectFit: 'contain',
-                borderRadius: '8px'
-              }}
-            />
-          </div>
-        </div>
-      )}
+      {/* Lightbox Modal with accessibility */}
+      <LightboxModal
+        selectedImage={selectedImage}
+        onClose={closeLightbox}
+        onPrev={handlePrevImage}
+        onNext={handleNextImage}
+      />
 
       <Suspense fallback={null}>
         <GetInTouch />
       </Suspense>
 
-      {/* Critical CSS inline */}
+      {/* Critical CSS inline with accessibility improvements */}
       <style dangerouslySetInnerHTML={{ __html: `
         @keyframes shimmer {
           0% { background-position: -200% 0; }
           100% { background-position: 200% 0; }
         }
+        .visually-hidden {
+          position: absolute;
+          width: 1px;
+          height: 1px;
+          padding: 0;
+          margin: -1px;
+          overflow: hidden;
+          clip: rect(0, 0, 0, 0);
+          border: 0;
+        }
         .cursor-pointer { cursor: pointer; }
         .gallery-item {
           transition: transform 0.3s ease;
         }
-        .gallery-item:hover {
+        .gallery-item:hover,
+        .gallery-item:focus-visible {
           transform: scale(1.03);
+          outline: 3px solid #cebd04;
+          outline-offset: 2px;
         }
-        .gallery-item:hover img {
+        .gallery-item:hover img,
+        .gallery-item:focus-visible img {
           transform: scale(1.1);
+        }
+        button:focus-visible,
+        [role="button"]:focus-visible {
+          outline: 3px solid #cebd04;
+          outline-offset: 2px;
         }
         @media (max-width: 768px) {
           .gallery-filter {

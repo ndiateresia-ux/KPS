@@ -128,10 +128,28 @@
   text-align: left;
   white-space: nowrap;
   max-width: 100%; /* Ensure full width */
+  min-height: 44px; /* Accessibility: touch target size */
+  min-width: 44px; /* Accessibility: touch target size */
 }
 
 .footer-link-btn:hover {
   color: var(--gold);
+}
+
+/* Footer Contact Links */
+.footer-contact-link {
+  color: rgba(255, 255, 255, 0.8);
+  text-decoration: none;
+  transition: color 0.2s ease;
+  display: inline-block;
+  min-height: 44px; /* Accessibility: touch target size */
+  min-width: 44px; /* Accessibility: touch target size */
+  padding: 0.25rem 0;
+}
+
+.footer-contact-link:hover {
+  color: var(--gold);
+  text-decoration: underline;
 }
 
 /* Social Icons - Optimized */
@@ -156,6 +174,10 @@
   text-decoration: none;
   flex-shrink: 0;
   will-change: background-color;
+  min-height: 44px; /* Accessibility: touch target size */
+  min-width: 44px; /* Accessibility: touch target size */
+  width: 44px; /* Override for accessibility */
+  height: 44px; /* Override for accessibility */
 }
 
 .social-icon:hover {
@@ -187,9 +209,11 @@
   font-size: 0.75rem;
   transition: color 0.2s ease;
   cursor: pointer;
-  padding: 0;
+  padding: 0.5rem;
   font-family: inherit;
   display: inline-block;
+  min-height: 44px; /* Accessibility: touch target size */
+  min-width: 44px; /* Accessibility: touch target size */
 }
 
 .footer-legal-link:hover {
@@ -210,6 +234,56 @@
   gap: 0.25rem;
 }
 
+/* ===== ACCESSIBILITY ADDITIONS ===== */
+
+/* Focus indicators for all interactive elements */
+.footer-link-btn:focus-visible,
+.footer-contact-link:focus-visible,
+.social-icon:focus-visible,
+.footer-legal-link:focus-visible {
+  outline: 3px solid var(--gold) !important;
+  outline-offset: 2px !important;
+  border-radius: 4px;
+  color: var(--gold) !important;
+}
+
+/* Visually hidden class for screen readers */
+.visually-hidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  border: 0;
+}
+
+/* Map iframe accessibility */
+.footer-map iframe {
+  title: "Google Maps showing Kitale Progressive School location";
+}
+
+/* Hover states with proper contrast */
+.footer-link-btn:hover,
+.footer-contact-link:hover,
+.footer-legal-link:hover {
+  color: var(--gold);
+  text-decoration: underline;
+}
+
+/* Ensure sufficient color contrast */
+.footer-content p,
+.footer-link-btn,
+.footer-contact-link {
+  color: rgba(255, 255, 255, 0.9); /* Slightly increased contrast */
+}
+
+.footer-rights p,
+.footer-legal-link {
+  color: rgba(255, 255, 255, 0.7); /* Slightly increased contrast */
+}
+
 /* Responsive Design - Optimized */
 @media (max-width: 1200px) {
   .footer-map {
@@ -224,6 +298,15 @@
   .footer-content [class*="col-"] {
     flex: 0 0 33.333%; /* 3 columns on medium-large screens */
     max-width: 33.333%;
+  }
+  
+  /* Adjust touch targets for tablet */
+  .footer-link-btn,
+  .footer-contact-link,
+  .social-icon,
+  .footer-legal-link {
+    min-height: 40px;
+    min-width: 40px;
   }
 }
 
@@ -248,6 +331,15 @@
   
   .footer-content p {
     white-space: normal; /* Ensure wrapping */
+  }
+  
+  /* Maintain touch targets on tablet */
+  .footer-link-btn,
+  .footer-contact-link,
+  .social-icon,
+  .footer-legal-link {
+    min-height: 44px;
+    min-width: 44px;
   }
 }
 
@@ -288,10 +380,17 @@
   .footer-link-btn {
     text-align: left;
     white-space: normal;
+    min-height: 44px; /* Ensure touch targets remain */
+    min-width: 44px;
   }
   
   .social-icons {
     justify-content: flex-start; /* Keep left alignment */
+  }
+  
+  .social-icon {
+    width: 44px; /* Maintain touch target size */
+    height: 44px;
   }
   
   .footer-legal-text {
@@ -302,6 +401,12 @@
   .separator {
     display: none;
   }
+  
+  .footer-legal-link {
+    min-height: 44px;
+    min-width: 44px;
+    padding: 0.5rem 1rem;
+  }
 }
 
 @media (max-width: 576px) {
@@ -310,8 +415,10 @@
   }
   
   .social-icon {
-    width: 28px;
-    height: 28px;
+    width: 42px; /* Slightly smaller but still accessible */
+    height: 42px;
+    min-height: 42px;
+    min-width: 42px;
     font-size: 0.9rem;
   }
   
@@ -326,6 +433,31 @@
   
   .footer-legal-link {
     font-size: 0.7rem;
+    min-height: 42px;
+    min-width: 42px;
+  }
+  
+  .footer-link-btn,
+  .footer-contact-link {
+    min-height: 42px;
+    min-width: 42px;
+  }
+}
+
+/* Very small screens */
+@media (max-width: 375px) {
+  .social-icon {
+    width: 40px;
+    height: 40px;
+    min-height: 40px;
+    min-width: 40px;
+  }
+  
+  .footer-link-btn,
+  .footer-contact-link,
+  .footer-legal-link {
+    min-height: 40px;
+    min-width: 40px;
   }
 }
 
@@ -333,15 +465,66 @@
 @media (prefers-reduced-motion: reduce) {
   .footer-link-btn,
   .social-icon,
-  .footer-legal-link {
+  .footer-legal-link,
+  .footer-contact-link {
     transition: none;
   }
   
-  .footer-link-btn:hover {
+  .footer-link-btn:hover,
+  .social-icon:hover,
+  .footer-legal-link:hover,
+  .footer-contact-link:hover {
     transform: none;
   }
   
-  .social-icon:hover {
-    transform: none;
+  /* Focus indicators remain visible but without transition */
+  .footer-link-btn:focus-visible,
+  .footer-contact-link:focus-visible,
+  .social-icon:focus-visible,
+  .footer-legal-link:focus-visible {
+    transition: none;
+  }
+}
+
+/* High contrast mode support */
+@media (prefers-contrast: high) {
+  .footer-link-btn:focus-visible,
+  .footer-contact-link:focus-visible,
+  .social-icon:focus-visible,
+  .footer-legal-link:focus-visible {
+    outline: 3px solid white !important;
+  }
+  
+  .footer-title {
+    color: white;
+  }
+  
+  .footer-title::after {
+    background-color: white;
+  }
+}
+
+/* Ensure keyboard focus is visible */
+.js-focus-visible :focus:not(.focus-visible) {
+  outline: none;
+}
+
+/* Print styles */
+@media print {
+  .footer-map {
+    display: none;
+  }
+  
+  .footer {
+    background: white;
+    color: black;
+  }
+  
+  .footer-title {
+    color: black;
+  }
+  
+  .footer-title::after {
+    background-color: black;
   }
 }

@@ -18,7 +18,7 @@ const loadAutoTable = async () => {
   return jsPDF;
 };
 
-// Memoized form input component
+// Memoized form input component with enhanced accessibility
 const FormInput = memo(({ 
   label, 
   type = "text", 
@@ -30,14 +30,19 @@ const FormInput = memo(({
   feedback,
   as,
   options,
-  className = "form-control-custom"
+  className = "form-control-custom",
+  describedBy,
+  autoComplete
 }) => {
   const id = `input-${name}`;
+  const errorId = `${id}-error`;
+  const descriptionId = describedBy || (required ? errorId : undefined);
   
   return (
     <Form.Group controlId={id} className="mb-3">
       <Form.Label className="fw-bold small">
-        {label} {required && <span className="text-danger">*</span>}
+        {label} {required && <span className="text-danger" aria-hidden="true">*</span>}
+        {required && <span className="visually-hidden"> (required)</span>}
       </Form.Label>
       {as === 'select' ? (
         <Form.Select 
@@ -46,6 +51,9 @@ const FormInput = memo(({
           value={value}
           onChange={onChange}
           className={className}
+          aria-invalid={required && !value ? "true" : "false"}
+          aria-describedby={descriptionId}
+          autoComplete={autoComplete}
         >
           <option value="">Select</option>
           {options?.map(opt => (
@@ -63,10 +71,13 @@ const FormInput = memo(({
           placeholder={placeholder}
           className={className}
           rows={as === 'textarea' ? 3 : undefined}
+          aria-invalid={required && !value ? "true" : "false"}
+          aria-describedby={descriptionId}
+          autoComplete={autoComplete}
         />
       )}
       {required && (
-        <Form.Control.Feedback type="invalid">
+        <Form.Control.Feedback type="invalid" id={errorId} role="alert">
           {feedback || `Please enter ${label.toLowerCase()}`}
         </Form.Control.Feedback>
       )}
@@ -76,38 +87,50 @@ const FormInput = memo(({
 
 FormInput.displayName = 'FormInput';
 
-// Memoized phone input component
-const PhoneInputField = memo(({ phone, onChange, error, validated }) => (
-  <Form.Group controlId="phone" className="mb-3">
-    <Form.Label className="fw-bold small">
-      Phone Number <span className="text-danger">*</span>
-    </Form.Label>
-    <PhoneInput
-      international
-      defaultCountry="KE"
-      value={phone}
-      onChange={onChange}
-      placeholder="712345678"
-      className={`form-control-custom-phone ${validated && (!phone || error) ? 'is-invalid' : ''}`}
-      limitMaxLength={true}
-    />
-    {validated && !phone && (
-      <Form.Control.Feedback type="invalid" style={{ display: 'block' }}>
-        Phone number is required.
-      </Form.Control.Feedback>
-    )}
-    {error && (
-      <Form.Text className="text-danger small">{error}</Form.Text>
-    )}
-    <Form.Text className="text-muted small d-block">
-      Enter 9 digits after country code
-    </Form.Text>
-  </Form.Group>
-));
+// Enhanced phone input component
+const PhoneInputField = memo(({ phone, onChange, error, validated }) => {
+  const id = "phone";
+  const errorId = `${id}-error`;
+  const helpId = `${id}-help`;
+  
+  return (
+    <Form.Group controlId={id} className="mb-3">
+      <Form.Label className="fw-bold small">
+        Phone Number <span className="text-danger" aria-hidden="true">*</span>
+        <span className="visually-hidden"> (required)</span>
+      </Form.Label>
+      <PhoneInput
+        international
+        defaultCountry="KE"
+        value={phone}
+        onChange={onChange}
+        placeholder="712345678"
+        className={`form-control-custom-phone ${validated && (!phone || error) ? 'is-invalid' : ''}`}
+        limitMaxLength={true}
+        aria-invalid={validated && (!phone || error) ? "true" : "false"}
+        aria-describedby={`${errorId} ${helpId}`}
+        aria-required="true"
+      />
+      {validated && !phone && (
+        <Form.Control.Feedback type="invalid" id={errorId} style={{ display: 'block' }} role="alert">
+          Phone number is required.
+        </Form.Control.Feedback>
+      )}
+      {error && (
+        <Form.Control.Feedback type="invalid" id={errorId} style={{ display: 'block' }} role="alert">
+          {error}
+        </Form.Control.Feedback>
+      )}
+      <Form.Text id={helpId} className="text-muted small d-block">
+        Enter 9 digits after country code (e.g., 712345678)
+      </Form.Text>
+    </Form.Group>
+  );
+});
 
 PhoneInputField.displayName = 'PhoneInputField';
 
-// Memoized status alert
+// Enhanced status alert
 const StatusAlert = memo(({ show, success, message, onClose }) => {
   if (!show) return null;
   
@@ -117,9 +140,11 @@ const StatusAlert = memo(({ show, success, message, onClose }) => {
       dismissible 
       onClose={onClose}
       className="mb-4 fade-in"
+      role="alert"
+      aria-live="polite"
     >
       <div className="d-flex">
-        <i className={`fas ${success ? 'fa-check-circle' : 'fa-exclamation-circle'} me-3 mt-1`}></i>
+        <i className={`fas ${success ? 'fa-check-circle' : 'fa-exclamation-circle'} me-3 mt-1`} aria-hidden="true"></i>
         <div>{message}</div>
       </div>
     </Alert>
@@ -597,20 +622,24 @@ function Apply() {
         />
       </Helmet>
       
-      {/* Page Title */}
-      <section className="page-title-section" style={{ 
-        background: 'linear-gradient(135deg, #132f66 0%, #0a1f4d 100%)',
-        paddingTop: '120px',
-        paddingBottom: '60px',
-        color: 'white',
-        textAlign: 'center',
-        width: '100%',
-        minHeight: '200px',
-        display: 'flex',
-        alignItems: 'center'
-      }}>
+      {/* Page Title with proper heading hierarchy */}
+      <section 
+        className="page-title-section" 
+        style={{ 
+          background: 'linear-gradient(135deg, #132f66 0%, #0a1f4d 100%)',
+          paddingTop: '120px',
+          paddingBottom: '60px',
+          color: 'white',
+          textAlign: 'center',
+          width: '100%',
+          minHeight: '200px',
+          display: 'flex',
+          alignItems: 'center'
+        }}
+        aria-labelledby="page-title"
+      >
         <Container>
-          <h1 className="display-5 fw-bold mb-3" style={{ color: 'white' }}>
+          <h1 id="page-title" className="display-5 fw-bold mb-3" style={{ color: 'white' }}>
             Application Form
           </h1>
           <p className="lead mb-0" style={{ 
@@ -624,7 +653,10 @@ function Apply() {
         </Container>
       </section>
 
-      <section className="apply-section section-padding bg-light-custom">
+      <section 
+        className="apply-section section-padding bg-light-custom"
+        aria-label="Application form section"
+      >
         <Container>
           <Row className="justify-content-center">
             <Col lg={10}>
@@ -639,10 +671,15 @@ function Apply() {
                 <Card.Body className="p-4 p-lg-5">
                   <h2 className="section-heading h4 mb-4">Application Form</h2>
                   
-                  <Form noValidate validated={validated} onSubmit={handleSubmit}>
+                  <Form 
+                    noValidate 
+                    validated={validated} 
+                    onSubmit={handleSubmit}
+                    aria-label="Admission application form"
+                  >
                     
-                    {/* Parent Info */}
-                    <h4 className="text-navy fw-bold h5 mb-3 pb-2 border-bottom">Parent/Guardian Information</h4>
+                    {/* Parent Info - h2 becomes h3 for proper nesting */}
+                    <h3 className="text-navy fw-bold h5 mb-3 pb-2 border-bottom">Parent/Guardian Information</h3>
                     
                     <Row className="g-3">
                       <Col md={6}>
@@ -654,6 +691,7 @@ function Apply() {
                           placeholder="James Vincent"
                           required
                           feedback="Please enter parent/guardian name"
+                          autoComplete="name"
                         />
                       </Col>
                       <Col md={6}>
@@ -666,6 +704,7 @@ function Apply() {
                           placeholder="example@email.com"
                           required
                           feedback="Please enter a valid email"
+                          autoComplete="email"
                         />
                       </Col>
                     </Row>
@@ -688,10 +727,16 @@ function Apply() {
                           onChange={handleChange}
                           required
                           options={[
-                            "Father", "Mother", "Brother", "Sister", 
-                            "Guardian", "Grandparent", "Other"
-                          ].map(v => ({ value: v, label: v }))}
+                            { value: "Father", label: "Father" },
+                            { value: "Mother", label: "Mother" },
+                            { value: "Brother", label: "Brother" },
+                            { value: "Sister", label: "Sister" },
+                            { value: "Guardian", label: "Guardian" },
+                            { value: "Grandparent", label: "Grandparent" },
+                            { value: "Other", label: "Other" }
+                          ]}
                           feedback="Please select relationship"
+                          autoComplete="off"
                         />
                       </Col>
                     </Row>
@@ -704,12 +749,13 @@ function Apply() {
                           value={formData.address}
                           onChange={handleChange}
                           placeholder="123 Street, Nairobi"
+                          autoComplete="street-address"
                         />
                       </Col>
                     </Row>
 
                     {/* Child Info */}
-                    <h4 className="text-navy fw-bold h5 mb-3 mt-4 pb-2 border-bottom">Child's Information</h4>
+                    <h3 className="text-navy fw-bold h5 mb-3 mt-4 pb-2 border-bottom">Child's Information</h3>
                     
                     <Row className="g-3">
                       <Col md={12}>
@@ -721,6 +767,7 @@ function Apply() {
                           placeholder="Prince Vincent"
                           required
                           feedback="Please enter child's name"
+                          autoComplete="off"
                         />
                       </Col>
                     </Row>
@@ -735,6 +782,7 @@ function Apply() {
                           onChange={handleChange}
                           required
                           feedback="Please enter date of birth"
+                          autoComplete="bday"
                         />
                       </Col>
                       <Col md={4}>
@@ -750,6 +798,7 @@ function Apply() {
                             { value: "Female", label: "Female" }
                           ]}
                           feedback="Please select gender"
+                          autoComplete="off"
                         />
                       </Col>
                       <Col md={4}>
@@ -760,9 +809,14 @@ function Apply() {
                           value={formData.nationality}
                           onChange={handleChange}
                           options={[
-                            "Kenyan", "Ugandan", "Tanzanian", 
-                            "Rwandan", "South Sudanese", "Other"
-                          ].map(v => ({ value: v, label: v }))}
+                            { value: "Kenyan", label: "Kenyan" },
+                            { value: "Ugandan", label: "Ugandan" },
+                            { value: "Tanzanian", label: "Tanzanian" },
+                            { value: "Rwandan", label: "Rwandan" },
+                            { value: "South Sudanese", label: "South Sudanese" },
+                            { value: "Other", label: "Other" }
+                          ]}
+                          autoComplete="country"
                         />
                       </Col>
                     </Row>
@@ -776,6 +830,7 @@ function Apply() {
                             value={formData.otherNationality}
                             onChange={handleChange}
                             placeholder="Enter nationality"
+                            autoComplete="off"
                           />
                         </Col>
                       </Row>
@@ -789,6 +844,7 @@ function Apply() {
                           value={formData.previousSchool}
                           onChange={handleChange}
                           placeholder="Enter previous school"
+                          autoComplete="off"
                         />
                       </Col>
                       <Col md={6}>
@@ -801,6 +857,7 @@ function Apply() {
                           required
                           options={gradeOptions}
                           feedback="Please select grade"
+                          autoComplete="off"
                         />
                       </Col>
                     </Row>
@@ -817,20 +874,27 @@ function Apply() {
                             required
                             options={stayStatusOptions}
                             feedback="Please select stay status"
+                            autoComplete="off"
                           />
                         </Col>
                       </Row>
                     )}
 
                     {/* Medical Info */}
-                    <h4 className="text-navy fw-bold h5 mb-3 mt-4 pb-2 border-bottom">Medical Information</h4>
+                    <h3 className="text-navy fw-bold h5 mb-3 mt-4 pb-2 border-bottom">Medical Information</h3>
                     
                     <Row className="mb-3">
                       <Col md={12}>
                         <Form.Check 
                           type="checkbox" 
                           name="hasAllergies" 
-                          label="Does the child have any allergies?" 
+                          id="hasAllergies"
+                          label={
+                            <span>
+                              Does the child have any allergies?
+                              <span className="visually-hidden"> (Check if yes)</span>
+                            </span>
+                          } 
                           checked={formData.hasAllergies} 
                           onChange={handleChange}
                           className="mb-2"
@@ -846,6 +910,7 @@ function Apply() {
                           value={formData.medicalConditions}
                           onChange={handleChange}
                           placeholder="E.g., Asthma, Diabetes"
+                          autoComplete="off"
                         />
                       </Col>
                     </Row>
@@ -857,6 +922,7 @@ function Apply() {
                           required 
                           type="checkbox" 
                           name="agreeToTerms" 
+                          id="agreeToTerms"
                           checked={formData.agreeToTerms} 
                           onChange={handleChange}
                           label={
@@ -868,6 +934,7 @@ function Apply() {
                               <Link to="/privacy-policy" target="_blank" className="text-navy">
                                 Privacy Policy
                               </Link>
+                              <span className="visually-hidden"> (required)</span>
                             </span>
                           }
                           feedback="You must agree to the Terms and Privacy Policy"
@@ -882,11 +949,13 @@ function Apply() {
                           className="btn-navy px-4 py-2"
                           disabled={submitting}
                           style={{ minWidth: '200px' }}
+                          aria-label={submitting ? "Submitting application" : "Submit application"}
                         >
                           {submitting ? (
                             <>
-                              <span className="spinner-border spinner-border-sm me-2" role="status"></span>
-                              Submitting...
+                              <span className="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>
+                              <span>Submitting...</span>
+                              <span className="visually-hidden">Please wait while we submit your application</span>
                             </>
                           ) : (
                             'Submit Application'
@@ -898,7 +967,7 @@ function Apply() {
                     <Row className="mt-3">
                       <Col md={12}>
                         <p className="text-muted small text-center mb-0">
-                          <i className="fas fa-lock me-1"></i>
+                          <i className="fas fa-lock me-1" aria-hidden="true"></i>
                           You'll sign in with Google to verify your identity
                         </p>
                       </Col>
@@ -915,7 +984,7 @@ function Apply() {
         <GetInTouch />
       </Suspense>
 
-      {/* Critical CSS inline */}
+      {/* Critical CSS inline with accessibility improvements */}
       <style dangerouslySetInnerHTML={{ __html: `
         .bg-gradient-navy {
           background: linear-gradient(135deg, #132f66 0%, #0a1f4d 100%);
@@ -934,6 +1003,7 @@ function Apply() {
         .form-control-custom:focus, .form-control-custom-phone:focus {
           border-color: #132f66;
           box-shadow: 0 0 0 0.2rem rgba(19,47,102,0.25);
+          outline: 2px solid transparent;
         }
         .btn-navy {
           background-color: #132f66;
@@ -942,11 +1012,17 @@ function Apply() {
           border-radius: 40px;
           font-weight: 600;
           transition: all 0.3s ease;
+          min-height: 44px; /* Touch target size */
+          min-width: 44px;
         }
         .btn-navy:hover:not(:disabled) {
           background-color: #0a1f4d;
           transform: translateY(-2px);
           box-shadow: 0 4px 12px rgba(19,47,102,0.3);
+        }
+        .btn-navy:focus-visible {
+          outline: 3px solid #cebd04;
+          outline-offset: 2px;
         }
         .fade-in { animation: fadeIn 0.3s ease; }
         @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
@@ -962,6 +1038,16 @@ function Apply() {
         }
         @keyframes spinner-border {
           to { transform: rotate(360deg); }
+        }
+        .visually-hidden {
+          position: absolute;
+          width: 1px;
+          height: 1px;
+          padding: 0;
+          margin: -1px;
+          overflow: hidden;
+          clip: rect(0, 0, 0, 0);
+          border: 0;
         }
         @media (prefers-reduced-motion: reduce) {
           * { animation-duration: 0.01ms !important; transition-duration: 0.01ms !important; }

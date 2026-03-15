@@ -18,6 +18,9 @@ function Contact() {
             behavior: 'smooth',
             block: 'start'
           });
+          // Set focus to contact section for keyboard users
+          contactSection.setAttribute('tabindex', '-1');
+          contactSection.focus({ preventScroll: true });
         }
       }, 100);
     });
@@ -55,31 +58,55 @@ function Contact() {
         </script>
       </Helmet>
       
-      {/* Minimal loading state while redirecting - optimized for CLS */}
-      <div style={{ 
-        minHeight: '100vh',
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'center',
-        background: 'linear-gradient(135deg, #132f66 0%, #0a1f4d 100%)'
-      }}>
+      {/* Loading state with accessibility improvements */}
+      <div 
+        style={{ 
+          minHeight: '100vh',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          background: 'linear-gradient(135deg, #132f66 0%, #0a1f4d 100%)'
+        }}
+        role="status"
+        aria-live="polite"
+        aria-label="Redirecting to contact section"
+      >
         <div style={{ textAlign: 'center', color: 'white' }}>
-          <div style={{
-            width: '40px',
-            height: '40px',
-            margin: '0 auto 16px',
-            border: '3px solid rgba(255,255,255,0.3)',
-            borderTopColor: '#cebd04',
-            borderRadius: '50%',
-            animation: 'spin 0.8s linear infinite'
-          }} />
-          <p style={{ fontSize: '1rem', opacity: 0.9 }}>Redirecting to contact section...</p>
+          <div 
+            style={{
+              width: '40px',
+              height: '40px',
+              margin: '0 auto 16px',
+              border: '3px solid rgba(255,255,255,0.3)',
+              borderTopColor: '#cebd04',
+              borderRadius: '50%',
+              animation: 'spin 0.8s linear infinite'
+            }}
+            aria-hidden="true"
+          />
+          <p style={{ fontSize: '1rem', opacity: 0.9 }}>
+            Redirecting to contact section...
+          </p>
+          {/* Visually hidden announcement for screen readers */}
+          <span className="visually-hidden">
+            Please wait while we redirect you to the contact section
+          </span>
         </div>
       </div>
 
       <style>{`
         @keyframes spin {
           to { transform: rotate(360deg); }
+        }
+        .visually-hidden {
+          position: absolute;
+          width: 1px;
+          height: 1px;
+          padding: 0;
+          margin: -1px;
+          overflow: hidden;
+          clip: rect(0, 0, 0, 0);
+          border: 0;
         }
         @media (prefers-reduced-motion: reduce) {
           div { animation: none; }

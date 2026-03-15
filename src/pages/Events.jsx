@@ -5,19 +5,25 @@ import { useState, useEffect, useMemo, useCallback, lazy, Suspense, memo } from 
 // Lazy load non-critical components
 const GetInTouch = lazy(() => import("../components/GetInTouch"));
 
-// Memoized event card component
-const EventCard = memo(({ event, categories, isHovered, onHover, onLeave }) => {
+// Memoized event card component with enhanced accessibility
+const EventCard = memo(({ event, categories, isHovered, onHover, onLeave, index }) => {
   const eventDate = new Date(event.date);
   const day = eventDate.getDate().toString().padStart(2, '0');
   const month = eventDate.toLocaleString('default', { month: 'short' }).toUpperCase();
+  const eventId = `event-${event.id || index}`;
   
   return (
     <div 
-      id={`event-${day}`}
+      id={eventId}
       className={`event-item ${isHovered ? 'hovered' : ''}`}
       onMouseEnter={() => onHover(event.id)}
       onMouseLeave={onLeave}
+      onFocus={() => onHover(event.id)}
+      onBlur={onLeave}
       style={{ borderLeftColor: event.color }}
+      role="article"
+      aria-labelledby={`${eventId}-title`}
+      tabIndex={0}
     >
       <div className="event-date" style={{ 
         background: `linear-gradient(135deg, ${event.color} 0%, ${event.color}dd 100%)`,
@@ -29,26 +35,29 @@ const EventCard = memo(({ event, categories, isHovered, onHover, onLeave }) => {
         alignItems: 'center',
         justifyContent: 'center',
         color: 'white'
-      }}>
+      }} aria-hidden="true">
         <span className="day fw-bold" style={{ fontSize: '1.5rem', lineHeight: 1 }}>{day}</span>
         <span className="month small" style={{ fontSize: '0.8rem', opacity: 0.9 }}>{month}</span>
       </div>
       <div className="event-info" style={{ flex: 1, minWidth: 0 }}>
-        <h3 className="h6 fw-bold mb-1" style={{ color: '#132f66' }}>{event.title}</h3>
+        <h3 id={`${eventId}-title`} className="h6 fw-bold mb-1" style={{ color: '#132f66' }}>{event.title}</h3>
         <div className="event-meta small d-flex flex-wrap gap-2 mb-1">
           <span className="text-muted">
-            <i className="far fa-clock me-1" aria-hidden="true"></i> {event.time}
+            <i className="far fa-clock me-1" aria-hidden="true"></i> 
+            <span className="visually-hidden">Time:</span> {event.time}
           </span>
           <span className="event-category-badge small px-2 py-1" style={{ 
             backgroundColor: `${event.color}20`, 
             color: event.color,
             borderRadius: '20px'
           }}>
-            {categories.find(c => c.id === event.category)?.icon} {event.category}
+            <span aria-hidden="true">{categories.find(c => c.id === event.category)?.icon}</span> 
+            <span className="visually-hidden">Category:</span> {event.category}
           </span>
           {event.location && event.location !== "TBD" && (
             <span className="text-muted">
-              <i className="fas fa-map-marker-alt me-1" aria-hidden="true"></i> {event.location}
+              <i className="fas fa-map-marker-alt me-1" aria-hidden="true"></i>
+              <span className="visually-hidden">Location:</span> {event.location}
             </span>
           )}
         </div>
@@ -62,11 +71,22 @@ const EventCard = memo(({ event, categories, isHovered, onHover, onLeave }) => {
 
 EventCard.displayName = 'EventCard';
 
-// Memoized calendar day component
-const CalendarDay = memo(({ day, onClick, categories, selectedCategory }) => (
+// Memoized calendar day component with enhanced accessibility
+const CalendarDay = memo(({ day, onClick, categories, selectedCategory, index }) => (
   <div 
     className={`cal-day ${day.dayNumber ? 'active' : ''} ${day.hasEvent ? 'has-event' : ''} ${day.isToday ? 'today' : ''} ${day.isSelected ? 'selected' : ''}`}
     onClick={() => day.dayNumber && onClick(day.dayNumber)}
+    onKeyDown={(e) => {
+      if (day.dayNumber && (e.key === 'Enter' || e.key === ' ')) {
+        e.preventDefault();
+        onClick(day.dayNumber);
+      }
+    }}
+    role={day.dayNumber ? "button" : "presentation"}
+    tabIndex={day.dayNumber ? 0 : -1}
+    aria-label={day.dayNumber ? 
+      `${day.dayNumber} ${months[selectedMonth]} ${selectedYear}${day.hasEvent ? `, ${day.events.length} events` : ''}${day.isToday ? ', today' : ''}${day.isSelected ? ', selected' : ''}` 
+      : undefined}
     style={{
       aspectRatio: '1',
       display: 'flex',
@@ -81,6 +101,7 @@ const CalendarDay = memo(({ day, onClick, categories, selectedCategory }) => (
       color: day.isSelected ? 'white' : 'inherit'
     }}
     title={day.hasEvent ? `${day.events.length} event(s)` : ""}
+    aria-current={day.isToday ? "date" : undefined}
   >
     {day.dayNumber}
     {day.hasEvent && !day.isSelected && (
@@ -93,18 +114,20 @@ const CalendarDay = memo(({ day, onClick, categories, selectedCategory }) => (
         height: '4px',
         borderRadius: '50%',
         backgroundColor: categories.find(c => c.id === selectedCategory)?.color || '#4299e1'
-      }}></span>
+      }} aria-hidden="true"></span>
     )}
   </div>
 ));
 
 CalendarDay.displayName = 'CalendarDay';
 
-// Memoized category button
+// Memoized category button with enhanced accessibility
 const CategoryButton = memo(({ category, isActive, onClick }) => (
   <button
     className={isActive ? 'active' : ''}
     onClick={() => onClick(category.id)}
+    aria-pressed={isActive}
+    aria-label={`${category.name} events${isActive ? ', currently selected' : ''}`}
     style={{
       padding: '0.5rem 1rem',
       borderRadius: '40px',
@@ -117,11 +140,13 @@ const CategoryButton = memo(({ category, isActive, onClick }) => (
       transition: 'all 0.2s ease',
       display: 'inline-flex',
       alignItems: 'center',
-      gap: '0.5rem'
+      gap: '0.5rem',
+      minHeight: '44px',
+      minWidth: '44px'
     }}
   >
     <span aria-hidden="true">{category.icon}</span>
-    {category.name}
+    <span>{category.name}</span>
   </button>
 ));
 
@@ -143,6 +168,11 @@ function Events() {
 
   // Months
   const months = useMemo(() => [
+    "January", "February", "March", "April", "May", "June",
+    "July", "August", "September", "October", "November", "December"
+  ], []);
+
+  const monthAbbr = useMemo(() => [
     "Jan", "Feb", "Mar", "Apr", "May", "Jun",
     "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"
   ], []);
@@ -377,6 +407,9 @@ function Events() {
     const eventElement = document.getElementById(`event-${dayNumber}`);
     if (eventElement) {
       eventElement.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      // Set focus to the event for keyboard users
+      eventElement.setAttribute('tabindex', '-1');
+      eventElement.focus({ preventScroll: true });
     }
   }, []);
 
@@ -429,16 +462,19 @@ function Events() {
         />
       </Helmet>
 
-      {/* Page Header */}
-      <section style={{ 
-        background: 'linear-gradient(135deg, #132f66 0%, #0a1f4d 100%)',
-        color: 'white',
-        paddingTop: '120px',
-        paddingBottom: '40px',
-        textAlign: 'center'
-      }}>
+      {/* Page Header with proper heading hierarchy */}
+      <section 
+        style={{ 
+          background: 'linear-gradient(135deg, #132f66 0%, #0a1f4d 100%)',
+          color: 'white',
+          paddingTop: '120px',
+          paddingBottom: '40px',
+          textAlign: 'center'
+        }}
+        aria-labelledby="page-title"
+      >
         <Container>
-          <h1 style={{ 
+          <h1 id="page-title" style={{ 
             fontSize: 'clamp(2rem, 5vw, 2.5rem)',
             fontWeight: 'bold',
             marginBottom: '0.5rem',
@@ -458,13 +494,15 @@ function Events() {
       </section>
 
       {/* Main Events Section */}
-      <section className="py-4 py-lg-5">
+      <section className="py-4 py-lg-5" aria-labelledby="events-heading">
         <Container>
+          <h2 id="events-heading" className="visually-hidden">Upcoming Events</h2>
+
           {/* API Error Alert */}
           {apiError && (
             <Row className="mb-3">
               <Col lg={8} className="mx-auto">
-                <Alert variant="warning" className="text-center small py-2">
+                <Alert variant="warning" className="text-center small py-2" role="alert">
                   <i className="fas fa-exclamation-triangle me-2" aria-hidden="true"></i>
                   Using sample events. Unable to connect to calendar.
                 </Alert>
@@ -473,7 +511,7 @@ function Events() {
           )}
 
           {/* Category Selector */}
-          <div className="d-flex flex-wrap justify-content-center gap-2 mb-4">
+          <div className="d-flex flex-wrap justify-content-center gap-2 mb-4" role="group" aria-label="Event categories">
             {categories.map(category => (
               <CategoryButton
                 key={category.id}
@@ -491,7 +529,7 @@ function Events() {
               <div className="upcoming-header d-flex justify-content-between align-items-center mb-3">
                 <h2 className="h5 fw-bold mb-0" style={{ color: '#132f66' }}>
                   {selectedCategory === 'all' ? 'All Events' : `${categories.find(c => c.id === selectedCategory)?.name} Events`}
-                  <span className="ms-2 small text-muted">({months[selectedMonth]} {selectedYear})</span>
+                  <span className="ms-2 small text-muted">({monthAbbr[selectedMonth]} {selectedYear})</span>
                 </h2>
                 {CALENDAR_ID && (
                   <button 
@@ -506,8 +544,11 @@ function Events() {
                       padding: '0.25rem 1rem',
                       fontSize: '0.85rem',
                       background: 'transparent',
-                      color: '#132f66'
+                      color: '#132f66',
+                      minHeight: '44px',
+                      minWidth: '44px'
                     }}
+                    aria-label="Subscribe to calendar"
                   >
                     <i className="far fa-calendar-plus me-1" aria-hidden="true"></i>
                     Subscribe
@@ -516,29 +557,31 @@ function Events() {
               </div>
 
               {loading ? (
-                <div className="text-center py-5">
+                <div className="text-center py-5" role="status" aria-live="polite">
                   <Spinner animation="border" variant="primary" size="sm" />
                   <p className="mt-2 small text-muted">Loading events...</p>
+                  <span className="visually-hidden">Loading events, please wait</span>
                 </div>
               ) : (
                 <>
                   {filteredEvents.length > 0 ? (
-                    <div className="d-flex flex-column gap-3">
-                      {filteredEvents.map(event => (
+                    <div className="d-flex flex-column gap-3" role="list" aria-label="Events list">
+                      {filteredEvents.map((event, index) => (
                         <EventCard
-                          key={event.id}
+                          key={event.id || index}
                           event={event}
                           categories={categories}
                           isHovered={hoveredEvent === event.id}
                           onHover={handleHover}
                           onLeave={handleLeave}
+                          index={index}
                         />
                       ))}
                     </div>
                   ) : (
-                    <div className="text-center py-5 bg-light rounded-4">
+                    <div className="text-center py-5 bg-light rounded-4" role="status">
                       <i className="fas fa-calendar-times fs-1 text-muted mb-2" aria-hidden="true"></i>
-                      <h5 className="h6 fw-bold">No events found</h5>
+                      <h3 className="h6 fw-bold">No events found</h3>
                       <p className="small text-muted mb-0">Try a different month or category</p>
                     </div>
                   )}
@@ -550,8 +593,10 @@ function Events() {
             <Col lg={4}>
               <div className="calendar-card bg-white p-3 rounded-4 shadow-sm">
                 <div className="d-flex justify-content-between align-items-center mb-3">
-                  <h3 className="h6 fw-bold mb-0">{months[selectedMonth]} {selectedYear}</h3>
-                  <span className="small text-muted">
+                  <h3 className="h6 fw-bold mb-0">
+                    {months[selectedMonth]} {selectedYear}
+                  </h3>
+                  <span className="small text-muted" aria-live="polite" aria-atomic="true">
                     <i className="far fa-calendar-check me-1" aria-hidden="true"></i>
                     {monthEventCount} {monthEventCount === 1 ? 'event' : 'events'}
                   </span>
@@ -567,6 +612,7 @@ function Events() {
                       setSelectedDate(null);
                     }}
                     style={{ borderRadius: '20px' }}
+                    aria-label="Select month"
                   >
                     {months.map((month, index) => (
                       <option key={month} value={index}>{month}</option>
@@ -580,6 +626,7 @@ function Events() {
                       setSelectedDate(null);
                     }}
                     style={{ borderRadius: '20px' }}
+                    aria-label="Select year"
                   >
                     {years.map(year => (
                       <option key={year} value={year}>{year}</option>
@@ -588,14 +635,22 @@ function Events() {
                 </div>
 
                 {/* Calendar Grid */}
-                <div className="calendar-grid" style={{
-                  display: 'grid',
-                  gridTemplateColumns: 'repeat(7, 1fr)',
-                  gap: '2px',
-                  marginBottom: '1rem'
-                }}>
-                  {['M', 'T', 'W', 'T', 'F', 'S', 'S'].map(day => (
-                    <div key={day} className="text-center small fw-bold text-muted py-1">{day}</div>
+                <div 
+                  className="calendar-grid" 
+                  style={{
+                    display: 'grid',
+                    gridTemplateColumns: 'repeat(7, 1fr)',
+                    gap: '2px',
+                    marginBottom: '1rem'
+                  }}
+                  role="grid"
+                  aria-label="Calendar"
+                >
+                  {['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'].map((day, i) => (
+                    <div key={day} className="text-center small fw-bold text-muted py-1" role="columnheader">
+                      {day.slice(0, 1)}
+                      <span className="visually-hidden">{day}</span>
+                    </div>
                   ))}
                   {calendarDays.map((day, index) => (
                     <CalendarDay
@@ -604,6 +659,10 @@ function Events() {
                       onClick={handleDateClick}
                       categories={categories}
                       selectedCategory={selectedCategory}
+                      index={index}
+                      months={monthAbbr}
+                      selectedMonth={selectedMonth}
+                      selectedYear={selectedYear}
                     />
                   ))}
                 </div>
@@ -611,33 +670,33 @@ function Events() {
                 {/* Legend */}
                 <div className="d-flex flex-wrap gap-3 small">
                   <div className="d-flex align-items-center gap-1">
-                    <span className="cal-day has-event" style={{ width: '16px', height: '16px', borderRadius: '50%', backgroundColor: '#ebf8ff' }}></span>
+                    <span className="cal-day has-event" style={{ width: '16px', height: '16px', borderRadius: '50%', backgroundColor: '#ebf8ff' }} aria-hidden="true"></span>
                     <span className="text-muted">Has events</span>
                   </div>
                   <div className="d-flex align-items-center gap-1">
-                    <span className="cal-day today" style={{ width: '16px', height: '16px', borderRadius: '50%', border: '2px solid #132f66' }}></span>
+                    <span className="cal-day today" style={{ width: '16px', height: '16px', borderRadius: '50%', border: '2px solid #132f66' }} aria-hidden="true"></span>
                     <span className="text-muted">Today</span>
                   </div>
                   <div className="d-flex align-items-center gap-1">
-                    <span className="cal-day selected" style={{ width: '16px', height: '16px', borderRadius: '50%', backgroundColor: '#cebd04' }}></span>
+                    <span className="cal-day selected" style={{ width: '16px', height: '16px', borderRadius: '50%', backgroundColor: '#cebd04' }} aria-hidden="true"></span>
                     <span className="text-muted">Selected</span>
                   </div>
                 </div>
 
                 {/* Quick Stats */}
-                <div className="mt-3 pt-2 border-top">
+                <div className="mt-3 pt-2 border-top" aria-live="polite" aria-atomic="true">
                   <div className="d-flex justify-content-between align-items-center small">
                     <span className="text-muted">Total events:</span>
-                    <span className="fw-bold">{monthEventCount}</span>
+                    <span className="fw-bold" aria-label={`Total events: ${monthEventCount}`}>{monthEventCount}</span>
                   </div>
                   <div className="d-flex justify-content-between align-items-center small mt-1">
                     <span className="text-muted">Categories:</span>
-                    <span className="fw-bold">{new Set(filteredEvents.map(e => e.category)).size}</span>
+                    <span className="fw-bold" aria-label={`Categories: ${new Set(filteredEvents.map(e => e.category)).size}`}>{new Set(filteredEvents.map(e => e.category)).size}</span>
                   </div>
                   {selectedDate && (
                     <div className="d-flex justify-content-between align-items-center small mt-1">
                       <span className="text-muted">Events on {selectedDate}:</span>
-                      <span className="fw-bold">{getEventsForDate(selectedDate).length}</span>
+                      <span className="fw-bold" aria-label={`Events on ${selectedDate}: ${getEventsForDate(selectedDate).length}`}>{getEventsForDate(selectedDate).length}</span>
                     </div>
                   )}
                 </div>
@@ -651,8 +710,18 @@ function Events() {
         <GetInTouch />
       </Suspense>
 
-      {/* Critical CSS inline */}
+      {/* Critical CSS inline with accessibility improvements */}
       <style dangerouslySetInnerHTML={{ __html: `
+        .visually-hidden {
+          position: absolute;
+          width: 1px;
+          height: 1px;
+          padding: 0;
+          margin: -1px;
+          overflow: hidden;
+          clip: rect(0, 0, 0, 0);
+          border: 0;
+        }
         .event-item {
           display: flex;
           gap: 1rem;
@@ -663,13 +732,24 @@ function Events() {
           transition: transform 0.2s ease, box-shadow 0.2s ease;
           border-left: 4px solid;
         }
-        .event-item:hover {
+        .event-item:hover,
+        .event-item:focus-within {
           transform: translateY(-2px);
           box-shadow: 0 8px 16px rgba(0,0,0,0.1);
+          outline: 3px solid #cebd04;
+          outline-offset: 2px;
         }
-        .btn-outline-navy:hover {
+        .btn-outline-navy {
+          transition: all 0.2s ease;
+          min-height: 44px;
+          min-width: 44px;
+        }
+        .btn-outline-navy:hover,
+        .btn-outline-navy:focus-visible {
           background: #132f66;
           color: white !important;
+          outline: 3px solid #cebd04;
+          outline-offset: 2px;
         }
         .calendar-card {
           position: sticky;
@@ -685,8 +765,11 @@ function Events() {
           border-radius: 50%;
           transition: all 0.2s ease;
         }
-        .cal-day.active:hover {
+        .cal-day.active:hover,
+        .cal-day.active:focus-visible {
           background: #f0f4ff;
+          outline: 3px solid #cebd04;
+          outline-offset: 2px;
         }
         .cal-day.has-event:not(.selected) {
           background: #ebf8ff;
@@ -695,6 +778,14 @@ function Events() {
         .cal-day.today {
           border: 2px solid #132f66;
           font-weight: bold;
+        }
+        .cal-day.selected {
+          background-color: #cebd04;
+          color: white;
+        }
+        .cal-day:focus-visible {
+          outline: 3px solid #cebd04;
+          outline-offset: 2px;
         }
         @media (max-width: 768px) {
           .event-item {
@@ -708,6 +799,9 @@ function Events() {
         @media (prefers-reduced-motion: reduce) {
           .event-item, .cal-day, * {
             transition: none !important;
+          }
+          .event-item:hover {
+            transform: none !important;
           }
         }
       `}} />

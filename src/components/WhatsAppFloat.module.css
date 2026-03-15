@@ -1,4 +1,5 @@
-/* WhatsAppFloat.module.css */
+/* WhatsAppFloat.module.css - With accessibility improvements */
+
 .container {
   position: fixed;
   bottom: 20px;
@@ -28,6 +29,9 @@
   outline: none;
   position: relative;
   will-change: transform;
+  min-width: 44px; /* Touch target size */
+  min-height: 44px; /* Touch target size */
+  text-decoration: none;
 }
 
 .float:hover {
@@ -40,12 +44,19 @@
   transform: scale(0.95);
 }
 
+/* Focus state for keyboard navigation */
+.float:focus-visible {
+  outline: 3px solid #cebd04;
+  outline-offset: 2px;
+  transform: scale(1.1);
+}
+
 .tooltip {
   position: absolute;
   right: 70px;
   background-color: #333;
   color: white;
-  padding: 5px 10px;
+  padding: 8px 12px;
   border-radius: 4px;
   font-size: 12px;
   white-space: nowrap;
@@ -53,14 +64,18 @@
   visibility: hidden;
   transition: all 0.2s ease;
   pointer-events: none;
+  z-index: 9991;
 }
 
-.float:hover .tooltip {
+/* Show tooltip on hover and focus */
+.float:hover .tooltip,
+.float:focus-visible .tooltip {
   opacity: 1;
   visibility: visible;
   right: 65px;
 }
 
+/* Welcome message dialog */
 .welcomeMessage {
   background-color: white;
   border-radius: 16px;
@@ -72,6 +87,12 @@
   animation: slideIn 0.3s ease;
   border: 1px solid #f0f0f0;
   contain: content;
+  outline: none; /* Remove default outline, we'll add custom focus */
+}
+
+.welcomeMessage:focus-visible {
+  outline: 3px solid #cebd04;
+  outline-offset: 2px;
 }
 
 .closeBtn {
@@ -85,18 +106,26 @@
   cursor: pointer;
   color: #666;
   padding: 0;
-  width: 24px;
-  height: 24px;
+  width: 32px;
+  height: 32px;
   display: flex;
   align-items: center;
   justify-content: center;
   border-radius: 50%;
   transition: background-color 0.2s ease;
+  min-width: 44px; /* Touch target size */
+  min-height: 44px; /* Touch target size */
 }
 
 .closeBtn:hover {
   background-color: #f0f0f0;
   color: #333;
+}
+
+.closeBtn:focus-visible {
+  outline: 3px solid #cebd04;
+  outline-offset: 2px;
+  background-color: #f0f0f0;
 }
 
 .messageContent {
@@ -131,16 +160,25 @@
   background-color: #25D366;
   color: white;
   text-decoration: none;
-  padding: 6px 12px;
+  padding: 8px 16px; /* Increased padding for better touch target */
   border-radius: 20px;
   font-size: 12px;
   font-weight: 600;
   transition: background-color 0.2s ease;
+  min-width: 44px; /* Touch target size */
+  min-height: 44px; /* Touch target size */
+  line-height: 1.2;
 }
 
 .messageLink:hover {
   background-color: #20ba5a;
   color: white;
+}
+
+.messageLink:focus-visible {
+  outline: 3px solid #cebd04;
+  outline-offset: 2px;
+  background-color: #20ba5a;
 }
 
 @keyframes slideIn {
@@ -154,19 +192,79 @@
   }
 }
 
+/* ===== ACCESSIBILITY ADDITIONS ===== */
+
+/* Visually hidden class for screen readers */
+.visually-hidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  border: 0;
+}
+
+/* Focus indicators for all interactive elements */
+.messageLink:focus-visible,
+.closeBtn:focus-visible,
+.float:focus-visible {
+  outline: 3px solid #cebd04;
+  outline-offset: 2px;
+}
+
 /* Reduced motion */
 @media (prefers-reduced-motion: reduce) {
   .float,
   .welcomeMessage,
   .closeBtn,
-  .messageLink {
+  .messageLink,
+  .tooltip {
     transition: none !important;
+    animation: none !important;
   }
+  
   .float:hover {
     transform: none !important;
   }
+  
   .welcomeMessage {
     animation: none !important;
+  }
+  
+  @keyframes slideIn {
+    from {
+      opacity: 1;
+      transform: none;
+    }
+    to {
+      opacity: 1;
+      transform: none;
+    }
+  }
+}
+
+/* High contrast mode support */
+@media (prefers-contrast: high) {
+  .float {
+    background-color: #006400;
+    border: 2px solid white;
+  }
+  
+  .messageLink {
+    background-color: #006400;
+    border: 2px solid white;
+  }
+  
+  .messageIcon {
+    background-color: #006400;
+  }
+  
+  .closeBtn:focus-visible,
+  .float:focus-visible,
+  .messageLink:focus-visible {
+    outline: 3px solid white;
   }
 }
 
@@ -180,6 +278,8 @@
   .float {
     width: 52px;
     height: 52px;
+    min-width: 44px;
+    min-height: 44px;
   }
   
   .welcomeMessage {
@@ -188,7 +288,16 @@
   }
   
   .tooltip {
-    display: none;
+    display: none; /* Hide tooltip on mobile to save space */
+  }
+  
+  .closeBtn {
+    width: 44px;
+    height: 44px;
+  }
+  
+  .messageLink {
+    padding: 8px 14px;
   }
 }
 
@@ -196,5 +305,20 @@
   .welcomeMessage {
     max-width: 220px;
     padding: 12px;
+  }
+  
+  .float {
+    width: 48px;
+    height: 48px;
+  }
+}
+
+/* Ensure focus remains visible on mobile */
+@media (max-width: 768px) and (prefers-reduced-motion: no-preference) {
+  .float:focus-visible,
+  .closeBtn:focus-visible,
+  .messageLink:focus-visible {
+    outline: 3px solid #cebd04;
+    outline-offset: 2px;
   }
 }
