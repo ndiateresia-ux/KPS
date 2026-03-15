@@ -1,0 +1,200 @@
+/* WhatsAppFloat.module.css */
+.container {
+  position: fixed;
+  bottom: 20px;
+  right: 20px;
+  z-index: 9990;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 10px;
+  contain: layout style;
+}
+
+.float {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 56px;
+  height: 56px;
+  background-color: #25D366;
+  color: white;
+  border-radius: 50%;
+  text-align: center;
+  box-shadow: 0 4px 12px rgba(37, 211, 102, 0.3);
+  transition: all 0.2s ease;
+  cursor: pointer;
+  border: none;
+  outline: none;
+  position: relative;
+  will-change: transform;
+}
+
+.float:hover {
+  background-color: #20ba5a;
+  transform: scale(1.1);
+  box-shadow: 0 6px 16px rgba(37, 211, 102, 0.4);
+}
+
+.float:active {
+  transform: scale(0.95);
+}
+
+.tooltip {
+  position: absolute;
+  right: 70px;
+  background-color: #333;
+  color: white;
+  padding: 5px 10px;
+  border-radius: 4px;
+  font-size: 12px;
+  white-space: nowrap;
+  opacity: 0;
+  visibility: hidden;
+  transition: all 0.2s ease;
+  pointer-events: none;
+}
+
+.float:hover .tooltip {
+  opacity: 1;
+  visibility: visible;
+  right: 65px;
+}
+
+.welcomeMessage {
+  background-color: white;
+  border-radius: 16px;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.15);
+  padding: 16px;
+  margin-bottom: 8px;
+  max-width: 260px;
+  position: relative;
+  animation: slideIn 0.3s ease;
+  border: 1px solid #f0f0f0;
+  contain: content;
+}
+
+.closeBtn {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  background: none;
+  border: none;
+  font-size: 20px;
+  line-height: 1;
+  cursor: pointer;
+  color: #666;
+  padding: 0;
+  width: 24px;
+  height: 24px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  transition: background-color 0.2s ease;
+}
+
+.closeBtn:hover {
+  background-color: #f0f0f0;
+  color: #333;
+}
+
+.messageContent {
+  display: flex;
+  gap: 12px;
+  align-items: flex-start;
+}
+
+.messageIcon {
+  width: 32px;
+  height: 32px;
+  background-color: #25D366;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: white;
+  font-size: 18px;
+  flex-shrink: 0;
+}
+
+.messageText {
+  font-size: 14px;
+  color: #333;
+  margin: 0 0 8px 0;
+  line-height: 1.4;
+  padding-right: 16px;
+}
+
+.messageLink {
+  display: inline-block;
+  background-color: #25D366;
+  color: white;
+  text-decoration: none;
+  padding: 6px 12px;
+  border-radius: 20px;
+  font-size: 12px;
+  font-weight: 600;
+  transition: background-color 0.2s ease;
+}
+
+.messageLink:hover {
+  background-color: #20ba5a;
+  color: white;
+}
+
+@keyframes slideIn {
+  from {
+    opacity: 0;
+    transform: translateX(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+/* Reduced motion */
+@media (prefers-reduced-motion: reduce) {
+  .float,
+  .welcomeMessage,
+  .closeBtn,
+  .messageLink {
+    transition: none !important;
+  }
+  .float:hover {
+    transform: none !important;
+  }
+  .welcomeMessage {
+    animation: none !important;
+  }
+}
+
+/* Mobile adjustments */
+@media (max-width: 768px) {
+  .container {
+    bottom: 16px;
+    right: 16px;
+  }
+  
+  .float {
+    width: 52px;
+    height: 52px;
+  }
+  
+  .welcomeMessage {
+    max-width: 240px;
+    padding: 14px;
+  }
+  
+  .tooltip {
+    display: none;
+  }
+}
+
+@media (max-width: 480px) {
+  .welcomeMessage {
+    max-width: 220px;
+    padding: 12px;
+  }
+}

@@ -1,0 +1,1 @@
+import{n as o}from"./chunk-CyzFmspp.js";import{n}from"./jsx-runtime-DrT-PAc3.js";var s=o(n());function e(r){return r.code==="Escape"||r.keyCode===27}function i(){const r="18.3.1".split(".");return{major:+r[0],minor:+r[1],patch:+r[2]}}function f(r){if(!r||typeof r=="function")return null;const{major:t}=i();return t>=19?r.props.ref:r.ref}export{e as n,f as t};

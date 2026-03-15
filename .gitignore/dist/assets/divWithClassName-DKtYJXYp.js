@@ -1,0 +1,1 @@
+import{n as a}from"./chunk-CyzFmspp.js";import{n as t,t as m}from"./jsx-runtime-DrT-PAc3.js";import{o as i}from"./Container-CbyOKXvW.js";var o=a(t()),_=a(i()),f=m(),n=(s=>o.forwardRef((r,e)=>(0,f.jsx)("div",{...r,ref:e,className:(0,_.default)(r.className,s)})));export{n as t};

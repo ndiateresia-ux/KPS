@@ -1,0 +1,1 @@
+import{n as i}from"./chunk-CyzFmspp.js";import{n as o}from"./jsx-runtime-DrT-PAc3.js";var t=i(o());function f(n,a){let e=0;return t.Children.map(n,r=>t.isValidElement(r)?a(r,e++):r)}function l(n,a){let e=0;t.Children.forEach(n,r=>{t.isValidElement(r)&&a(r,e++)})}function p(n,a){return t.Children.toArray(n).some(e=>t.isValidElement(e)&&e.type===a)}export{p as n,f as r,l as t};
