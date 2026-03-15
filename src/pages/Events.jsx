@@ -5,7 +5,7 @@ import { useState, useEffect, useMemo, useCallback, lazy, Suspense, memo } from 
 // Lazy load non-critical components
 const GetInTouch = lazy(() => import("../components/GetInTouch"));
 
-// Memoized event card component with enhanced accessibility
+// Memoized event card component with accessibility
 const EventCard = memo(({ event, categories, isHovered, onHover, onLeave, index }) => {
   const eventDate = new Date(event.date);
   const day = eventDate.getDate().toString().padStart(2, '0');
@@ -71,8 +71,8 @@ const EventCard = memo(({ event, categories, isHovered, onHover, onLeave, index 
 
 EventCard.displayName = 'EventCard';
 
-// Memoized calendar day component with enhanced accessibility
-const CalendarDay = memo(({ day, onClick, categories, selectedCategory, index }) => (
+// Memoized calendar day component with accessibility
+const CalendarDay = memo(({ day, onClick, categories, selectedCategory, index, months, selectedMonth, selectedYear }) => (
   <div 
     className={`cal-day ${day.dayNumber ? 'active' : ''} ${day.hasEvent ? 'has-event' : ''} ${day.isToday ? 'today' : ''} ${day.isSelected ? 'selected' : ''}`}
     onClick={() => day.dayNumber && onClick(day.dayNumber)}
@@ -98,7 +98,9 @@ const CalendarDay = memo(({ day, onClick, categories, selectedCategory, index })
       fontSize: '0.9rem',
       fontWeight: day.isToday ? 'bold' : 'normal',
       backgroundColor: day.isSelected ? '#cebd04' : 'transparent',
-      color: day.isSelected ? 'white' : 'inherit'
+      color: day.isSelected ? 'white' : 'inherit',
+      minHeight: '44px',
+      minWidth: '44px'
     }}
     title={day.hasEvent ? `${day.events.length} event(s)` : ""}
     aria-current={day.isToday ? "date" : undefined}
@@ -121,7 +123,7 @@ const CalendarDay = memo(({ day, onClick, categories, selectedCategory, index })
 
 CalendarDay.displayName = 'CalendarDay';
 
-// Memoized category button with enhanced accessibility
+// Memoized category button with accessibility
 const CategoryButton = memo(({ category, isActive, onClick }) => (
   <button
     className={isActive ? 'active' : ''}
@@ -162,9 +164,9 @@ function Events() {
   const [hoveredEvent, setHoveredEvent] = useState(null);
   const [selectedDate, setSelectedDate] = useState(null);
 
-  // Google Calendar API configuration
+  // Get environment variables
   const GOOGLE_API_KEY = import.meta.env.VITE_GOOGLE_CALENDAR_API_KEY;
-  const CALENDAR_ID = import.meta.env.VITE_GOOGLE_CALENDAR_ID;
+  const GOOGLE_CALENDAR_ID = import.meta.env.VITE_GOOGLE_CALENDAR_ID;
 
   // Months
   const months = useMemo(() => [
@@ -195,13 +197,13 @@ function Events() {
     { id: "ceremony", name: "Ceremonies", icon: "🏆", color: "#f56565" }
   ], []);
 
-  // ✅ Moved determineCategory BEFORE it's used in hooks
+  // Determine category based on event title/description
   const determineCategory = useCallback((title, description) => {
     const text = (title + " " + (description || "")).toLowerCase();
-    if (text.includes("sport") || text.includes("football") || text.includes("game")) return "sports";
-    if (text.includes("music") || text.includes("dance") || text.includes("cultural")) return "cultural";
-    if (text.includes("meeting") || text.includes("conference") || text.includes("parents")) return "meeting";
-    if (text.includes("prize") || text.includes("award") || text.includes("ceremony")) return "ceremony";
+    if (text.includes("sport") || text.includes("football") || text.includes("game") || text.includes("athletics")) return "sports";
+    if (text.includes("music") || text.includes("dance") || text.includes("cultural") || text.includes("festival")) return "cultural";
+    if (text.includes("meeting") || text.includes("conference") || text.includes("parents") || text.includes("pta")) return "meeting";
+    if (text.includes("prize") || text.includes("award") || text.includes("ceremony") || text.includes("graduation")) return "ceremony";
     return "academic";
   }, []);
 
@@ -210,7 +212,7 @@ function Events() {
     {
       id: 1,
       title: "Term 1 Opening Day",
-      date: "2024-01-08",
+      date: `${selectedYear}-01-08`,
       description: "School opens for Term 1. All students to report by 8:00 AM.",
       category: "academic",
       time: "8:00 AM",
@@ -220,7 +222,7 @@ function Events() {
     {
       id: 2,
       title: "Sports Day",
-      date: "2024-02-15",
+      date: `${selectedYear}-02-15`,
       description: "Annual inter-house sports competitions. Parents cordially invited.",
       category: "sports",
       time: "9:00 AM - 4:00 PM",
@@ -230,7 +232,7 @@ function Events() {
     {
       id: 3,
       title: "Parents-Teachers Conference",
-      date: "2024-03-10",
+      date: `${selectedYear}-03-10`,
       description: "Meet your child's teachers and discuss academic progress.",
       category: "meeting",
       time: "2:00 PM - 6:00 PM",
@@ -240,7 +242,7 @@ function Events() {
     {
       id: 4,
       title: "Music Festival",
-      date: "2024-03-20",
+      date: `${selectedYear}-03-20`,
       description: "Annual music festival featuring choir, band, and solo performances.",
       category: "cultural",
       time: "10:00 AM - 3:00 PM",
@@ -250,7 +252,7 @@ function Events() {
     {
       id: 5,
       title: "Term 1 Closed",
-      date: "2024-03-28",
+      date: `${selectedYear}-03-28`,
       description: "School closes for Term 1 holidays. Dismissal at 12:00 PM.",
       category: "academic",
       time: "12:00 PM",
@@ -260,7 +262,7 @@ function Events() {
     {
       id: 6,
       title: "Science Fair",
-      date: "2024-05-10",
+      date: `${selectedYear}-05-10`,
       description: "Students showcase their science projects and experiments.",
       category: "academic",
       time: "9:00 AM - 2:00 PM",
@@ -270,7 +272,7 @@ function Events() {
     {
       id: 7,
       title: "Cultural Day",
-      date: "2024-06-05",
+      date: `${selectedYear}-06-05`,
       description: "Celebration of Kenya's diverse cultures with performances.",
       category: "cultural",
       time: "10:00 AM - 4:00 PM",
@@ -280,81 +282,80 @@ function Events() {
     {
       id: 8,
       title: "Prize Giving Day",
-      date: "2024-07-20",
+      date: `${selectedYear}-07-20`,
       description: "Annual awards ceremony recognizing student achievements.",
       category: "ceremony",
       time: "9:00 AM - 1:00 PM",
       location: "School Hall",
       color: "#f56565"
     }
-  ], []);
+  ], [selectedYear]);
 
-  // Check for missing environment variables
-  useEffect(() => {
-    if (!GOOGLE_API_KEY || !CALENDAR_ID) {
-      console.warn("Missing Google Calendar environment variables");
-      setApiError(true);
-      setEvents(fallbackEvents);
-      setLoading(false);
-    }
-  }, [GOOGLE_API_KEY, CALENDAR_ID, fallbackEvents]);
-
-  // Fetch calendar events
+  // Fetch calendar events from Google Calendar
   const fetchGoogleCalendarEvents = useCallback(async () => {
-    if (!GOOGLE_API_KEY || !CALENDAR_ID) {
-      setApiError(true);
-      setEvents(fallbackEvents);
-      setLoading(false);
-      return;
-    }
-
     setLoading(true);
     setApiError(false);
     
     try {
-      const timeMin = new Date(`${selectedYear}-01-01`).toISOString();
-      const timeMax = new Date(`${selectedYear}-12-31T23:59:59`).toISOString();
+      // If no API key or calendar ID, use fallback events
+      if (!GOOGLE_API_KEY || !GOOGLE_CALENDAR_ID) {
+        console.warn("Google Calendar API credentials missing, using fallback events");
+        setEvents(fallbackEvents);
+        setApiError(true);
+        setLoading(false);
+        return;
+      }
+
+      const timeMin = new Date(selectedYear, 0, 1).toISOString();
+      const timeMax = new Date(selectedYear, 11, 31, 23, 59, 59).toISOString();
       
-      const headers = {
-        'Referer': window.location.origin // Use current origin instead of hardcoded localhost
-      };
+      const url = `https://www.googleapis.com/calendar/v3/calendars/${encodeURIComponent(GOOGLE_CALENDAR_ID)}/events?` +
+                  `key=${GOOGLE_API_KEY}&timeMin=${timeMin}&timeMax=${timeMax}&` +
+                  `singleEvents=true&orderBy=startTime&maxResults=50`;
+      
+      console.log("Fetching events from Google Calendar...");
       
       const controller = new AbortController();
       const timeoutId = setTimeout(() => controller.abort(), 5000);
 
-      const url = `https://www.googleapis.com/calendar/v3/calendars/${encodeURIComponent(CALENDAR_ID)}/events?` +
-                  `key=${GOOGLE_API_KEY}&timeMin=${timeMin}&timeMax=${timeMax}&` +
-                  `singleEvents=true&orderBy=startTime&maxResults=50`;
-      
       const response = await fetch(url, { 
         signal: controller.signal,
-        headers: headers
+        headers: {
+          'Accept': 'application/json'
+        }
       });
       
       clearTimeout(timeoutId);
       
       if (!response.ok) {
+        console.error(`Calendar API error: ${response.status}`);
         throw new Error(`Calendar API error: ${response.status}`);
       }
       
       const data = await response.json();
+      console.log("Calendar data received:", data);
       
-      if (data.items?.length > 0) {
-        const formattedEvents = data.items.slice(0, 30).map(event => {
-          const isAllDay = !!event.start.date;
-          const eventDate = isAllDay ? event.start.date : event.start.dateTime.split('T')[0];
-          const eventTime = isAllDay ? "All day" : 
-            new Date(event.start.dateTime).toLocaleTimeString([], { 
+      if (data.items && data.items.length > 0) {
+        const formattedEvents = data.items.slice(0, 50).map((event, index) => {
+          // Handle all-day events vs timed events
+          const isAllDay = !!event.start?.date;
+          const eventDate = isAllDay ? event.start.date : event.start?.dateTime?.split('T')[0];
+          
+          // Format time
+          let eventTime = "All day";
+          if (!isAllDay && event.start?.dateTime) {
+            eventTime = new Date(event.start.dateTime).toLocaleTimeString([], { 
               hour: '2-digit', 
               minute: '2-digit',
               hour12: true 
             });
+          }
           
           const category = determineCategory(event.summary, event.description);
           const categoryColor = categories.find(c => c.id === category)?.color || "#718096";
           
           return {
-            id: event.id,
+            id: event.id || index,
             title: event.summary || "Untitled Event",
             date: eventDate,
             description: event.description || "No description available",
@@ -367,7 +368,8 @@ function Events() {
         
         setEvents(formattedEvents);
       } else {
-        setEvents([]);
+        console.log("No events found in calendar, using fallback");
+        setEvents(fallbackEvents);
       }
     } catch (error) {
       console.error("Error fetching calendar events:", error);
@@ -376,15 +378,14 @@ function Events() {
     } finally {
       setLoading(false);
     }
-  }, [GOOGLE_API_KEY, CALENDAR_ID, selectedYear, categories, fallbackEvents, determineCategory]);
+  }, [GOOGLE_API_KEY, GOOGLE_CALENDAR_ID, selectedYear, categories, fallbackEvents, determineCategory]);
 
+  // Fetch events when year changes
   useEffect(() => {
-    if (GOOGLE_API_KEY && CALENDAR_ID) {
-      fetchGoogleCalendarEvents();
-    }
-  }, [selectedYear, fetchGoogleCalendarEvents, GOOGLE_API_KEY, CALENDAR_ID]);
+    fetchGoogleCalendarEvents();
+  }, [selectedYear, fetchGoogleCalendarEvents]);
 
-  // Filter events
+  // Filter events based on selected month and category
   const filteredEvents = useMemo(() => {
     return events
       .filter(event => {
@@ -407,7 +408,6 @@ function Events() {
     const eventElement = document.getElementById(`event-${dayNumber}`);
     if (eventElement) {
       eventElement.scrollIntoView({ behavior: 'smooth', block: 'center' });
-      // Set focus to the event for keyboard users
       eventElement.setAttribute('tabindex', '-1');
       eventElement.focus({ preventScroll: true });
     }
@@ -462,7 +462,7 @@ function Events() {
         />
       </Helmet>
 
-      {/* Page Header with proper heading hierarchy */}
+      {/* Page Header */}
       <section 
         style={{ 
           background: 'linear-gradient(135deg, #132f66 0%, #0a1f4d 100%)',
@@ -504,7 +504,7 @@ function Events() {
               <Col lg={8} className="mx-auto">
                 <Alert variant="warning" className="text-center small py-2" role="alert">
                   <i className="fas fa-exclamation-triangle me-2" aria-hidden="true"></i>
-                  Using sample events. Unable to connect to calendar.
+                  Using sample events. Unable to connect to live calendar.
                 </Alert>
               </Col>
             </Row>
@@ -531,29 +531,6 @@ function Events() {
                   {selectedCategory === 'all' ? 'All Events' : `${categories.find(c => c.id === selectedCategory)?.name} Events`}
                   <span className="ms-2 small text-muted">({monthAbbr[selectedMonth]} {selectedYear})</span>
                 </h2>
-                {CALENDAR_ID && (
-                  <button 
-                    className="btn btn-sm btn-outline-navy"
-                    onClick={() => {
-                      const calendarUrl = `webcal://calendar.google.com/calendar/ical/${encodeURIComponent(CALENDAR_ID)}/public/basic.ics`;
-                      window.open(calendarUrl, '_blank');
-                    }}
-                    style={{
-                      border: '2px solid #132f66',
-                      borderRadius: '40px',
-                      padding: '0.25rem 1rem',
-                      fontSize: '0.85rem',
-                      background: 'transparent',
-                      color: '#132f66',
-                      minHeight: '44px',
-                      minWidth: '44px'
-                    }}
-                    aria-label="Subscribe to calendar"
-                  >
-                    <i className="far fa-calendar-plus me-1" aria-hidden="true"></i>
-                    Subscribe
-                  </button>
-                )}
               </div>
 
               {loading ? (
@@ -710,7 +687,7 @@ function Events() {
         <GetInTouch />
       </Suspense>
 
-      {/* Critical CSS inline with accessibility improvements */}
+      {/* Critical CSS inline */}
       <style dangerouslySetInnerHTML={{ __html: `
         .visually-hidden {
           position: absolute;
@@ -739,18 +716,6 @@ function Events() {
           outline: 3px solid #cebd04;
           outline-offset: 2px;
         }
-        .btn-outline-navy {
-          transition: all 0.2s ease;
-          min-height: 44px;
-          min-width: 44px;
-        }
-        .btn-outline-navy:hover,
-        .btn-outline-navy:focus-visible {
-          background: #132f66;
-          color: white !important;
-          outline: 3px solid #cebd04;
-          outline-offset: 2px;
-        }
         .calendar-card {
           position: sticky;
           top: 100px;
@@ -764,6 +729,8 @@ function Events() {
           cursor: pointer;
           border-radius: 50%;
           transition: all 0.2s ease;
+          min-height: 44px;
+          min-width: 44px;
         }
         .cal-day.active:hover,
         .cal-day.active:focus-visible {
@@ -783,10 +750,6 @@ function Events() {
           background-color: #cebd04;
           color: white;
         }
-        .cal-day:focus-visible {
-          outline: 3px solid #cebd04;
-          outline-offset: 2px;
-        }
         @media (max-width: 768px) {
           .event-item {
             flex-direction: column;
@@ -799,9 +762,6 @@ function Events() {
         @media (prefers-reduced-motion: reduce) {
           .event-item, .cal-day, * {
             transition: none !important;
-          }
-          .event-item:hover {
-            transform: none !important;
           }
         }
       `}} />
