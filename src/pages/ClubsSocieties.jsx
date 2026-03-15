@@ -15,10 +15,11 @@ const OptimizedImage = memo(({ src, alt, width, height, color }) => {
 
   return (
     <div className="club-image-container" style={{ 
-      aspectRatio: '4/3', 
       backgroundColor: color || '#f0f0f0',
       position: 'relative',
-      overflow: 'hidden'
+      overflow: 'hidden',
+      width: '100%',
+      height: '100%'
     }}>
       {!isLoaded && (
         <div style={{
@@ -29,7 +30,8 @@ const OptimizedImage = memo(({ src, alt, width, height, color }) => {
           bottom: 0,
           background: `linear-gradient(90deg, ${color}15 25%, ${color}25 50%, ${color}15 75%)`,
           backgroundSize: '200% 100%',
-          animation: 'shimmer 1.5s infinite'
+          animation: 'shimmer 1.5s infinite',
+          zIndex: 1
         }} />
       )}
       <img
@@ -49,7 +51,9 @@ const OptimizedImage = memo(({ src, alt, width, height, color }) => {
           height: '100%',
           objectFit: 'cover',
           opacity: isLoaded ? 1 : 0,
-          transition: 'opacity 0.3s ease'
+          transition: 'opacity 0.3s ease',
+          position: 'relative',
+          zIndex: 2
         }}
       />
     </div>
@@ -58,7 +62,6 @@ const OptimizedImage = memo(({ src, alt, width, height, color }) => {
 
 OptimizedImage.displayName = 'OptimizedImage';
 
-// Memoized club card component with enhanced accessibility
 // Memoized club card component with enhanced accessibility and better desktop layout
 const ClubCard = memo(({ club, index }) => {
   const cardId = `club-${index}-${club.name.toLowerCase().replace(/\s+/g, '-')}`;
@@ -108,7 +111,7 @@ const ClubCard = memo(({ club, index }) => {
                   <span className="visually-hidden"> for {club.name}</span>
                 </h4>
                 <div 
-                  className="d-flex flex-wrap gap-1" 
+                  className="d-flex flex-wrap gap-1 activities-container" 
                   aria-labelledby={`${cardId}-activities`}
                   role="list"
                 >
@@ -566,25 +569,39 @@ function ClubsSocieties() {
           transition: transform 0.2s ease, box-shadow 0.2s ease;
           border-radius: 12px;
           overflow: hidden;
+          height: 100%;
         }
+        
+        .club-card .row {
+          height: 100%;
+          margin: 0;
+        }
+        
         .club-card:hover,
         .club-card:focus-within {
           transform: translateY(-4px);
           box-shadow: 0 10px 30px rgba(0,0,0,0.1) !important;
         }
+        
         .club-image-container {
           overflow: hidden;
-          height: 100%;
-          min-height: 180px;
           background-color: #f0f0f0;
+          width: 100%;
+          height: 100%;
         }
-        .club-image {
+        
+        .club-image-container img {
           transition: transform 0.3s ease;
+          width: 100%;
+          height: 100%;
+          object-fit: cover;
         }
-        .club-card:hover .club-image,
-        .club-card:focus-within .club-image {
+        
+        .club-card:hover .club-image-container img,
+        .club-card:focus-within .club-image-container img {
           transform: scale(1.05);
         }
+        
         .activity-badge {
           background: #f0f0f0;
           padding: 0.25rem 0.75rem;
@@ -592,6 +609,106 @@ function ClubsSocieties() {
           font-size: 0.75rem;
           white-space: nowrap;
         }
+        
+        .text-truncate {
+          overflow: hidden;
+          text-overflow: ellipsis;
+          white-space: nowrap;
+        }
+        
+        /* Desktop styles */
+        @media (min-width: 768px) {
+          .club-card .col-md-4 {
+            height: 220px;
+            padding: 0 !important;
+          }
+          
+          .club-card .col-md-8 {
+            height: 220px;
+            display: flex;
+            flex-direction: column;
+          }
+          
+          .club-card .card-body {
+            padding: 1rem !important;
+            display: flex;
+            flex-direction: column;
+            height: 100%;
+            overflow: hidden;
+          }
+          
+          .club-description {
+            display: -webkit-box;
+            -webkit-line-clamp: 3;
+            -webkit-box-orient: vertical;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            line-height: 1.5;
+            max-height: 4.5em;
+            margin-bottom: 0.5rem !important;
+            flex-shrink: 0;
+          }
+          
+          .club-card .card-title {
+            max-width: 200px;
+          }
+          
+          .club-card .card-body > div:last-child {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            min-height: 0;
+          }
+          
+          .activities-container {
+            max-height: 70px;
+            overflow-y: auto;
+            padding-right: 4px;
+          }
+          
+          .activities-container::-webkit-scrollbar {
+            width: 4px;
+          }
+          
+          .activities-container::-webkit-scrollbar-track {
+            background: #f1f1f1;
+            border-radius: 4px;
+          }
+          
+          .activities-container::-webkit-scrollbar-thumb {
+            background: #132f66;
+            border-radius: 4px;
+          }
+        }
+        
+        /* Large desktop styles */
+        @media (min-width: 1200px) {
+          .club-card .col-md-4,
+          .club-card .col-md-8 {
+            height: 240px;
+          }
+          
+          .club-description {
+            -webkit-line-clamp: 3;
+            max-height: 4.5em;
+          }
+          
+          .activities-container {
+            max-height: 85px;
+          }
+        }
+        
+        /* Mobile styles */
+        @media (max-width: 767px) {
+          .club-card .col-md-4 {
+            height: 180px;
+          }
+          
+          .club-description {
+            margin-bottom: 0.5rem;
+          }
+        }
+        
         .btn-outline-navy {
           border: 2px solid #132f66;
           background: transparent;
@@ -599,6 +716,7 @@ function ClubsSocieties() {
           min-height: 44px;
           min-width: 44px;
         }
+        
         .btn-outline-navy:hover,
         .btn-outline-navy:focus-visible {
           background: #132f66;
@@ -606,25 +724,30 @@ function ClubsSocieties() {
           outline: 3px solid #cebd04;
           outline-offset: 2px;
         }
+        
         .btn-navy {
           background: #132f66;
           color: white;
           border: none;
         }
+        
         .btn-navy:focus-visible {
           outline: 3px solid #cebd04;
           outline-offset: 2px;
         }
+        
         .club-highlight-card,
         .benefit-card {
           transition: transform 0.2s ease;
           border-radius: 8px;
         }
+        
         .club-highlight-card:hover,
         .benefit-card:hover {
           transform: translateY(-2px);
           background: #f8f9fa;
         }
+        
         .visually-hidden {
           position: absolute;
           width: 1px;
@@ -635,19 +758,22 @@ function ClubsSocieties() {
           clip: rect(0, 0, 0, 0);
           border: 0;
         }
+        
         @keyframes shimmer {
           0% { background-position: 200% 0; }
           100% { background-position: -200% 0; }
         }
-        @media (max-width: 768px) {
-          .club-image-container {
-            min-height: 150px;
-          }
-        }
+        
         @media (prefers-reduced-motion: reduce) {
-          .club-card, .club-image, * {
+          .club-card,
+          .club-image-container img,
+          .club-card:hover,
+          .club-card:focus-within,
+          .club-highlight-card,
+          .benefit-card {
             transition: none !important;
             animation: none !important;
+            transform: none !important;
           }
         }
       `}} />
