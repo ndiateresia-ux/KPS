@@ -69,8 +69,9 @@ const ClubCard = memo(({ club, index }) => {
         as="article"
         aria-labelledby={`${cardId}-title`}
       >
-        <Row className="g-0 h-100">
-          <Col md={5} className="px-0">
+        {/* Stack vertically on mobile, horizontal on desktop */}
+        <div className="d-flex flex-column flex-md-row h-100">
+          <div className="flex-md-shrink-0" style={{ width: '100%', maxWidth: '200px' }}>
             <OptimizedImage 
               src={club.image} 
               alt={`${club.name} club members participating in activities`}
@@ -78,8 +79,8 @@ const ClubCard = memo(({ club, index }) => {
               height="300"
               color={club.color}
             />
-          </Col>
-          <Col md={7}>
+          </div>
+          <div className="flex-grow-1">
             <Card.Body className="p-3 p-lg-4">
               <div className="d-flex align-items-center mb-2">
                 <span className="club-icon fs-4 me-2" aria-hidden="true">{club.icon}</span>
@@ -122,8 +123,8 @@ const ClubCard = memo(({ club, index }) => {
                 </div>
               </div>
             </Card.Body>
-          </Col>
-        </Row>
+          </div>
+        </div>
       </Card>
     </Col>
   );
