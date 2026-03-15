@@ -59,6 +59,7 @@ const OptimizedImage = memo(({ src, alt, width, height, color }) => {
 OptimizedImage.displayName = 'OptimizedImage';
 
 // Memoized club card component with enhanced accessibility
+// Memoized club card component with enhanced accessibility and better desktop layout
 const ClubCard = memo(({ club, index }) => {
   const cardId = `club-${index}-${club.name.toLowerCase().replace(/\s+/g, '-')}`;
   
@@ -69,9 +70,9 @@ const ClubCard = memo(({ club, index }) => {
         as="article"
         aria-labelledby={`${cardId}-title`}
       >
-        {/* Stack vertically on mobile, horizontal on desktop */}
-        <div className="d-flex flex-column flex-md-row h-100">
-          <div className="flex-md-shrink-0" style={{ width: '100%', maxWidth: '200px' }}>
+        <Row className="g-0 h-100">
+          {/* Image column - smaller on desktop */}
+          <Col md={4} className="px-0">
             <OptimizedImage 
               src={club.image} 
               alt={`${club.name} club members participating in activities`}
@@ -79,24 +80,29 @@ const ClubCard = memo(({ club, index }) => {
               height="300"
               color={club.color}
             />
-          </div>
-          <div className="flex-grow-1">
-            <Card.Body className="p-3 p-lg-4">
+          </Col>
+          {/* Content column - larger on desktop */}
+          <Col md={8}>
+            <Card.Body className="p-3 p-lg-4 d-flex flex-column h-100">
               <div className="d-flex align-items-center mb-2">
                 <span className="club-icon fs-4 me-2" aria-hidden="true">{club.icon}</span>
                 <Card.Title 
                   as="h3" 
                   id={`${cardId}-title`}
-                  className="fw-bold h6 mb-0"
+                  className="fw-bold h6 mb-0 text-truncate"
                   style={{ color: club.color }}
                 >
                   {club.name}
                 </Card.Title>
               </div>
-              <Card.Text className="text-muted small mb-2">
+              
+              {/* Description with controlled height */}
+              <Card.Text className="text-muted small mb-2 club-description">
                 {club.description}
               </Card.Text>
-              <div>
+              
+              {/* Activities section - stays at bottom */}
+              <div className="mt-auto">
                 <h4 className="fw-bold small mb-2 clubs-activities-title" id={`${cardId}-activities`}>
                   Activities:
                   <span className="visually-hidden"> for {club.name}</span>
@@ -123,8 +129,8 @@ const ClubCard = memo(({ club, index }) => {
                 </div>
               </div>
             </Card.Body>
-          </div>
-        </div>
+          </Col>
+        </Row>
       </Card>
     </Col>
   );
