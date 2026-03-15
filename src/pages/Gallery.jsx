@@ -597,20 +597,21 @@ function Gallery() {
                 borderRadius: '12px',
                 boxShadow: '0 10px 30px rgba(0,0,0,0.1)'
               }}>
-                <iframe
-                  src="https://www.youtube.com/embed/your-video-id"
-                  title="School Life Video - Kitale Progressive School"
-                  frameBorder="0"
-                  allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-                  allowFullScreen
-                  style={{
-                    position: 'absolute',
-                    top: 0,
-                    left: 0,
-                    width: '100%',
-                    height: '100%'
-                  }}
-                ></iframe>
+                <iframe 
+                    src="https://www.youtube-nocookie.com/embed/your-video-id"
+                    title="YouTube video"
+                    loading="lazy"
+                    allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                    allowFullScreen
+                    style={{
+                      position: 'absolute',
+                      top: 0,
+                      left: 0,
+                      width: '100%',
+                      height: '100%',
+                      border: 0
+                    }}
+                  />
               </div>
             </Col>
           </Row>
