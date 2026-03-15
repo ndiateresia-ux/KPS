@@ -10,20 +10,8 @@ const OptimizedImage = memo(({ src, alt, width, height, color }) => {
   const [imgSrc, setImgSrc] = useState(src);
   const [isLoaded, setIsLoaded] = useState(false);
   
-  // Fallback image based on category color with proper contrast text
-  const fallbackImage = `data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='${width}' height='${height}' viewBox='0 0 ${width} ${height}'%3E%3Crect width='${width}' height='${height}' fill='%23${color?.replace('#', '') || 'f0f0f0'}'/%3E%3Ctext x='50%25' y='50%25' font-family='Arial' font-size='16' fill='%23${getContrastColor(color)}' text-anchor='middle' dy='.3em'%3E${alt}%3C/text%3E%3C/svg%3E`;
-
-  // Helper function to determine text color based on background
-  function getContrastColor(hexColor) {
-    if (!hexColor) return '333333';
-    // Simple contrast check - if background is dark, use white text
-    const color = hexColor.replace('#', '');
-    const r = parseInt(color.substr(0, 2), 16);
-    const g = parseInt(color.substr(2, 2), 16);
-    const b = parseInt(color.substr(4, 2), 16);
-    const luminance = (0.299 * r + 0.587 * g + 0.114 * b) / 255;
-    return luminance > 0.5 ? '000000' : 'ffffff';
-  }
+  // Fallback image based on category color
+  const fallbackImage = `data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='${width}' height='${height}' viewBox='0 0 ${width} ${height}'%3E%3Crect width='${width}' height='${height}' fill='%23${color?.replace('#', '') || 'f0f0f0'}'/%3E%3Ctext x='50%25' y='50%25' font-family='Arial' font-size='14' fill='%23999' text-anchor='middle' dy='.3em'%3E${alt}%3C/text%3E%3C/svg%3E`;
 
   return (
     <div className="club-image-container" style={{ 
@@ -39,7 +27,7 @@ const OptimizedImage = memo(({ src, alt, width, height, color }) => {
           left: 0,
           right: 0,
           bottom: 0,
-          background: `linear-gradient(90deg, ${color}25 25%, ${color}40 50%, ${color}25 75%)`,
+          background: `linear-gradient(90deg, ${color}15 25%, ${color}25 50%, ${color}15 75%)`,
           backgroundSize: '200% 100%',
           animation: 'shimmer 1.5s infinite'
         }} />
@@ -104,11 +92,11 @@ const ClubCard = memo(({ club, index }) => {
                   {club.name}
                 </Card.Title>
               </div>
-              <Card.Text className="text-secondary mb-2" style={{ color: '#4a4a4a !important' }}>
+              <Card.Text className="text-muted small mb-2">
                 {club.description}
               </Card.Text>
               <div>
-                <h4 className="fw-bold small mb-2" style={{ color: '#212529' }} id={`${cardId}-activities`}>
+                <h4 className="fw-bold small mb-2 clubs-activities-title" id={`${cardId}-activities`}>
                   Activities:
                   <span className="visually-hidden"> for {club.name}</span>
                 </h4>
@@ -124,8 +112,7 @@ const ClubCard = memo(({ club, index }) => {
                       style={{ 
                         background: `${club.color}15`,
                         color: club.color,
-                        fontSize: '0.7rem',
-                        fontWeight: '500'
+                        fontSize: '0.7rem'
                       }}
                       role="listitem"
                     >
@@ -144,51 +131,49 @@ const ClubCard = memo(({ club, index }) => {
 
 ClubCard.displayName = 'ClubCard';
 
-// Highlight card with proper contrast ratios
+// Simplified highlight card with better semantics
 const HighlightCard = memo(({ icon, title, text }) => (
   <Col md={3} sm={6} className="mb-3">
     <div 
-      className="club-highlight-card text-center p-3 h-100" 
+      className="club-highlight-card text-center p-3" 
       role="article"
-      style={{ backgroundColor: '#f8f9fa', borderRadius: '8px' }}
     >
-      <div className="highlight-icon fs-2 mb-2" style={{ color: '#132f66' }} aria-hidden="true">{icon}</div>
-      <h3 className="highlight-title h6 fw-bold mb-1" style={{ color: '#212529' }}>{title}</h3>
-      <p className="highlight-text small mb-0" style={{ color: '#495057' }}>{text}</p>
+      <div className="highlight-icon fs-2 mb-2" aria-hidden="true">{icon}</div>
+      <h3 className="highlight-title h6 fw-bold mb-1">{title}</h3>
+      <p className="highlight-text small text-muted mb-0">{text}</p>
     </div>
   </Col>
 ));
 
 HighlightCard.displayName = 'HighlightCard';
 
-// Benefit card with proper contrast ratios
+// Simplified benefit card
 const BenefitCard = memo(({ icon, title, text }) => (
   <Col md={4} className="mb-3">
-    <div className="benefit-card text-center p-3 h-100" role="article">
+    <div className="benefit-card text-center p-3" role="article">
       <div 
-        className="benefit-icon-wrapper mx-auto mb-3" 
+        className="benefit-icon-wrapper bg-navy mx-auto mb-3" 
         style={{ 
           width: '50px', 
           height: '50px', 
           borderRadius: '50%', 
           display: 'flex', 
           alignItems: 'center', 
-          justifyContent: 'center',
-          backgroundColor: '#132f66'
+          justifyContent: 'center' 
         }}
         aria-hidden="true"
       >
-        <i className={`bi ${icon}`} style={{ fontSize: '1.5rem', color: '#ffffff' }}></i>
+        <i className={`bi ${icon} text-white`} style={{ fontSize: '1.5rem' }}></i>
       </div>
-      <h3 className="benefit-title h6 fw-bold mb-2" style={{ color: '#212529' }}>{title}</h3>
-      <p className="benefit-text small mb-0" style={{ color: '#495057' }}>{text}</p>
+      <h3 className="benefit-title h6 fw-bold mb-2">{title}</h3>
+      <p className="benefit-text small text-muted mb-0">{text}</p>
     </div>
   </Col>
 ));
 
 BenefitCard.displayName = 'BenefitCard';
 
-// Optimized tab navigation with proper contrast
+// Optimized tab navigation with reduced re-renders
 const TabNav = memo(({ categories, activeTab, onTabChange }) => {
   return (
     <nav className="clubs-tab-nav d-flex flex-wrap justify-content-center gap-2 mb-4" aria-label="Club categories">
@@ -196,7 +181,7 @@ const TabNav = memo(({ categories, activeTab, onTabChange }) => {
         <button
           key={category.id}
           onClick={() => onTabChange(category.id)}
-          className={`btn ${activeTab === category.id ? 'btn-navy' : 'btn-outline-navy'}`}
+          className={`btn ${activeTab === category.id ? 'btn-navy text-white' : 'btn-outline-navy'}`}
           style={{
             padding: '0.5rem 1rem',
             borderRadius: '40px',
@@ -204,19 +189,7 @@ const TabNav = memo(({ categories, activeTab, onTabChange }) => {
             fontWeight: '500',
             minHeight: '44px',
             minWidth: '44px',
-            transition: 'background-color 0.2s ease, color 0.2s ease',
-            ...(activeTab === category.id 
-              ? { 
-                  backgroundColor: '#132f66', 
-                  color: '#ffffff',
-                  border: 'none'
-                } 
-              : { 
-                  backgroundColor: 'transparent', 
-                  color: '#132f66',
-                  border: '2px solid #132f66'
-                }
-            )
+            transition: 'background-color 0.2s ease, color 0.2s ease'
           }}
           aria-pressed={activeTab === category.id}
           aria-current={activeTab === category.id ? 'true' : undefined}
@@ -454,7 +427,7 @@ function ClubsSocieties() {
         <link rel="preconnect" href="https://images.unsplash.com" />
       </Helmet>
       
-      {/* Page Header - H1 */}
+      {/* Page Header */}
       <section 
         style={{ 
           background: 'linear-gradient(135deg, #132f66 0%, #0a1f4d 100%)',
@@ -471,7 +444,7 @@ function ClubsSocieties() {
             fontSize: 'clamp(2rem, 5vw, 3rem)',
             fontWeight: 'bold',
             marginBottom: '1rem',
-            color: '#ffffff'
+            color: 'white'
           }}>
             Clubs & Societies
           </h1>
@@ -479,21 +452,20 @@ function ClubsSocieties() {
             fontSize: 'clamp(1rem, 4vw, 1.2rem)',
             maxWidth: '700px',
             margin: '0 auto',
-            color: '#ffffff',
-            opacity: 0.95
+            color: 'rgba(255,255,255,0.95)'
           }}>
             Discover Your Passion, Develop Your Talents
           </p>
         </Container>
       </section>
       
-      {/* Introduction Section - H2 */}
+      {/* Introduction Section */}
       <section className="section-padding bg-light-custom py-5" aria-labelledby="intro-heading">
         <Container>
           <Row className="text-center mb-4">
             <Col lg={8} className="mx-auto">
-              <h2 id="intro-heading" className="section-heading h3 mb-3" style={{ color: '#212529' }}>Where Talents Blossom</h2>
-              <p className="small" style={{ color: '#495057' }}>
+              <h2 id="intro-heading" className="section-heading h3 mb-3">Where Talents Blossom</h2>
+              <p className="small">
                 At Kitale Progressive School, we believe education extends beyond the classroom. 
                 Our vibrant clubs and societies provide students with opportunities to explore interests, 
                 develop skills, and build lasting friendships.
@@ -501,7 +473,7 @@ function ClubsSocieties() {
             </Col>
           </Row>
 
-          {/* Highlights Cards - H3 headings inside */}
+          {/* Highlights Cards */}
           <Row className="mb-4 g-3" aria-label="Club highlights">
             {highlights.map((item, index) => (
               <HighlightCard key={`highlight-${index}`} {...item} />
@@ -510,7 +482,7 @@ function ClubsSocieties() {
         </Container>
       </section>
 
-      {/* Clubs Listing with Tabs - H2 (visually hidden) */}
+      {/* Clubs Listing with Tabs */}
       <section className="section-padding bg-white py-5" aria-labelledby="clubs-heading">
         <Container>
           <h2 id="clubs-heading" className="visually-hidden">Clubs by Category</h2>
@@ -530,13 +502,13 @@ function ClubsSocieties() {
         </Container>
       </section>
 
-      {/* Benefits Section - H2 */}
+      {/* Benefits Section */}
       <section className="section-padding bg-light-custom py-5" aria-labelledby="benefits-heading">
         <Container>
           <Row className="text-center mb-4">
             <Col lg={8} className="mx-auto">
-              <h2 id="benefits-heading" className="section-heading h3 mb-3" style={{ color: '#212529' }}>Benefits of Joining</h2>
-              <p className="small" style={{ color: '#495057' }}>
+              <h2 id="benefits-heading" className="section-heading h3 mb-3">Benefits of Joining</h2>
+              <p className="small">
                 Participation in clubs and societies helps students develop holistically
               </p>
             </Col>
@@ -550,18 +522,18 @@ function ClubsSocieties() {
         </Container>
       </section>
 
-      {/* Call to Action - H2 */}
-      <section className="cta-section py-5" style={{ backgroundColor: '#132f66' }} aria-labelledby="cta-heading">
-        <Container className="text-center">
-          <h2 id="cta-heading" className="h3 fw-bold mb-2" style={{ color: '#ffffff' }}>Ready to Join Us?</h2>
-          <p className="small mb-3" style={{ color: '#ffffff', opacity: 0.95 }}>
+      {/* Call to Action */}
+      <section className="cta-section bg-navy text-white text-center py-5" aria-label="Call to action">
+        <Container>
+          <h2 className="h3 fw-bold mb-2">Ready to Join Us?</h2>
+          <p className="small mb-3">
             Every term, students can choose up to two clubs. Discover your passion today!
           </p>
           <a 
             href="/admissions/apply"
             className="btn btn-light px-4 py-2 d-inline-block"
             style={{
-              backgroundColor: '#ffffff',
+              backgroundColor: 'white',
               color: '#132f66',
               borderRadius: '40px',
               fontWeight: '600',
@@ -581,7 +553,7 @@ function ClubsSocieties() {
         <GetInTouch />
       </Suspense>
 
-      {/* Critical CSS inline with accessibility improvements */}
+      {/* Critical CSS inline */}
       <style dangerouslySetInnerHTML={{ __html: `
         .club-card {
           transition: transform 0.2s ease, box-shadow 0.2s ease;
@@ -612,10 +584,11 @@ function ClubsSocieties() {
           border-radius: 30px;
           font-size: 0.75rem;
           white-space: nowrap;
-          color: #212529 !important;
         }
         .btn-outline-navy {
+          border: 2px solid #132f66;
           background: transparent;
+          color: #132f66;
           min-height: 44px;
           min-width: 44px;
         }
@@ -626,11 +599,17 @@ function ClubsSocieties() {
           outline: 3px solid #cebd04;
           outline-offset: 2px;
         }
+        .btn-navy {
+          background: #132f66;
+          color: white;
+          border: none;
+        }
         .btn-navy:focus-visible {
           outline: 3px solid #cebd04;
           outline-offset: 2px;
         }
-        .club-highlight-card {
+        .club-highlight-card,
+        .benefit-card {
           transition: transform 0.2s ease;
           border-radius: 8px;
         }
