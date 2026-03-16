@@ -18,6 +18,38 @@ const loadAutoTable = async () => {
   return jsPDF;
 };
 
+// Helper function for Unicode-safe base64 encoding
+const utf8ToBase64 = (str) => {
+  // First convert the string to UTF-8 bytes
+  const utf8Bytes = new TextEncoder().encode(str);
+  // Convert the byte array to a binary string
+  let binaryString = '';
+  for (let i = 0; i < utf8Bytes.length; i++) {
+    binaryString += String.fromCharCode(utf8Bytes[i]);
+  }
+  // Use btoa on the binary string
+  return btoa(binaryString);
+};
+
+// Helper function to convert image to base64
+const getImageBase64 = (imagePath) => {
+  return new Promise((resolve, reject) => {
+    const img = new Image();
+    img.crossOrigin = 'Anonymous';
+    img.onload = () => {
+      const canvas = document.createElement('canvas');
+      canvas.width = img.width;
+      canvas.height = img.height;
+      const ctx = canvas.getContext('2d');
+      ctx.drawImage(img, 0, 0);
+      const dataURL = canvas.toDataURL('image/jpeg');
+      resolve(dataURL);
+    };
+    img.onerror = reject;
+    img.src = imagePath;
+  });
+};
+
 // Memoized form input component with enhanced accessibility
 const FormInput = memo(({ 
   label, 
@@ -185,11 +217,28 @@ function Apply() {
     success: false,
     message: ""
   });
+  const [logoBase64, setLogoBase64] = useState(null);
 
   // Get environment variables
   const GOOGLE_CLIENT_ID = import.meta.env.VITE_GOOGLE_GMAIL_CLIENT_ID;
+  const GOOGLE_API_KEY = import.meta.env.VITE_GOOGLE_GMAIL_API_KEY;
   const ADMISSIONS_EMAIL = import.meta.env.VITE_ADMISSIONS_EMAIL || 'ndiateresia@gmail.com';
   const GMAIL_SCOPES = import.meta.env.VITE_GMAIL_SCOPES || 'https://www.googleapis.com/auth/gmail.send';
+  const SITE_URL = import.meta.env.VITE_SITE_URL || 'http://localhost:5173';
+
+  // Load logo on component mount
+  useEffect(() => {
+    const loadLogo = async () => {
+      try {
+        const logoPath = '/images/optimized/logo.jpg';
+        const base64 = await getImageBase64(logoPath);
+        setLogoBase64(base64);
+      } catch (error) {
+        console.warn('Could not load logo:', error);
+      }
+    };
+    loadLogo();
+  }, []);
 
   // Load the last used application number from localStorage on component mount
   useEffect(() => {
@@ -255,23 +304,42 @@ function Apply() {
     return [];
   }, [formData.gradeApplying]);
 
-  // Optimized PDF generation with lazy loading
+  // Optimized PDF generation with lazy loading and logo
   const generatePDF = useCallback(async () => {
     const jsPDF = await loadAutoTable();
     const doc = new jsPDF();
     
+    // Add logo if available
+    let logoAdded = false;
+    if (logoBase64) {
+      try {
+        // Remove the data:image/jpeg;base64, prefix
+        const base64Data = logoBase64.replace(/^data:image\/\w+;base64,/, '');
+        doc.addImage(base64Data, 'JPEG', 15, 10, 30, 30);
+        logoAdded = true;
+      } catch (error) {
+        console.warn('Could not add logo to PDF:', error);
+      }
+    }
+    
+    // Adjust header position based on whether logo was added
+    const titleY = logoAdded ? 25 : 20;
+    const mottoY = logoAdded ? 33 : 28;
+    const formY = logoAdded ? 45 : 40;
+    const dateY = logoAdded ? 60 : 55;
+    
     // School header
     doc.setFontSize(20);
     doc.setTextColor(19, 47, 102);
-    doc.text("KITALE PROGRESSIVE SCHOOL", 105, 20, { align: "center" });
+    doc.text("KITALE PROGRESSIVE SCHOOL", 105, titleY, { align: "center" });
     
     doc.setFontSize(12);
     doc.setTextColor(100, 100, 100);
-    doc.text("In Pursuit of Excellence", 105, 28, { align: "center" });
+    doc.text("In Pursuit of Excellence", 105, mottoY, { align: "center" });
     
     doc.setFontSize(16);
     doc.setTextColor(19, 47, 102);
-    doc.text("ADMISSION APPLICATION FORM", 105, 40, { align: "center" });
+    doc.text("ADMISSION APPLICATION FORM", 105, formY, { align: "center" });
     
     // Format application number
     const formattedNumber = applicationCounter.toString().padStart(4, '0');
@@ -279,10 +347,10 @@ function Apply() {
     
     doc.setFontSize(10);
     doc.setTextColor(100, 100, 100);
-    doc.text(`Application Date: ${new Date().toLocaleDateString()}`, 20, 55);
-    doc.text(`Application ID: ${applicationId}`, 150, 55);
+    doc.text(`Application Date: ${new Date().toLocaleDateString()}`, 20, dateY);
+    doc.text(`Application ID: ${applicationId}`, 150, dateY);
     
-    let yPos = 70;
+    let yPos = dateY + 15;
     
     // Format nationality
     const displayNationality = formData.nationality === "Other" ? 
@@ -373,14 +441,21 @@ function Apply() {
     doc.text("Medical Conditions:", 25, yPos);
     doc.text(formData.medicalConditions || "None", 70, yPos);
     
+    // Add footer with school contact
+    yPos = 260;
+    doc.setFontSize(9);
+    doc.setTextColor(100, 100, 100);
+    doc.text("Kitale Progressive School", 105, yPos, { align: "center" });
+    doc.text("P.O. Box 1338, Kitale, Kenya | Tel: +254 722 631 433 | Email: progressivesch@gmail.com", 105, yPos + 5, { align: "center" });
+    
     return {
       pdfBlob: doc.output('blob'),
       applicationId,
       applicationDate: new Date().toLocaleDateString()
     };
-  }, [formData, applicationCounter]);
+  }, [formData, applicationCounter, logoBase64]);
 
-  // Create email with attachment function
+  // Create email with attachment function - FIXED with Unicode-safe encoding
   const createEmailWithAttachment = useCallback(async (to, from, subject, htmlContent, pdfBlob, filename) => {
     // Convert blob to base64
     const reader = new FileReader();
@@ -392,19 +467,22 @@ function Apply() {
     // Create boundary
     const boundary = 'boundary_' + Math.random().toString(36).substring(2);
 
-    // Construct email with attachment
+    // Construct email with attachment - Remove emojis and special characters
+    const cleanSubject = subject.replace(/[^\x00-\x7F]/g, ''); // Remove non-ASCII chars from subject
+    const cleanHtmlContent = htmlContent.replace(/[^\x00-\x7F]/g, ''); // Remove non-ASCII from HTML if needed
+    
     const emailParts = [
       `MIME-Version: 1.0`,
       `To: ${to}`,
       `From: ${from}`,
-      `Subject: ${subject}`,
+      `Subject: ${cleanSubject}`,
       `Content-Type: multipart/mixed; boundary="${boundary}"`,
       '',
       `--${boundary}`,
       'Content-Type: text/html; charset=UTF-8',
       'Content-Transfer-Encoding: 7bit',
       '',
-      htmlContent,
+      cleanHtmlContent,
       '',
       `--${boundary}`,
       'Content-Type: application/pdf; name="' + filename + '"',
@@ -418,8 +496,8 @@ function Apply() {
 
     const emailContent = emailParts.join('\r\n');
     
-    // Encode to base64url
-    return btoa(emailContent)
+    // Use our Unicode-safe base64 encoding function
+    return utf8ToBase64(emailContent)
       .replace(/\+/g, '-')
       .replace(/\//g, '_')
       .replace(/=+$/, '');
@@ -429,6 +507,7 @@ function Apply() {
   const login = useGoogleLogin({
     clientId: GOOGLE_CLIENT_ID,
     scope: GMAIL_SCOPES,
+    redirectUri: `${SITE_URL}/auth/callback`,
     onSuccess: async (tokenResponse) => {
       try {
         setSubmitting(true);
@@ -450,71 +529,201 @@ function Apply() {
           }
         } catch (error) {}
         
-        // Create HTML email content
-        const htmlContent = `
+        // Format date of birth for display
+        const formattedDOB = formData.dateOfBirth ? new Date(formData.dateOfBirth).toLocaleDateString('en-KE', {
+          year: 'numeric',
+          month: 'long',
+          day: 'numeric'
+        }) : 'Not provided';
+        
+        // Create HTML email content for PARENT - WITHOUT EMOJIS
+        const parentHtmlContent = `
+          <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; background-color: #f9f9f9;">
+            <div style="text-align: center; margin-bottom: 30px; padding: 20px; background: linear-gradient(135deg, #132f66 0%, #0a1f4d 100%); border-radius: 10px;">
+              <h2 style="color: white; margin: 0; font-size: 24px;">Kitale Progressive School</h2>
+              <p style="color: #cebd04; margin: 5px 0 0;">In Pursuit of Excellence</p>
+            </div>
+            
+            <div style="background-color: white; padding: 30px; border-radius: 10px; box-shadow: 0 2px 10px rgba(0,0,0,0.1);">
+              <h3 style="color: #132f66; margin-top: 0;">Application Received Successfully!</h3>
+              
+              <p style="font-size: 16px; line-height: 1.6; color: #333;">Dear <strong>${formData.parentName}</strong>,</p>
+              
+              <p style="font-size: 16px; line-height: 1.6; color: #333;">Thank you for submitting an application to Kitale Progressive School. We are delighted that you are considering us for your child's education.</p>
+              
+              <div style="background-color: #f0f5fa; padding: 20px; border-radius: 8px; margin: 25px 0; border-left: 4px solid #132f66;">
+                <p style="margin: 0 0 10px 0; font-weight: bold; color: #132f66;">Application Details:</p>
+                <p style="margin: 5px 0;"><strong>Application ID:</strong> ${applicationId}</p>
+                <p style="margin: 5px 0;"><strong>Date Submitted:</strong> ${applicationDate}</p>
+                <p style="margin: 5px 0;"><strong>Student Name:</strong> ${formData.childName}</p>
+                <p style="margin: 5px 0;"><strong>Grade Applied For:</strong> ${formData.gradeApplying}</p>
+                <p style="margin: 5px 0;"><strong>Stay Status:</strong> ${formData.stayStatus?.replace('-', ' ') || 'Not specified'}</p>
+              </div>
+              
+              <h4 style="color: #132f66; margin: 25px 0 15px 0;">Next Steps in Your Journey:</h4>
+              
+              <table style="width: 100%; border-collapse: collapse;">
+                <tr>
+                  <td style="padding: 10px; border-bottom: 1px solid #eee; width: 40px; vertical-align: top;">
+                    <span style="background-color: #132f66; color: white; width: 24px; height: 24px; display: inline-block; border-radius: 50%; text-align: center; line-height: 24px; font-weight: bold;">1</span>
+                  </td>
+                  <td style="padding: 10px; border-bottom: 1px solid #eee;">
+                    <strong style="color: #333;">Application Review</strong><br/>
+                    <span style="color: #666;">Our admissions team will review your application within 2-3 business days.</span>
+                  </td>
+                </tr>
+                <tr>
+                  <td style="padding: 10px; border-bottom: 1px solid #eee;">
+                    <span style="background-color: #132f66; color: white; width: 24px; height: 24px; display: inline-block; border-radius: 50%; text-align: center; line-height: 24px; font-weight: bold;">2</span>
+                  </td>
+                  <td style="padding: 10px; border-bottom: 1px solid #eee;">
+                    <strong style="color: #333;">Admissions Interview</strong><br/>
+                    <span style="color: #666;">We'll contact you to schedule an interview with you and your child.</span>
+                  </td>
+                </tr>
+                <tr>
+                  <td style="padding: 10px; border-bottom: 1px solid #eee;">
+                    <span style="background-color: #132f66; color: white; width: 24px; height: 24px; display: inline-block; border-radius: 50%; text-align: center; line-height: 24px; font-weight: bold;">3</span>
+                  </td>
+                  <td style="padding: 10px; border-bottom: 1px solid #eee;">
+                    <strong style="color: #333;">Acceptance Decision</strong><br/>
+                    <span style="color: #666;">You'll receive our decision within one week after the interview.</span>
+                  </td>
+                </tr>
+              </table>
+              
+              <div style="margin: 30px 0 20px 0; padding: 20px; background-color: #fff8e7; border-radius: 8px; border: 1px solid #cebd04;">
+                <p style="margin: 0; color: #132f66;">
+                  <strong>Important:</strong> A copy of your application form is attached to this email. 
+                  Please save it for your records. You will need your Application ID (${applicationId}) for all future correspondence.
+                </p>
+              </div>
+              
+              <p style="font-size: 16px; line-height: 1.6; color: #333;">If you have any questions before then, please don't hesitate to contact our admissions office:</p>
+              
+              <div style="margin: 20px 0; padding: 15px; background-color: #f5f5f5; border-radius: 8px;">
+                <p style="margin: 5px 0;"><strong>Phone:</strong> +254 722 631 433</p>
+                <p style="margin: 5px 0;"><strong>Email:</strong> progressicesch@gmail.com</p>
+                <p style="margin: 5px 0;"><strong>Office Hours:</strong> Monday - Friday, 8:00 AM - 4:00 PM</p>
+              </div>
+              
+              <p style="font-size: 16px; line-height: 1.6; color: #333; margin-top: 25px;">Warm regards,<br/>
+              <strong style="color: #132f66;">The Admissions Team</strong><br/>
+              Kitale Progressive School</p>
+            </div>
+            
+            <div style="text-align: center; margin-top: 20px; padding: 15px; color: #666; font-size: 12px;">
+              <p style="margin: 5px 0;">Kitale Progressive School | P.O. Box 1338, Kitale, Kenya</p>
+              <p style="margin: 5px 0;">© ${new Date().getFullYear()} Kitale Progressive School. All rights reserved.</p>
+              <p style="margin: 5px 0;">This email was sent to confirm your application submission.</p>
+            </div>
+          </div>
+        `;
+        
+        // Create HTML email content for ADMISSIONS OFFICE
+        const admissionsHtmlContent = `
           <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
             <div style="text-align: center; margin-bottom: 20px; border-bottom: 2px solid #132f66;">
               <h2 style="color: #132f66; margin: 0;">Kitale Progressive School</h2>
               <p style="color: #cebd04; margin: 5px 0 0;">In Pursuit of Excellence</p>
             </div>
-            <h3 style="color: #132f66;">New Admission Application</h3>
-            <p><strong>Application ID:</strong> ${applicationId}</p>
-            <p><strong>Date:</strong> ${applicationDate}</p>
-            <p><strong>Student:</strong> ${formData.childName}</p>
-            <p><strong>Parent:</strong> ${formData.parentName}</p>
-            <p><strong>Grade:</strong> ${formData.gradeApplying}</p>
-            <p><strong>Stay Status:</strong> ${formData.stayStatus?.replace('-', ' ') || 'Not specified'}</p>
-            <p><strong>Phone:</strong> ${formattedPhone}</p>
-            <p><strong>Email:</strong> ${formData.email}</p>
+            <h3 style="color: #132f66;">New Admission Application Received</h3>
+            
+            <table style="width: 100%; border-collapse: collapse; margin: 20px 0;">
+              <tr><td style="padding: 8px; border: 1px solid #ddd;"><strong>Application ID:</strong></td><td style="padding: 8px; border: 1px solid #ddd;">${applicationId}</td></tr>
+              <tr><td style="padding: 8px; border: 1px solid #ddd;"><strong>Date:</strong></td><td style="padding: 8px; border: 1px solid #ddd;">${applicationDate}</td></tr>
+              <tr><td style="padding: 8px; border: 1px solid #ddd;"><strong>Student Name:</strong></td><td style="padding: 8px; border: 1px solid #ddd;">${formData.childName}</td></tr>
+              <tr><td style="padding: 8px; border: 1px solid #ddd;"><strong>Date of Birth:</strong></td><td style="padding: 8px; border: 1px solid #ddd;">${formattedDOB}</td></tr>
+              <tr><td style="padding: 8px; border: 1px solid #ddd;"><strong>Gender:</strong></td><td style="padding: 8px; border: 1px solid #ddd;">${formData.gender || 'Not specified'}</td></tr>
+              <tr><td style="padding: 8px; border: 1px solid #ddd;"><strong>Nationality:</strong></td><td style="padding: 8px; border: 1px solid #ddd;">${displayNationality || 'Not specified'}</td></tr>
+              <tr><td style="padding: 8px; border: 1px solid #ddd;"><strong>Grade Applying:</strong></td><td style="padding: 8px; border: 1px solid #ddd;">${formData.gradeApplying}</td></tr>
+              <tr><td style="padding: 8px; border: 1px solid #ddd;"><strong>Stay Status:</strong></td><td style="padding: 8px; border: 1px solid #ddd;">${formData.stayStatus?.replace('-', ' ') || 'Not specified'}</td></tr>
+              <tr><td style="padding: 8px; border: 1px solid #ddd;"><strong>Previous School:</strong></td><td style="padding: 8px; border: 1px solid #ddd;">${formData.previousSchool || 'None'}</td></tr>
+            </table>
+            
+            <h4 style="color: #132f66;">Parent/Guardian Information</h4>
+            <table style="width: 100%; border-collapse: collapse; margin: 10px 0;">
+              <tr><td style="padding: 8px; border: 1px solid #ddd;"><strong>Name:</strong></td><td style="padding: 8px; border: 1px solid #ddd;">${formData.parentName}</td></tr>
+              <tr><td style="padding: 8px; border: 1px solid #ddd;"><strong>Email:</strong></td><td style="padding: 8px; border: 1px solid #ddd;">${formData.email}</td></tr>
+              <tr><td style="padding: 8px; border: 1px solid #ddd;"><strong>Phone:</strong></td><td style="padding: 8px; border: 1px solid #ddd;">${formattedPhone}</td></tr>
+              <tr><td style="padding: 8px; border: 1px solid #ddd;"><strong>Address:</strong></td><td style="padding: 8px; border: 1px solid #ddd;">${formData.address || 'Not provided'}</td></tr>
+              <tr><td style="padding: 8px; border: 1px solid #ddd;"><strong>Relationship:</strong></td><td style="padding: 8px; border: 1px solid #ddd;">${formData.relationship}</td></tr>
+            </table>
+            
+            <h4 style="color: #132f66;">Medical Information</h4>
+            <table style="width: 100%; border-collapse: collapse; margin: 10px 0;">
+              <tr><td style="padding: 8px; border: 1px solid #ddd;"><strong>Allergies:</strong></td><td style="padding: 8px; border: 1px solid #ddd;">${formData.hasAllergies ? 'Yes' : 'No'}</td></tr>
+              <tr><td style="padding: 8px; border: 1px solid #ddd;"><strong>Medical Conditions:</strong></td><td style="padding: 8px; border: 1px solid #ddd;">${formData.medicalConditions || 'None'}</td></tr>
+            </table>
+            
+            <p><strong>Complete application form is attached as PDF.</strong></p>
             <hr/>
-            <p>Please find the complete application form attached as PDF.</p>
+            <p style="color: #666; font-size: 12px;">This application was submitted via the school website.</p>
           </div>
         `;
         
-        // Create email with attachment
-        const filename = `Admission_${formData.childName.replace(/\s+/g, '_')}_${applicationId}.pdf`;
+        // Create filename for the PDF
+        const sanitizedName = formData.childName.replace(/\s+/g, '_').replace(/[^a-zA-Z0-9_]/g, '');
+        const filename = `Admission_${sanitizedName}_${applicationId}.pdf`;
         
-        const encodedEmail = await createEmailWithAttachment(
-          ADMISSIONS_EMAIL,
-          formData.email,
-          `Admission Application - ${formData.childName} (${applicationId})`,
-          htmlContent,
+        // SEND EMAIL TO PARENT FIRST
+        console.log("Sending confirmation email to parent:", formData.email);
+        
+        const parentEncodedEmail = await createEmailWithAttachment(
+          formData.email, // Send to parent's email
+          formData.email, // From the parent's email (they're authenticated)
+          `Application Received - ${formData.childName} (${applicationId}) - Kitale Progressive School`, // No emojis
+          parentHtmlContent,
           pdfBlob,
           filename
         );
         
-        console.log("Sending email via Gmail API...");
-        
-        const controller = new AbortController();
-        const timeoutId = setTimeout(() => controller.abort(), 10000);
-
-        const response = await fetch('https://gmail.googleapis.com/gmail/v1/users/me/messages/send', {
+        const parentResponse = await fetch('https://gmail.googleapis.com/gmail/v1/users/me/messages/send', {
           method: 'POST',
           headers: {
             'Authorization': `Bearer ${tokenResponse.access_token}`,
             'Content-Type': 'application/json'
           },
-          body: JSON.stringify({ raw: encodedEmail }),
-          signal: controller.signal
+          body: JSON.stringify({ raw: parentEncodedEmail })
         });
-
-        clearTimeout(timeoutId);
-
-        if (!response.ok) {
-          const errorData = await response.json();
-          console.error("Gmail API Error:", errorData);
-          
-          if (response.status === 403) {
-            throw new Error("Permission denied. Please check Gmail API permissions.");
-          } else if (response.status === 401) {
-            throw new Error("Authentication failed. Please try again.");
-          } else {
-            throw new Error(errorData.error?.message || 'Failed to send email');
-          }
+        
+        if (!parentResponse.ok) {
+          const errorData = await parentResponse.json();
+          console.error("Error sending to parent:", errorData);
+          throw new Error("Failed to send confirmation email to parent");
         }
-
-        const result = await response.json();
-        console.log("Email sent successfully:", result);
+        
+        console.log("Parent email sent successfully");
+        
+        // SEND EMAIL TO ADMISSIONS OFFICE
+        console.log("Sending notification to admissions office:", ADMISSIONS_EMAIL);
+        
+        const admissionsEncodedEmail = await createEmailWithAttachment(
+          ADMISSIONS_EMAIL, // Send to admissions office
+          formData.email, // From the parent's email
+          `NEW APPLICATION: ${formData.childName} - Grade ${formData.gradeApplying} (${applicationId})`,
+          admissionsHtmlContent,
+          pdfBlob,
+          filename
+        );
+        
+        const admissionsResponse = await fetch('https://gmail.googleapis.com/gmail/v1/users/me/messages/send', {
+          method: 'POST',
+          headers: {
+            'Authorization': `Bearer ${tokenResponse.access_token}`,
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({ raw: admissionsEncodedEmail })
+        });
+        
+        if (!admissionsResponse.ok) {
+          const errorData = await admissionsResponse.json();
+          console.error("Error sending to admissions:", errorData);
+          // Don't throw error here - parent already got confirmation
+          console.warn("Failed to send to admissions office, but parent email was sent");
+        } else {
+          console.log("Admissions office notification sent successfully");
+        }
         
         // Update counter
         const newCounter = applicationCounter + 1;
@@ -526,7 +735,7 @@ function Apply() {
         setSubmitStatus({
           show: true,
           success: true,
-          message: `Application ${applicationId} submitted successfully! We'll contact you soon.`
+          message: `Application ${applicationId} submitted successfully! A confirmation email with your application form has been sent to ${formData.email}.`
         });
         
         // Reset form after delay
@@ -535,7 +744,7 @@ function Apply() {
           setPhone("");
           setPhoneError("");
           setValidated(false);
-        }, 3000);
+        }, 5000);
         
       } catch (error) {
         console.error("Submission error:", error);
@@ -549,12 +758,22 @@ function Apply() {
         window.scrollTo({ top: 0, behavior: 'smooth' });
       }
     },
-    onError: (error) => {
-      console.error('Login Failed:', error);
+    onError: (errorResponse) => {
+      console.error('Login Failed:', errorResponse);
+      let errorMessage = "Google sign-in failed. ";
+      
+      if (errorResponse?.error === 'popup_blocked_by_browser') {
+        errorMessage += "Please allow popups for this site.";
+      } else if (errorResponse?.error === 'access_denied') {
+        errorMessage += "You denied access to your account.";
+      } else {
+        errorMessage += "Please try again.";
+      }
+      
       setSubmitStatus({
         show: true,
         success: false,
-        message: "Google sign-in failed. Please try again."
+        message: errorMessage
       });
     }
   });
@@ -591,7 +810,7 @@ function Apply() {
       setSubmitStatus({
         show: true,
         success: false,
-        message: "Google Client ID is missing. Please check configuration."
+        message: "Google Client ID is missing. Please check your environment configuration."
       });
       return;
     }
@@ -677,7 +896,7 @@ function Apply() {
         </Container>
       </section>
 
-      {/* Application Journey Section - NEW informative section */}
+      {/* Application Journey Section */}
       <section className="journey-section py-5" aria-label="Application journey steps">
         <Container>
           <h2 className="section-header text-center mb-5" style={{ color: '#132f66' }}>
@@ -1050,7 +1269,7 @@ function Apply() {
                       <Col md={12}>
                         <p className="text-muted small text-center mb-0">
                           <i className="fas fa-lock me-1" aria-hidden="true"></i>
-                          You'll sign in with Google to verify your identity
+                          You'll sign in with Google to verify your identity and receive your confirmation email
                         </p>
                       </Col>
                     </Row>
