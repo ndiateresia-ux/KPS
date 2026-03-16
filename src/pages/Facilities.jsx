@@ -1,21 +1,111 @@
+// pages/Facilities.jsx
 import { Helmet } from "react-helmet-async";
 import { Container, Row, Col, Card, Button } from "react-bootstrap";
-import { useState, useCallback, lazy, Suspense, memo } from "react";
+import { useState, useCallback, lazy, Suspense, memo, useEffect } from "react";
 
 // Lazy load non-critical components
 const GetInTouch = lazy(() => import("../components/GetInTouch"));
 
-// Fallback images for error handling
-const FALLBACK_IMAGES = {
-  facility: "https://images.unsplash.com/photo-1562774053-701939374585?ixlib=rb-4.0.3&auto=format&fit=crop&w=600&q=80",
-  kitchen: "https://images.unsplash.com/photo-1556911220-e15b29be8c8f?ixlib=rb-4.0.3&auto=format&fit=crop&w=600&q=80",
-  dining: "https://images.unsplash.com/photo-1517248135467-4c7edcad34c4?ixlib=rb-4.0.3&auto=format&fit=crop&w=600&q=80",
-  placeholder: "https://via.placeholder.com/800x600?text=Image+Coming+Soon"
-};
+// Optimized image component with WebP support and objectFit prop
+const OptimizedImage = memo(({ src, alt, width, height, className = '', objectFit = 'cover' }) => {
+  const [imgSrc, setImgSrc] = useState('');
+  const [isLoaded, setIsLoaded] = useState(false);
+  const [error, setError] = useState(false);
+  
+  // Extract filename from path
+  useEffect(() => {
+    if (src) {
+      const filename = src.split('/').pop().replace(/\.(jpg|jpeg|png)$/i, '');
+      setImgSrc(filename);
+    }
+  }, [src]);
+
+  if (error) {
+    return (
+      <div style={{ 
+        backgroundColor: '#f0f0f0',
+        width: '100%',
+        height: '100%',
+        minHeight: height || '200px',
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        color: '#666',
+        fontSize: '0.875rem',
+        borderRadius: '12px',
+        aspectRatio: width && height ? `${width}/${height}` : 'auto'
+      }}>
+        <div className="text-center">
+          <div style={{ fontSize: '2rem', marginBottom: '0.5rem' }}>📷</div>
+          <div>{alt}</div>
+          <div style={{ fontSize: '0.75rem', marginTop: '0.5rem' }}>Image coming soon</div>
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div style={{ 
+      position: 'relative', 
+      width: '100%', 
+      height: '100%',
+      aspectRatio: width && height ? `${width}/${height}` : 'auto'
+    }}>
+      {!isLoaded && (
+        <div 
+          style={{
+            position: 'absolute',
+            top: 0,
+            left: 0,
+            right: 0,
+            bottom: 0,
+            background: 'linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%)',
+            backgroundSize: '200% 100%',
+            animation: 'shimmer 1.5s infinite',
+            borderRadius: '12px',
+            zIndex: 1
+          }}
+          aria-hidden="true"
+        />
+      )}
+      
+      <picture>
+        {/* WebP version */}
+        <source 
+          srcSet={`/images/optimized/${imgSrc}.webp`}
+          type="image/webp"
+        />
+        {/* Fallback JPG */}
+        <img
+          src={`/images/optimized/${imgSrc}.jpg`}
+          alt={alt}
+          loading="lazy"
+          decoding="async"
+          width={width}
+          height={height}
+          onLoad={() => setIsLoaded(true)}
+          onError={() => setError(true)}
+          style={{
+            width: '100%',
+            height: '100%',
+            objectFit: objectFit, // Use the prop here
+            opacity: isLoaded ? 1 : 0,
+            transition: 'opacity 0.3s ease, transform 0.3s ease',
+            position: 'relative',
+            zIndex: 2,
+            borderRadius: '12px'
+          }}
+          className={className}
+        />
+      </picture>
+    </div>
+  );
+});
+
+OptimizedImage.displayName = 'OptimizedImage';
 
 // Memoized facility image card component with enhanced accessibility
-const FacilityImageCard = memo(({ image, alt, onClick }) => {
-  const [imgSrc, setImgSrc] = useState(image);
+const FacilityImageCard = memo(({ src, alt, onClick }) => {
   const [loaded, setLoaded] = useState(false);
   const cardId = `facility-${alt.replace(/\s+/g, '-').toLowerCase()}`;
 
@@ -42,38 +132,12 @@ const FacilityImageCard = memo(({ image, alt, onClick }) => {
         backgroundColor: '#f0f0f0'
       }}
     >
-      {!loaded && (
-        <div 
-          style={{
-            position: 'absolute',
-            top: 0,
-            left: 0,
-            right: 0,
-            bottom: 0,
-            background: 'linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%)',
-            backgroundSize: '200% 100%',
-            animation: 'shimmer 1.5s infinite'
-          }}
-          aria-hidden="true"
-        />
-      )}
-      <img
-        src={imgSrc}
+      <OptimizedImage 
+        src={src}
         alt={alt}
-        loading="lazy"
-        decoding="async"
-        onLoad={() => setLoaded(true)}
-        onError={(e) => {
-          e.target.onerror = null;
-          setImgSrc(FALLBACK_IMAGES.placeholder);
-        }}
-        style={{
-          width: '100%',
-          height: '100%',
-          objectFit: 'cover',
-          opacity: loaded ? 1 : 0,
-          transition: 'opacity 0.3s ease, transform 0.3s ease'
-        }}
+        width="400"
+        height="300"
+        objectFit="cover" // Cover works best for gallery thumbnails
       />
       <div 
         style={{
@@ -85,7 +149,8 @@ const FacilityImageCard = memo(({ image, alt, onClick }) => {
           color: 'white',
           padding: '1rem 0.5rem 0.5rem 0.5rem',
           fontSize: '0.9rem',
-          fontWeight: '500'
+          fontWeight: '500',
+          zIndex: 3
         }}
         aria-hidden="true"
       >
@@ -173,6 +238,27 @@ const ImageModal = memo(({ selectedImage, onClose }) => {
     }
   };
 
+  // Extract filename from the selected image path
+  const getImageSrc = (path) => {
+    if (!path) return '';
+    const filename = path.split('/').pop().replace(/\.(jpg|jpeg|png)$/i, '');
+    return (
+      <picture>
+        <source srcSet={`/images/optimized/${filename}.webp`} type="image/webp" />
+        <img
+          src={`/images/optimized/${filename}.jpg`}
+          alt="Enlarged view of facility"
+          style={{
+            maxWidth: '100%',
+            maxHeight: '90vh',
+            objectFit: 'contain',
+            borderRadius: '8px'
+          }}
+        />
+      </picture>
+    );
+  };
+
   return (
     <div 
       role="dialog"
@@ -225,22 +311,14 @@ const ImageModal = memo(({ selectedImage, onClose }) => {
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center',
-            boxShadow: '0 2px 8px rgba(0,0,0,0.2)'
+            boxShadow: '0 2px 8px rgba(0,0,0,0.2)',
+            zIndex: 100001
           }}
         >
           ✕
           <span className="visually-hidden">Close</span>
         </button>
-        <img
-          src={selectedImage}
-          alt="Enlarged view of facility"
-          style={{
-            maxWidth: '100%',
-            maxHeight: '90vh',
-            objectFit: 'contain',
-            borderRadius: '8px'
-          }}
-        />
+        {getImageSrc(selectedImage)}
       </div>
     </div>
   );
@@ -252,7 +330,7 @@ function Facilities() {
   const [activeTab, setActiveTab] = useState("boarding");
   const [selectedImage, setSelectedImage] = useState(null);
 
-  // Boarding facility images
+  // Boarding facility images - just the paths, OptimizedImage will handle WebP
   const boardingImages = {
     dormitory: "/images/facilities/dormitory.jpg",
     commonRoom: "/images/facilities/common-room.jpg",
@@ -321,6 +399,11 @@ function Facilities() {
     setActiveTab(tab);
   }, []);
 
+  // Preconnect to nothing - all local images
+  useEffect(() => {
+    // No external domains needed
+  }, []);
+
   return (
     <>
       <Helmet>
@@ -331,7 +414,7 @@ function Facilities() {
         />
       </Helmet>
       
-      {/* Page Header with proper heading hierarchy */}
+      {/* Page Header */}
       <section 
         style={{ 
           background: 'linear-gradient(135deg, #132f66 0%, #0a1f4d 100%)',
@@ -407,49 +490,49 @@ function Facilities() {
               <Row className="g-4 mb-5" role="list" aria-label="Boarding facility images">
                 <Col md={4} role="listitem">
                   <FacilityImageCard 
-                    image={boardingImages.dormitory} 
+                    src={boardingImages.dormitory} 
                     alt="Dormitory" 
                     onClick={() => handleViewImage(boardingImages.dormitory)}
                   />
                 </Col>
                 <Col md={4} role="listitem">
                   <FacilityImageCard 
-                    image={boardingImages.commonRoom} 
+                    src={boardingImages.commonRoom} 
                     alt="Common Room" 
                     onClick={() => handleViewImage(boardingImages.commonRoom)}
                   />
                 </Col>
                 <Col md={4} role="listitem">
                   <FacilityImageCard 
-                    image={boardingImages.dining} 
+                    src={boardingImages.dining} 
                     alt="Dining Hall" 
                     onClick={() => handleViewImage(boardingImages.dining)}
                   />
                 </Col>
                 <Col md={4} role="listitem">
                   <FacilityImageCard 
-                    image={boardingImages.studyArea} 
+                    src={boardingImages.studyArea} 
                     alt="Study Area" 
                     onClick={() => handleViewImage(boardingImages.studyArea)}
                   />
                 </Col>
                 <Col md={4} role="listitem">
                   <FacilityImageCard 
-                    image={boardingImages.recreation} 
+                    src={boardingImages.recreation} 
                     alt="Recreation Area" 
                     onClick={() => handleViewImage(boardingImages.recreation)}
                   />
                 </Col>
                 <Col md={4} role="listitem">
                   <FacilityImageCard 
-                    image={boardingImages.chapel} 
+                    src={boardingImages.chapel} 
                     alt="Chapel" 
                     onClick={() => handleViewImage(boardingImages.chapel)}
                   />
                 </Col>
               </Row>
 
-              {/* Daily Routine - Beautiful alternating rows */}
+              {/* Daily Routine */}
               <Row className="mb-5">
                 <Col lg={12}>
                   <Card className="border-0 shadow-sm overflow-hidden">
@@ -465,7 +548,7 @@ function Facilities() {
                         <span className="activity-column" role="columnheader">Activity</span>
                       </div>
 
-                      {/* Table Rows with alternating colors */}
+                      {/* Table Rows */}
                       <div className="routine-body" role="table" aria-label="Daily boarding schedule">
                         {dailyRoutine.map((item, index) => (
                           <RoutineRow key={index} item={item} index={index} />
@@ -507,22 +590,22 @@ function Facilities() {
                         tabIndex={0}
                         aria-label="View enlarged boarding items checklist"
                       >
-                        <img 
-                          src={boardingItemsImage} 
-                          alt="Boarding Items Checklist"
-                          loading="lazy"
-                          style={{ 
-                            maxHeight: '400px', 
-                            width: 'auto', 
-                            maxWidth: '100%',
-                            borderRadius: '8px',
-                            boxShadow: '0 4px 12px rgba(0,0,0,0.1)'
-                          }}
-                          onError={(e) => {
-                            e.target.onerror = null;
-                            e.target.src = FALLBACK_IMAGES.placeholder;
-                          }}
-                        />
+                        <div style={{ 
+                          maxHeight: '400px', 
+                          overflow: 'hidden',
+                          borderRadius: '8px',
+                          boxShadow: '0 4px 12px rgba(0,0,0,0.1)',
+                          margin: '0 auto',
+                          display: 'inline-block'
+                        }}>
+                          <OptimizedImage 
+                            src={boardingItemsImage}
+                            alt="Boarding Items Checklist"
+                            width="800"
+                            height="600"
+                            objectFit="contain" // This ensures the whole image is visible
+                          />
+                        </div>
                         <div className="mt-2">
                           <small className="text-muted">Click image to enlarge</small>
                         </div>
@@ -577,35 +660,35 @@ function Facilities() {
               <Row className="g-4 mb-5" role="list" aria-label="Kitchen and dining facility images">
                 <Col md={6} role="listitem">
                   <FacilityImageCard 
-                    image={kitchenImages.kitchen} 
+                    src={kitchenImages.kitchen} 
                     alt="Modern Kitchen" 
                     onClick={() => handleViewImage(kitchenImages.kitchen)}
                   />
                 </Col>
                 <Col md={6} role="listitem">
                   <FacilityImageCard 
-                    image={kitchenImages.diningHall} 
+                    src={kitchenImages.diningHall} 
                     alt="Dining Hall" 
                     onClick={() => handleViewImage(kitchenImages.diningHall)}
                   />
                 </Col>
                 <Col md={6} role="listitem">
                   <FacilityImageCard 
-                    image={kitchenImages.foodPrep} 
+                    src={kitchenImages.foodPrep} 
                     alt="Food Preparation" 
                     onClick={() => handleViewImage(kitchenImages.foodPrep)}
                   />
                 </Col>
                 <Col md={6} role="listitem">
                   <FacilityImageCard 
-                    image={kitchenImages.storage} 
+                    src={kitchenImages.storage} 
                     alt="Food Storage" 
                     onClick={() => handleViewImage(kitchenImages.storage)}
                   />
                 </Col>
               </Row>
 
-              {/* Weekly Menu */}
+              {/* Weekly Menu - UPDATED with proper dimensions and objectFit="contain" */}
               <Row className="mb-5">
                 <Col lg={12}>
                   <Card className="border-0 shadow-sm">
@@ -629,22 +712,22 @@ function Facilities() {
                         tabIndex={0}
                         aria-label="View enlarged weekly menu"
                       >
-                        <img 
-                          src={weeklyMenuImage} 
-                          alt="Weekly Menu"
-                          loading="lazy"
-                          style={{ 
-                            maxHeight: '500px', 
-                            width: 'auto', 
-                            maxWidth: '100%',
-                            borderRadius: '8px',
-                            boxShadow: '0 4px 12px rgba(0,0,0,0.1)'
-                          }}
-                          onError={(e) => {
-                            e.target.onerror = null;
-                            e.target.src = FALLBACK_IMAGES.placeholder;
-                          }}
-                        />
+                        <div style={{ 
+                          maxHeight: '500px', 
+                          overflow: 'hidden',
+                          borderRadius: '8px',
+                          boxShadow: '0 4px 12px rgba(0,0,0,0.1)',
+                          margin: '0 auto',
+                          display: 'inline-block'
+                        }}>
+                          <OptimizedImage 
+                            src={weeklyMenuImage}
+                            alt="Weekly Menu"
+                            width="800"  // Corrected dimensions
+                            height="1000" // Corrected dimensions
+                            objectFit="contain" // This ensures the whole menu is visible
+                          />
+                        </div>
                         <div className="mt-2">
                           <small className="text-muted">Click image to enlarge</small>
                         </div>
@@ -707,13 +790,15 @@ function Facilities() {
       </section>
 
       {/* Image Modal with accessibility improvements */}
-      <ImageModal selectedImage={selectedImage} onClose={closeModal} />
+      {selectedImage && (
+        <ImageModal selectedImage={selectedImage} onClose={closeModal} />
+      )}
 
       <Suspense fallback={null}>
         <GetInTouch />
       </Suspense>
 
-      {/* Critical CSS inline with accessibility improvements */}
+      {/* Critical CSS inline */}
       <style dangerouslySetInnerHTML={{ __html: `
         @keyframes shimmer {
           0% { background-position: -200% 0; }
@@ -735,13 +820,17 @@ function Facilities() {
         
         .facility-image-card {
           transition: transform 0.3s ease;
+          position: relative;
+          overflow: hidden;
         }
+        
         .facility-image-card:hover,
         .facility-image-card:focus-visible {
           transform: scale(1.02);
           outline: 3px solid #cebd04;
           outline-offset: 2px;
         }
+        
         .facility-image-card:hover img,
         .facility-image-card:focus-visible img {
           transform: scale(1.05);
@@ -812,7 +901,6 @@ function Facilities() {
           outline-offset: -3px;
         }
 
-        /* Special activity styling */
         .routine-row.prep-time {
           border-left: 4px solid #4299e1;
         }

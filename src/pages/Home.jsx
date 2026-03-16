@@ -1,3 +1,4 @@
+ // pages/Home.jsx - Updated with WebP images
 import { Helmet } from "react-helmet-async";
 import { Carousel, Container, Row, Col, Button, Card } from "react-bootstrap";
 import { useLocation, useNavigate } from "react-router-dom";
@@ -40,7 +41,6 @@ const useCountUp = (end, duration = 2000) => {
     
     let startTime;
     let animationFrame;
-    let startValue = 0;
     
     const animate = (timestamp) => {
       if (!startTime) startTime = timestamp;
@@ -109,7 +109,6 @@ function Home() {
       if (contactSection) {
         requestAnimationFrame(() => {
           contactSection.scrollIntoView({ behavior: 'smooth' });
-          // Set focus for keyboard users
           contactSection.setAttribute('tabindex', '-1');
           contactSection.focus({ preventScroll: true });
         });
@@ -127,6 +126,17 @@ function Home() {
       window.scrollTo({ top: 0, behavior: 'smooth' });
     });
   }, [navigate]);
+
+  // Preload critical WebP images
+  useEffect(() => {
+    // Preload first carousel image as WebP
+    const link = document.createElement('link');
+    link.rel = 'preload';
+    link.as = 'image';
+    link.href = '/images/optimized/gate3.webp';
+    link.type = 'image/webp';
+    document.head.appendChild(link);
+  }, []);
 
   // Memoized data
   const whyChooseUsItems = useMemo(() => [
@@ -160,19 +170,19 @@ function Home() {
     {
       level: "ECDE",
       summary: "Foundational learning that develops curiosity, creativity, and social skills for young learners.",
-      image: "/images/ECDE3.jpg",
+      image: "ECDE3",
       section: "ecde-section"
     },
     {
       level: "Primary",
       summary: "Structured academic programs combining CBC excellence with values-based education.",
-      image: "/images/computer1.jpg",
+      image: "computer1",
       section: "primary-section"
     },
     {
       level: "Junior Secondary School (JSS)",
       summary: "Advanced curriculum preparing students for senior secondary and holistic personal development.",
-      image: "/images/jss.jpg",
+      image: "jss",
       section: "junior-section"
     },
   ], []);
@@ -196,12 +206,20 @@ function Home() {
     },
   ], []);
 
-  // Stats data - simple without icons
+  // Stats data
   const stats = useMemo(() => [
     { value: 20, label: "Years of Excellence", suffix: "+" },
     { value: 500, label: "Happy Students", suffix: "+" },
     { value: 50, label: "Expert Teachers", suffix: "+" },
     { value: 100, label: "CBC Curriculum", suffix: "%" }
+  ], []);
+
+  // Carousel images with WebP paths
+  const carouselImages = useMemo(() => [
+    { webp: "/images/optimized/gate3.webp", jpg: "/images/optimized/gate3.jpg", alt: "Kitale Progressive School Main Gate" },
+    { webp: "/images/optimized/slide2.webp", jpg: "/images/optimized/slide2.jpg", alt: "School Activities" },
+    { webp: "/images/optimized/gate.webp", jpg: "/images/optimized/gate.jpg", alt: "Campus" },
+    { webp: "/images/optimized/classroom2.webp", jpg: "/images/optimized/classroom2.jpg", alt: "Classroom" }
   ], []);
 
   return (
@@ -212,33 +230,41 @@ function Home() {
           name="description"
           content="Kitale Progressive School - Excellence in Education, Holistic Development and Safe Boarding Environment since 2004."
         />
+        <link rel="preconnect" href="https://www.youtube-nocookie.com" />
+        <link rel="preload" as="image" href="/images/optimized/gate3.webp" type="image/webp" />
       </Helmet>
 
-      {/* HERO CAROUSEL - LCP element with zoom effect */}
+      {/* HERO CAROUSEL - LCP element with WebP images */}
       <section className="hero-carousel-section" aria-label="Hero carousel showcasing school facilities">
         <Carousel   
-          fade 
+         fade 
           interval={5000}
           controls={false}
           pause={false}
           wrap={true}
+          indicators={false}
           className="hero-carousel"
         >
-          {[1, 2, 3, 4].map((item) => (
-            <Carousel.Item key={item}>
+          {carouselImages.map((item, index) => (
+            <Carousel.Item key={index}>
               <div className="carousel-image-wrapper">
-                <img 
-                  className="d-block w-100 carousel-zoom" 
-                  src={item === 1 ? "/images/gate3.jpg" : 
-                      item === 2 ? "/images/slide2.jpg" : 
-                      item === 3 ? "/images/gate.jpg" : 
-                      "/images/classroom2.jpg"} 
-                  alt={`Kitale Progressive School ${item === 1 ? 'Main Gate' : item === 2 ? 'School Activities' : item === 3 ? 'Campus' : 'Classroom'}`}
-                  loading={item === 1 ? "eager" : "lazy"}
-                  fetchpriority={item === 1 ? "high" : "auto"}
-                  width="1920"
-                  height="1080"
-                />
+                <picture>
+                  {/* WebP version for modern browsers */}
+                  <source 
+                    srcSet={item.webp}
+                    type="image/webp"
+                  />
+                  {/* Fallback JPEG for older browsers */}
+                  <img 
+                    className="d-block w-100 carousel-zoom" 
+                    src={item.jpg}
+                    alt={item.alt}
+                    loading={index === 0 ? "eager" : "lazy"}
+                    fetchpriority={index === 0 ? "high" : "auto"}
+                    width="1920"
+                    height="1080"
+                  />
+                </picture>
               </div>
             </Carousel.Item>
           ))}
@@ -318,19 +344,22 @@ function Home() {
         </div>
       </section>
 
-      {/* ABOUT SECTION */}
+      {/* ABOUT SECTION - with WebP image */}
       <section className="about-section section-padding bg-white py-5" aria-labelledby="about-heading">
         <Container>
           <Row className="align-items-center g-4 g-lg-5">
             <Col lg={6} className="order-2 order-lg-1">
-              <img 
-                src="/images/gate1.jpg" 
-                alt="Kitale Progressive School Campus" 
-                className="img-fluid rounded shadow-custom w-100"
-                loading="lazy"
-                width="600"
-                height="400"
-              />
+              <picture>
+                <source srcSet="/images/optimized/gate1.webp" type="image/webp" />
+                <img 
+                  src="/images/optimized/gate1.jpg" 
+                  alt="Kitale Progressive School Campus" 
+                  className="img-fluid rounded shadow-custom w-100"
+                  loading="lazy"
+                  width="600"
+                  height="400"
+                />
+              </picture>
             </Col>
             <Col lg={6} className="order-1 order-lg-2">
               <h2 id="about-heading" className="section-heading-left h1 h2-md">Welcome to Kitale Progressive School</h2>
@@ -352,7 +381,7 @@ function Home() {
         </Container>
       </section>
 
-      {/* ACADEMIC PATHWAY */}
+      {/* ACADEMIC PATHWAY - with WebP images */}
       <section className="academic-pathway-section section-padding bg-white py-5" aria-labelledby="pathway-heading">
         <Container>
           <h2 id="pathway-heading" className="section-heading h1 h2-md">Academic Pathway at KPS</h2>
@@ -361,15 +390,18 @@ function Home() {
               <Col md={6} lg={4} key={index} role="listitem">
                 <Card className="card-custom h-100 border-0">
                   <div className="academic-image-container">
-                    <Card.Img 
-                      variant="top" 
-                      src={item.image} 
-                      alt={`${item.level} classroom activities`}
-                      className="academic-card-image"
-                      loading="lazy"
-                      width="400"
-                      height="200"
-                    />
+                    <picture>
+                      <source srcSet={`/images/optimized/${item.image}.webp`} type="image/webp" />
+                      <Card.Img 
+                        variant="top" 
+                        src={`/images/optimized/${item.image}.jpg`}
+                        alt={`${item.level} classroom activities`}
+                        className="academic-card-image"
+                        loading="lazy"
+                        width="400"
+                        height="200"
+                      />
+                    </picture>
                   </div>
                   <Card.Body className="d-flex flex-column">
                     <Card.Title as="h3" className="card-title-navy-large h4">
@@ -393,7 +425,7 @@ function Home() {
         </Container>
       </section>
 
-      {/* WHY CHOOSE US */}
+      {/* WHY CHOOSE US - unchanged */}
       <section className="why-choose-us-section section-padding bg-light-custom py-5" aria-labelledby="why-heading">
         <Container>
           <h2 id="why-heading" className="section-heading h1 h2-md">Why Choose Us</h2>
@@ -416,7 +448,7 @@ function Home() {
         </Container>
       </section>
 
-      {/* STATISTICS SECTION - Simple stats with animated counters */}
+      {/* STATISTICS SECTION - unchanged */}
       <section className="stats-section py-5" style={{ background: '#ece507' }} aria-labelledby="stats-heading">
         <Container>
           <h2 id="stats-heading" className="visually-hidden">School Statistics</h2>
@@ -433,7 +465,7 @@ function Home() {
         </Container>
       </section>
 
-      {/* OUR LEARNING APPROACH */}
+      {/* OUR LEARNING APPROACH - unchanged */}
       <section className="learning-approach-section section-padding bg-white py-5" aria-labelledby="approach-heading">
         <Container>
           <h2 id="approach-heading" className="section-heading h1 h2-md">Our Learning Approach</h2>
@@ -468,7 +500,7 @@ function Home() {
         </Container>
       </section>
 
-      {/* YOUTUBE VIDEO SECTION */}
+      {/* YOUTUBE VIDEO SECTION - unchanged */}
       <section className="video-section py-5" style={{ background: '#f8fafc' }} aria-labelledby="video-heading">
         <Container>
           <Row className="align-items-center">
@@ -497,39 +529,42 @@ function Home() {
                 boxShadow: '0 20px 40px rgba(0,0,0,0.1)'
               }}>
                 <iframe 
-                    src="https://www.youtube-nocookie.com/embed/Vomydkvag_w"
-                    title="YouTube video"
-                    loading="lazy"
-                    allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-                    allowFullScreen
-                    style={{
-                      position: 'absolute',
-                      top: 0,
-                      left: 0,
-                      width: '100%',
-                      height: '100%',
-                      border: 0
-                    }}
-                  />
+                  src="https://www.youtube-nocookie.com/embed/Vomydkvag_w"
+                  title="School Life at Kitale Progressive School"
+                  loading="lazy"
+                  allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                  allowFullScreen
+                  style={{
+                    position: 'absolute',
+                    top: 0,
+                    left: 0,
+                    width: '100%',
+                    height: '100%',
+                    border: 0
+                  }}
+                />
               </div>
             </Col>
           </Row>
         </Container>
       </section>
 
-      {/* Director SECTION */}
+      {/* Director SECTION - with WebP image */}
       <section className="director-section section-padding bg-white py-5" aria-labelledby="director-heading">
         <Container>
           <Row className="align-items-center g-4 g-lg-5">
             <Col lg={6} className="order-2 order-lg-1">
-              <img 
-                src="/images/director.jpg" 
-                alt="Director John Arthur Kabiro - Kitale Progressive School" 
-                className="img-fluid rounded shadow-custom w-100"
-                loading="lazy"
-                width="600"
-                height="400"
-              />
+              <picture>
+                <source srcSet="/images/optimized/director.webp" type="image/webp" />
+                <img 
+                  src="/images/optimized/director.jpg" 
+                  alt="Director John Arthur Kabiro - Kitale Progressive School" 
+                  className="img-fluid rounded shadow-custom w-100"
+                  loading="lazy"
+                  width="600"
+                  height="400"
+                />
+              </picture>
             </Col>
             <Col lg={6} className="order-1 order-lg-2">
               <h2 id="director-heading" className="section-heading-left h1 h2-md">Welcome Message from Director</h2>
@@ -553,7 +588,7 @@ function Home() {
         </Container>
       </section>
       
-      {/* CALL TO ACTION */}
+      {/* CALL TO ACTION - unchanged */}
       <section className="cta-section py-5" style={{ background: '#132f66' }} aria-label="Call to action">
         <Container className="text-center text-white">
           <h2 className="display-5 display-md-4 fw-bold mb-3 px-3">Ready to Join Kitale Progressive School?</h2>
@@ -561,105 +596,21 @@ function Home() {
           <div className="d-flex justify-content-center gap-2 gap-md-3 flex-wrap px-3">
             <button 
               onClick={() => handleLinkClick('/admissions/apply')} 
-              onKeyDown={(e) => {
-                if (e.key === 'Enter' || e.key === ' ') {
-                  e.preventDefault();
-                  handleLinkClick('/admissions/apply');
-                }
-              }}
-              style={{
-                backgroundColor: '#cebd04',
-                color: '#132f66',
-                border: 'none',
-                padding: '0.75rem 2rem',
-                borderRadius: '40px',
-                fontWeight: '600',
-                fontSize: '1rem',
-                cursor: 'pointer',
-                transition: 'all 0.3s ease',
-                minHeight: '44px',
-                minWidth: '44px'
-              }}
-              onMouseEnter={(e) => {
-                e.target.style.backgroundColor = '#b09e03';
-                e.target.style.transform = 'translateY(-2px)';
-                e.target.style.boxShadow = '0 4px 12px rgba(0,0,0,0.2)';
-              }}
-              onMouseLeave={(e) => {
-                e.target.style.backgroundColor = '#cebd04';
-                e.target.style.transform = 'translateY(0)';
-                e.target.style.boxShadow = 'none';
-              }}
+              className="btn-apply"
               aria-label="Apply for admission now"
             >
               Apply Now
             </button>
             <button 
               onClick={() => handleLinkClick('/contact')} 
-              onKeyDown={(e) => {
-                if (e.key === 'Enter' || e.key === ' ') {
-                  e.preventDefault();
-                  handleLinkClick('/contact');
-                }
-              }}
-              style={{
-                backgroundColor: 'transparent',
-                color: 'white',
-                border: '2px solid white',
-                padding: '0.75rem 2rem',
-                borderRadius: '40px',
-                fontWeight: '600',
-                fontSize: '1rem',
-                cursor: 'pointer',
-                transition: 'all 0.3s ease',
-                minHeight: '44px',
-                minWidth: '44px'
-              }}
-              onMouseEnter={(e) => {
-                e.target.style.backgroundColor = 'white';
-                e.target.style.color = '#132f66';
-                e.target.style.transform = 'translateY(-2px)';
-              }}
-              onMouseLeave={(e) => {
-                e.target.style.backgroundColor = 'transparent';
-                e.target.style.color = 'white';
-                e.target.style.transform = 'translateY(0)';
-              }}
+              className="btn-contact"
               aria-label="Contact us"
             >
               Contact Us
             </button>
             <button 
               onClick={() => handleLinkClick('/admissions/fee-structure')} 
-              onKeyDown={(e) => {
-                if (e.key === 'Enter' || e.key === ' ') {
-                  e.preventDefault();
-                  handleLinkClick('/admissions/fee-structure');
-                }
-              }}
-              style={{
-                backgroundColor: 'transparent',
-                color: 'white',
-                border: '2px solid white',
-                padding: '0.75rem 2rem',
-                borderRadius: '40px',
-                fontWeight: '600',
-                fontSize: '1rem',
-                cursor: 'pointer',
-                transition: 'all 0.3s ease',
-                minHeight: '44px',
-                minWidth: '44px'
-              }}
-              onMouseEnter={(e) => {
-                e.target.style.backgroundColor = 'white';
-                e.target.style.color = '#132f66';
-                e.target.style.transform = 'translateY(-2px)';
-              }}
-              onMouseLeave={(e) => {
-                e.target.style.backgroundColor = 'transparent';
-                e.target.style.color = 'white';
-                e.target.style.transform = 'translateY(0)';
-              }}
+              className="btn-fees"
               aria-label="View fee structure"
             >
               View Fees
@@ -678,12 +629,6 @@ function Home() {
         @keyframes zoomOut {
           0% { transform: scale(1.2); }
           100% { transform: scale(1); }
-        }
-        
-        @keyframes bounce {
-          0%, 20%, 50%, 80%, 100% { transform: translateX(-50%) translateY(0); }
-          40% { transform: translateX(-50%) translateY(-20px); }
-          60% { transform: translateX(-50%) translateY(-10px); }
         }
         
         .visually-hidden {
@@ -718,19 +663,46 @@ function Home() {
           box-shadow: 0 20px 40px rgba(0,0,0,0.1) !important;
         }
         
-        button:focus-visible {
-          outline: 3px solid #cebd04;
-          outline-offset: 2px;
-        }
-        
-        [role="button"]:focus-visible {
-          outline: 3px solid #cebd04;
-          outline-offset: 2px;
-        }
-        
+        button:focus-visible,
+        [role="button"]:focus-visible,
         a:focus-visible {
           outline: 3px solid #cebd04;
           outline-offset: 2px;
+        }
+
+        .btn-apply, .btn-contact, .btn-fees {
+          padding: 0.75rem 2rem;
+          border-radius: 40px;
+          font-weight: 600;
+          font-size: 1rem;
+          cursor: pointer;
+          transition: all 0.3s ease;
+          min-height: 44px;
+          min-width: 44px;
+          border: none;
+        }
+
+        .btn-apply {
+          background-color: #cebd04;
+          color: #132f66;
+        }
+
+        .btn-apply:hover {
+          background-color: #b09e03;
+          transform: translateY(-2px);
+          box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+        }
+
+        .btn-contact, .btn-fees {
+          background-color: transparent;
+          color: white;
+          border: 2px solid white;
+        }
+
+        .btn-contact:hover, .btn-fees:hover {
+          background-color: white;
+          color: #132f66;
+          transform: translateY(-2px);
         }
         
         @media (max-width: 768px) {
@@ -740,16 +712,11 @@ function Home() {
         }
         
         @media (prefers-reduced-motion: reduce) {
-          .carousel-zoom {
-            animation: none !important;
-          }
-          .card-custom:hover {
-            transform: none !important;
-          }
+          .carousel-zoom,
+          .card-custom:hover,
           button:hover {
+            animation: none !important;
             transform: none !important;
-          }
-          * {
             transition: none !important;
           }
         }

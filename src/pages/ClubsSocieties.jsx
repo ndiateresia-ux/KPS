@@ -1,17 +1,85 @@
+// pages/ClubsSocieties.jsx
 import { Helmet } from "react-helmet-async";
 import { Container, Row, Col, Card } from "react-bootstrap";
 import { useState, lazy, Suspense, memo, useCallback, useEffect } from "react";
 
-// Lazy load non-critical components with named export
+// Lazy load non-critical components
 const GetInTouch = lazy(() => import("../components/GetInTouch"));
 
-// Optimized image component with proper error handling and sizing
-const OptimizedImage = memo(({ src, alt, width, height, color }) => {
-  const [imgSrc, setImgSrc] = useState(src);
+// Unsplash fallback images based on club category
+const UNSPLASH_FALLBACKS = {
+  academic: "https://images.unsplash.com/photo-1522202176988-66273c2fd55f?w=400&q=75&auto=format", // Students studying
+  cultural: "https://images.unsplash.com/photo-1516450360452-9312f5e86fc7?w=400&q=75&auto=format", // Cultural dance
+  sports: "https://images.unsplash.com/photo-1461896836934-ffe607ba8211?w=400&q=75&auto=format", // Sports
+  service: "https://images.unsplash.com/photo-1559027615-cd4628902d4a?w=400&q=75&auto=format", // Community service
+  default: "https://images.unsplash.com/photo-1541339907198-e08756dedf3f?w=400&q=75&auto=format" // Default campus
+};
+
+// Category mapping for fallback images
+const getCategoryFallback = (club) => {
+  if (club.category === "academic") return UNSPLASH_FALLBACKS.academic;
+  if (club.category === "cultural") return UNSPLASH_FALLBACKS.cultural;
+  if (club.category === "sports" || club.category === "talent") return UNSPLASH_FALLBACKS.sports;
+  if (club.category === "service") return UNSPLASH_FALLBACKS.service;
+  return UNSPLASH_FALLBACKS.default;
+};
+
+// Optimized image component with WebP support and Unsplash fallback
+const OptimizedImage = memo(({ src, alt, width, height, color, category = 'default' }) => {
+  const [imgSrc, setImgSrc] = useState('');
   const [isLoaded, setIsLoaded] = useState(false);
+  const [error, setError] = useState(false);
+  const [useFallback, setUseFallback] = useState(false);
   
-  // Fallback image based on category color
-  const fallbackImage = `data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='${width}' height='${height}' viewBox='0 0 ${width} ${height}'%3E%3Crect width='${width}' height='${height}' fill='%23${color?.replace('#', '') || 'f0f0f0'}'/%3E%3Ctext x='50%25' y='50%25' font-family='Arial' font-size='14' fill='%23999' text-anchor='middle' dy='.3em'%3E${alt}%3C/text%3E%3C/svg%3E`;
+  // For Unsplash images, use their CDN with optimization
+  const isUnsplash = src.includes('unsplash.com');
+  
+  useEffect(() => {
+    if (useFallback) {
+      // Use category-based Unsplash fallback
+      setImgSrc(getCategoryFallback({ category }));
+    } else if (isUnsplash) {
+      // Optimize Unsplash URLs
+      const baseUrl = src.split('?')[0];
+      setImgSrc(`${baseUrl}?w=400&q=75&auto=format`);
+    } else {
+      // For local images, assume they're in the optimized folder
+      setImgSrc(src);
+    }
+  }, [src, isUnsplash, useFallback, category]);
+
+  // Fallback image based on category color (SVG)
+  const svgFallback = `data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='${width}' height='${height}' viewBox='0 0 ${width} ${height}'%3E%3Crect width='${width}' height='${height}' fill='%23${color?.replace('#', '') || 'f0f0f0'}'/%3E%3Ctext x='50%25' y='50%25' font-family='Arial' font-size='14' fill='%23999' text-anchor='middle' dy='.3em'%3E${alt}%3C/text%3E%3C/svg%3E`;
+
+  const handleError = () => {
+    if (!useFallback) {
+      // Try Unsplash fallback first
+      setUseFallback(true);
+      setIsLoaded(false);
+    } else {
+      // If Unsplash also fails, use SVG fallback
+      setError(true);
+      setIsLoaded(true);
+      setImgSrc(svgFallback);
+    }
+  };
+
+  if (error) {
+    return (
+      <div className="club-image-container" style={{ 
+        backgroundColor: color || '#f0f0f0',
+        width: '100%',
+        height: '100%',
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        color: '#666',
+        fontSize: '0.875rem'
+      }}>
+        📷 {alt}
+      </div>
+    );
+  }
 
   return (
     <div className="club-image-container" style={{ 
@@ -34,28 +102,56 @@ const OptimizedImage = memo(({ src, alt, width, height, color }) => {
           zIndex: 1
         }} />
       )}
-      <img
-        src={imgSrc}
-        alt={alt}
-        loading="lazy"
-        decoding="async"
-        width={width}
-        height={height}
-        onLoad={() => setIsLoaded(true)}
-        onError={() => {
-          setIsLoaded(true);
-          setImgSrc(fallbackImage);
-        }}
-        style={{
-          width: '100%',
-          height: '100%',
-          objectFit: 'cover',
-          opacity: isLoaded ? 1 : 0,
-          transition: 'opacity 0.3s ease',
-          position: 'relative',
-          zIndex: 2
-        }}
-      />
+      
+      {isUnsplash || useFallback ? (
+        // Unsplash images (optimized)
+        <img
+          src={imgSrc}
+          alt={alt}
+          loading="lazy"
+          decoding="async"
+          width={width}
+          height={height}
+          onLoad={() => setIsLoaded(true)}
+          onError={handleError}
+          style={{
+            width: '100%',
+            height: '100%',
+            objectFit: 'cover',
+            opacity: isLoaded ? 1 : 0,
+            transition: 'opacity 0.3s ease',
+            position: 'relative',
+            zIndex: 2
+          }}
+        />
+      ) : (
+        // Local images with WebP support
+        <picture>
+          <source 
+            srcSet={`/images/optimized/${src}.webp`}
+            type="image/webp"
+          />
+          <img
+            src={`/images/optimized/${src}.jpg`}
+            alt={alt}
+            loading="lazy"
+            decoding="async"
+            width={width}
+            height={height}
+            onLoad={() => setIsLoaded(true)}
+            onError={handleError}
+            style={{
+              width: '100%',
+              height: '100%',
+              objectFit: 'cover',
+              opacity: isLoaded ? 1 : 0,
+              transition: 'opacity 0.3s ease',
+              position: 'relative',
+              zIndex: 2
+            }}
+          />
+        </picture>
+      )}
     </div>
   );
 });
@@ -63,7 +159,7 @@ const OptimizedImage = memo(({ src, alt, width, height, color }) => {
 OptimizedImage.displayName = 'OptimizedImage';
 
 // Memoized club card component with enhanced accessibility and better desktop layout
-const ClubCard = memo(({ club, index }) => {
+const ClubCard = memo(({ club, index, category }) => {
   const cardId = `club-${index}-${club.name.toLowerCase().replace(/\s+/g, '-')}`;
   
   return (
@@ -82,6 +178,7 @@ const ClubCard = memo(({ club, index }) => {
               width="400"
               height="300"
               color={club.color}
+              category={category}
             />
           </Col>
           {/* Content column - larger on desktop */}
@@ -221,48 +318,53 @@ function ClubsSocieties() {
     setActiveTab(tabId);
   }, []);
 
-  // Memoize club data to prevent unnecessary re-renders
+  // Memoize club data with optimized image paths and category
   const clubsData = {
     academic: [
       {
         name: "Young Scientists Club",
         description: "Fostering curiosity through hands-on experiments and environmental projects.",
         activities: ["Science fairs", "Nature walks", "Experiments", "Conservation"],
-        image: "https://images.unsplash.com/photo-1532094349884-543bc11b234d?ixlib=rb-4.0.3&auto=format&fit=crop&w=600&q=80",
+        image: "young-scientists", // Will try local first, then Unsplash fallback
         icon: "🔬",
-        color: "#132f66"
+        color: "#132f66",
+        category: "academic"
       },
       {
         name: "Mathematics Club",
         description: "Making math fun through puzzles, competitions, and problem-solving.",
         activities: ["Math contests", "Puzzles", "Mental math", "Math games"],
-        image: "https://images.unsplash.com/photo-1635070041078-e363dbe005cb?ixlib=rb-4.0.3&auto=format&fit=crop&w=600&q=80",
+        image: "mathematics-club",
         icon: "🧮",
-        color: "#0a1f4d"
+        color: "#0a1f4d",
+        category: "academic"
       },
       {
         name: "Reading Club",
         description: "Cultivating love for reading through storytelling and book reviews.",
         activities: ["Storytelling", "Book reviews", "Poetry", "Reading comps"],
-        image: "https://images.unsplash.com/photo-1526243741027-444d633d7365?ixlib=rb-4.0.3&auto=format&fit=crop&w=600&q=80",
+        image: "reading-club",
         icon: "📚",
-        color: "#132f66"
+        color: "#132f66",
+        category: "academic"
       },
       {
         name: "Computer Club",
         description: "Introducing digital literacy and basic programming in a fun environment.",
         activities: ["Coding basics", "Typing", "Digital art", "Internet safety"],
-        image: "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='400' height='300' viewBox='0 0 400 300'%3E%3Crect width='400' height='300' fill='%23132f66'/%3E%3Ctext x='200' y='150' font-family='Arial' font-size='16' fill='white' text-anchor='middle'%3EComputer Club%3C/text%3E%3C/svg%3E",
+        image: "computer-club",
         icon: "💻",
-        color: "#0a1f4d"
+        color: "#0a1f4d",
+        category: "academic"
       },
       {
         name: "Chinese Language Club",
         description: "Learning Mandarin and exploring China's rich culture and traditions.",
         activities: ["Mandarin", "Calligraphy", "Festivals", "Songs"],
-        image: "https://images.unsplash.com/photo-1524593689594-aae2f26b75ab?ixlib=rb-4.0.3&auto=format&fit=crop&w=600&q=80",
+        image: "chinese-club",
         icon: "🇨🇳",
-        color: "#132f66"
+        color: "#132f66",
+        category: "academic"
       }
     ],
     cultural: [
@@ -270,41 +372,46 @@ function ClubsSocieties() {
         name: "Kenyan Traditional Dance",
         description: "Celebrating Kenya's rich cultural heritage through traditional dances.",
         activities: ["Dances", "Festivals", "Drumming", "Traditional attire"],
-        image: "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='400' height='300' viewBox='0 0 400 300'%3E%3Crect width='400' height='300' fill='%23132f66'/%3E%3Ctext x='200' y='150' font-family='Arial' font-size='16' fill='white' text-anchor='middle'%3EKenyan Dance%3C/text%3E%3C/svg%3E",
+        image: "kenyan-dance",
         icon: "💃",
-        color: "#132f66"
+        color: "#132f66",
+        category: "cultural"
       },
       {
         name: "School Band",
         description: "Learn musical instruments and perform at school events together.",
         activities: ["Brass", "Percussion", "Marching band", "Performances"],
-        image: "https://images.unsplash.com/photo-1458560871784-56d23406c091?ixlib=rb-4.0.3&auto=format&fit=crop&w=600&q=80",
+        image: "school-band",
         icon: "🎺",
-        color: "#8b4513"
+        color: "#8b4513",
+        category: "cultural"
       },
       {
         name: "Music Club",
         description: "Developing musical talents through choir and instruments.",
         activities: ["Choir", "Instrument lessons", "Festivals", "Songs"],
-        image: "https://images.unsplash.com/photo-1511671782779-c97d3d27a1d4?ixlib=rb-4.0.3&auto=format&fit=crop&w=600&q=80",
+        image: "music-club",
         icon: "🎵",
-        color: "#0a1f4d"
+        color: "#0a1f4d",
+        category: "cultural"
       },
       {
         name: "Journalism Club",
         description: "Developing young writers through news writing and school magazine.",
         activities: ["News writing", "Magazine", "Interviewing", "Photography"],
-        image: "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='400' height='300' viewBox='0 0 400 300'%3E%3Crect width='400' height='300' fill='%23132f66'/%3E%3Ctext x='200' y='150' font-family='Arial' font-size='16' fill='white' text-anchor='middle'%3EJournalism Club%3C/text%3E%3C/svg%3E",
+        image: "journalism-club",
         icon: "📰",
-        color: "#132f66"
+        color: "#132f66",
+        category: "cultural"
       },
       {
         name: "Drama Club",
         description: "Nurturing creativity through plays, skits, and performances.",
         activities: ["Stage plays", "Role play", "Puppetry", "Productions"],
-        image: "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='400' height='300' viewBox='0 0 400 300'%3E%3Crect width='400' height='300' fill='%230a1f4d'/%3E%3Ctext x='200' y='150' font-family='Arial' font-size='16' fill='white' text-anchor='middle'%3EDrama Club%3C/text%3E%3C/svg%3E",
+        image: "drama-club",
         icon: "🎭",
-        color: "#0a1f4d"
+        color: "#0a1f4d",
+        category: "cultural"
       }
     ],
     talent: [
@@ -312,49 +419,55 @@ function ClubsSocieties() {
         name: "Football Academy",
         description: "Developing soccer skills, teamwork, and sportsmanship.",
         activities: ["Training", "Matches", "Tournaments", "Skills clinics"],
-        image: "https://images.unsplash.com/photo-1543326727-cf6c39e8f84c?ixlib=rb-4.0.3&auto=format&fit=crop&w=600&q=80",
+        image: "football-academy",
         icon: "⚽",
-        color: "#132f66"
+        color: "#132f66",
+        category: "sports"
       },
       {
         name: "Athletics Club",
         description: "Building endurance and speed in track and field events.",
         activities: ["Track", "Field events", "Cross country", "Sports day"],
-        image: "https://images.unsplash.com/photo-1461896836934-ffe607ba8211?ixlib=rb-4.0.3&auto=format&fit=crop&w=600&q=80",
+        image: "athletics-club",
         icon: "🏃",
-        color: "#0a1f4d"
+        color: "#0a1f4d",
+        category: "sports"
       },
       {
         name: "Netball Club",
         description: "Teaching fundamentals of netball, teamwork, and fair play.",
         activities: ["Skills", "Position play", "Matches", "Tournaments"],
-        image: "https://images.unsplash.com/photo-1552674605-d67e0ee90881?ixlib=rb-4.0.3&auto=format&fit=crop&w=600&q=80",
+        image: "netball-club",
         icon: "🏐",
-        color: "#132f66"
+        color: "#132f66",
+        category: "sports"
       },
       {
         name: "Art & Craft Club",
         description: "Exploring creativity through drawing, painting, and crafts.",
         activities: ["Drawing", "Beadwork", "Clay", "Recycled art"],
-        image: "https://images.unsplash.com/photo-1460661419201-fd4cecdf8a8b?ixlib=rb-4.0.3&auto=format&fit=crop&w=600&q=80",
+        image: "art-club",
         icon: "🎨",
-        color: "#0a1f4d"
+        color: "#0a1f4d",
+        category: "cultural" // Art is cultural
       },
       {
         name: "Swimming Club",
         description: "Learn swimming techniques, water safety, and compete in galas.",
         activities: ["Techniques", "Water safety", "Galas", "Life saving"],
-        image: "https://images.unsplash.com/photo-1530549387789-4c1017266635?ixlib=rb-4.0.3&auto=format&fit=crop&w=600&q=80",
+        image: "swimming-club",
         icon: "🏊",
-        color: "#0066b3"
+        color: "#0066b3",
+        category: "sports"
       },
       {
         name: "Indoor Games Club",
         description: "Enjoy table tennis, chess, scrabble, carrom, and more.",
         activities: ["Table tennis", "Chess", "Scrabble", "Carrom"],
-        image: "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='400' height='300' viewBox='0 0 400 300'%3E%3Crect width='400' height='300' fill='%230a1f4d'/%3E%3Ctext x='200' y='150' font-family='Arial' font-size='16' fill='white' text-anchor='middle'%3EIndoor Games%3C/text%3E%3C/svg%3E",
+        image: "indoor-games",
         icon: "🎯",
-        color: "#0a1f4d"
+        color: "#0a1f4d",
+        category: "sports"
       }
     ],
     service: [
@@ -362,33 +475,37 @@ function ClubsSocieties() {
         name: "Wildlife/Environmental Club",
         description: "Creating awareness about Kenya's wildlife and conservation.",
         activities: ["Park visits", "Conservation", "Tree planting", "Wildlife talks"],
-        image: "https://images.unsplash.com/photo-1516426122078-c23e76319801?ixlib=rb-4.0.3&auto=format&fit=crop&w=600&q=80",
+        image: "wildlife-club",
         icon: "🦁",
-        color: "#132f66"
+        color: "#132f66",
+        category: "service"
       },
       {
         name: "Scouts & Guides",
         description: "Building character and leadership through scouting activities.",
         activities: ["Camping", "Community service", "First aid", "Outdoor skills"],
-        image: "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='400' height='300' viewBox='0 0 400 300'%3E%3Crect width='400' height='300' fill='%230a1f4d'/%3E%3Ctext x='200' y='150' font-family='Arial' font-size='16' fill='white' text-anchor='middle'%3EScouts %26 Guides%3C/text%3E%3C/svg%3E",
+        image: "scouts-guides",
         icon: "⛺",
-        color: "#0a1f4d"
+        color: "#0a1f4d",
+        category: "service"
       },
       {
         name: "Young Farmers Club",
         description: "Introducing agriculture through school gardening projects.",
         activities: ["School garden", "Animal care", "Composting", "Market days"],
-        image: "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='400' height='300' viewBox='0 0 400 300'%3E%3Crect width='400' height='300' fill='%23132f66'/%3E%3Ctext x='200' y='150' font-family='Arial' font-size='16' fill='white' text-anchor='middle'%3EYoung Farmers%3C/text%3E%3C/svg%3E",
+        image: "young-farmers",
         icon: "🌱",
-        color: "#132f66"
+        color: "#132f66",
+        category: "service"
       },
       {
         name: "Red Cross Society",
         description: "Promoting health, first aid, and humanitarian values.",
         activities: ["First aid", "Health campaigns", "Fundraising", "Peer support"],
-        image: "https://images.unsplash.com/photo-1584515933487-779824d29309?ixlib=rb-4.0.3&auto=format&fit=crop&w=600&q=80",
+        image: "red-cross",
         icon: "❤️",
-        color: "#0a1f4d"
+        color: "#0a1f4d",
+        category: "service"
       }
     ]
   };
@@ -506,7 +623,12 @@ function ClubsSocieties() {
 
           <Row className="g-4" role="list" aria-label={`${categories.find(c => c.id === activeTab)?.name} clubs`}>
             {clubsData[activeTab]?.map((club, index) => (
-              <ClubCard key={`club-${activeTab}-${index}`} club={club} index={index} />
+              <ClubCard 
+                key={`club-${activeTab}-${index}`} 
+                club={club} 
+                index={index} 
+                category={activeTab}
+              />
             ))}
           </Row>
         </Container>
@@ -588,6 +710,8 @@ function ClubsSocieties() {
           background-color: #f0f0f0;
           width: 100%;
           height: 100%;
+          min-height: 200px;
+          aspect-ratio: 4/3;
         }
         
         .club-image-container img {
@@ -595,6 +719,7 @@ function ClubsSocieties() {
           width: 100%;
           height: 100%;
           object-fit: cover;
+          object-position: center;
         }
         
         .club-card:hover .club-image-container img,
@@ -619,12 +744,14 @@ function ClubsSocieties() {
         /* Desktop styles */
         @media (min-width: 768px) {
           .club-card .col-md-4 {
-            height: 220px;
+            height: auto;
+            min-height: 220px;
             padding: 0 !important;
           }
           
           .club-card .col-md-8 {
-            height: 220px;
+            height: auto;
+            min-height: 220px;
             display: flex;
             flex-direction: column;
           }
@@ -683,9 +810,12 @@ function ClubsSocieties() {
         
         /* Large desktop styles */
         @media (min-width: 1200px) {
-          .club-card .col-md-4,
+          .club-card .col-md-4 {
+            min-height: 240px;
+          }
+          
           .club-card .col-md-8 {
-            height: 240px;
+            min-height: 240px;
           }
           
           .club-description {
@@ -701,7 +831,12 @@ function ClubsSocieties() {
         /* Mobile styles */
         @media (max-width: 767px) {
           .club-card .col-md-4 {
-            height: 180px;
+            height: 200px;
+            width: 100%;
+          }
+          
+          .club-image-container {
+            min-height: 200px;
           }
           
           .club-description {

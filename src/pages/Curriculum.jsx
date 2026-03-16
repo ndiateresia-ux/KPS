@@ -1,3 +1,4 @@
+// pages/Curriculum.jsx - Updated with correct paths
 import { lazy, Suspense, memo, useCallback, useMemo, useEffect, useState } from "react";
 import { useLocation } from "react-router-dom";
 import Container from 'react-bootstrap/Container';
@@ -10,12 +11,114 @@ import Button from 'react-bootstrap/Button';
 const GetInTouch = lazy(() => import("../components/GetInTouch"));
 const Helmet = lazy(() => import("react-helmet-async").then(mod => ({ default: mod.Helmet })));
 
-// Optimized image URLs with lower quality and responsive parameters
-const FALLBACK_IMAGES = {
-  ecde: "https://images.unsplash.com/photo-1503676260728-517c89092e3c?w=400&q=60&auto=format&fit=crop",
-  primary: "https://images.unsplash.com/photo-1509062522246-3755977927d7?w=400&q=60&auto=format&fit=crop",
-  jss: "https://images.unsplash.com/photo-1523050854058-8df90110c9f1?w=400&q=60&auto=format&fit=crop"
-};
+// Optimized image component with WebP support (using same paths as other pages)
+const OptimizedImage = memo(({ 
+  src, 
+  alt, 
+  className = '', 
+  width, 
+  height,
+  priority = false,
+  folder = '', // Add folder parameter for gallery images
+  ...props 
+}) => {
+  const [loaded, setLoaded] = useState(false);
+  const [error, setError] = useState(false);
+  const imageId = `img-${src.replace(/[^a-zA-Z0-9]/g, '-')}`;
+
+  // Determine the correct path
+  const basePath = folder ? `/images/optimized/${folder}/${src}` : `/images/optimized/${src}`;
+
+  // Preload critical images
+  useEffect(() => {
+    if (priority) {
+      const link = document.createElement('link');
+      link.rel = 'preload';
+      link.as = 'image';
+      link.href = `${basePath}.webp`;
+      link.type = 'image/webp';
+      document.head.appendChild(link);
+    }
+  }, [priority, basePath]);
+
+  if (error) {
+    return (
+      <div 
+        style={{
+          width: '100%',
+          height: height || '100%',
+          backgroundColor: '#f0f0f0',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          color: '#666',
+          fontSize: '14px',
+          aspectRatio: width && height ? `${width}/${height}` : 'auto'
+        }}
+      >
+        📷 Image not available
+      </div>
+    );
+  }
+
+  return (
+    <div style={{ 
+      position: 'relative', 
+      width: '100%', 
+      height: '100%',
+      aspectRatio: width && height ? `${width}/${height}` : 'auto'
+    }}>
+      {!loaded && (
+        <div 
+          className="image-skeleton"
+          style={{
+            position: 'absolute',
+            top: 0,
+            left: 0,
+            right: 0,
+            bottom: 0,
+            background: 'linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%)',
+            backgroundSize: '200% 100%',
+            animation: 'shimmer 1.5s infinite',
+            borderRadius: '12px'
+          }}
+          aria-hidden="true"
+        />
+      )}
+      <picture>
+        {/* WebP version */}
+        <source 
+          srcSet={`${basePath}.webp`}
+          type="image/webp"
+        />
+        {/* Fallback JPG */}
+        <img
+          id={imageId}
+          src={`${basePath}.jpg`}
+          alt={alt}
+          loading={priority ? "eager" : "lazy"}
+          decoding="async"
+          width={width}
+          height={height}
+          onLoad={() => setLoaded(true)}
+          onError={() => setError(true)}
+          style={{
+            width: '100%',
+            height: '100%',
+            objectFit: 'cover',
+            opacity: loaded ? 1 : 0,
+            transition: 'opacity 0.3s ease, transform 0.3s ease',
+            borderRadius: '12px'
+          }}
+          className={className}
+          {...props}
+        />
+      </picture>
+    </div>
+  );
+});
+
+OptimizedImage.displayName = 'OptimizedImage';
 
 // Memoized stat item component
 const StatItem = memo(({ value, label }) => (
@@ -43,34 +146,20 @@ const PillarItem = memo(({ icon, label }) => (
 
 PillarItem.displayName = 'PillarItem';
 
-// Optimized navigation card component with responsive images
+// Optimized navigation card component
 const NavCard = memo(({ data, onClick }) => {
   const cardId = `nav-card-${data.id}`;
   
   return (
     <Col md={4} className="mb-4">
       <Card className="curriculum-nav-card h-100 border-0 shadow-sm" role="article" aria-labelledby={cardId}>
-        <div className="curriculum-card-img-wrapper" style={{ aspectRatio: '16/9', overflow: 'hidden' }}>
-          <Card.Img 
-            variant="top" 
-            src={`${data.image}?w=400&q=60&auto=format`}
-            srcSet={`
-              ${data.image}?w=400&q=60&auto=format 400w,
-              ${data.image}?w=600&q=60&auto=format 600w,
-              ${data.image}?w=800&q=60&auto=format 800w
-            `}
-            sizes="(max-width: 768px) 400px, (max-width: 1200px) 600px, 800px"
+        <div className="curriculum-card-img-wrapper" style={{ aspectRatio: '16/9', overflow: 'hidden', borderRadius: '12px 12px 0 0' }}>
+          <OptimizedImage
+            src={data.image}
             alt={`${data.badge} level learning activities`}
-            className="curriculum-card-img"
-            loading="lazy"
-            decoding="async"
             width="400"
             height="225"
-            style={{ width: '100%', height: '100%', objectFit: 'cover' }}
-            onError={(e) => {
-              e.target.onerror = null;
-              e.target.src = data.fallbackImage;
-            }}
+            priority={data.id === 'ecde'}
           />
         </div>
         <Card.Body className="text-center p-3">
@@ -82,6 +171,7 @@ const NavCard = memo(({ data, onClick }) => {
             className="btn-outline-navy btn-sm px-3"
             onClick={() => onClick(`${data.id}-section`)}
             aria-label={`Explore ${data.badge} curriculum`}
+            style={{ minHeight: '44px', minWidth: '44px' }}
           >
             Explore
           </Button>
@@ -93,89 +183,7 @@ const NavCard = memo(({ data, onClick }) => {
 
 NavCard.displayName = 'NavCard';
 
-// Optimized image component with responsive images and loading states
-const CurriculumImage = memo(({ data }) => {
-  const [imgSrc, setImgSrc] = useState(data.image);
-  const [loaded, setLoaded] = useState(false);
-
-  return (
-    <div className="curriculum-image-wrapper" style={{ 
-      aspectRatio: '4/3',
-      position: 'relative',
-      borderRadius: '12px',
-      overflow: 'hidden',
-      backgroundColor: '#f0f0f0'
-    }}>
-      {!loaded && (
-        <div 
-          className="image-skeleton"
-          style={{
-            position: 'absolute',
-            top: 0,
-            left: 0,
-            right: 0,
-            bottom: 0,
-            background: 'linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%)',
-            backgroundSize: '200% 100%',
-            animation: 'shimmer 1.5s infinite'
-          }}
-          aria-hidden="true"
-        />
-      )}
-      <img 
-        src={`${imgSrc}?w=600&q=60&auto=format`}
-        srcSet={`
-          ${imgSrc}?w=400&q=60&auto=format 400w,
-          ${imgSrc}?w=600&q=60&auto=format 600w,
-          ${imgSrc}?w=800&q=60&auto=format 800w
-        `}
-        sizes="(max-width: 768px) 400px, (max-width: 1200px) 600px, 800px"
-        alt={`${data.title} - ${data.imageTag} illustration`}
-        className={`curriculum-image ${loaded ? 'loaded' : ''}`}
-        loading="lazy"
-        decoding="async"
-        width="600"
-        height="450"
-        style={{ 
-          width: '100%', 
-          height: '100%', 
-          objectFit: 'cover',
-          opacity: loaded ? 1 : 0,
-          transition: 'opacity 0.3s ease, transform 0.3s ease'
-        }}
-        onLoad={() => setLoaded(true)}
-        onError={(e) => {
-          e.target.onerror = null;
-          setImgSrc(data.fallbackImage);
-        }}
-      />
-      <div 
-        className="image-tag"
-        style={{
-          position: 'absolute',
-          bottom: '15px',
-          left: '15px',
-          background: 'rgba(206, 189, 4, 0.9)',
-          color: '#132f66',
-          padding: '4px 12px',
-          borderRadius: '30px',
-          fontSize: '0.8rem',
-          fontWeight: '600',
-          backdropFilter: 'blur(5px)',
-          zIndex: 2
-        }}
-        aria-label={`Tag: ${data.imageTag}`}
-      >
-        <i className={`fas ${data.imageIcon} me-2`} aria-hidden="true"></i>
-        {data.imageTag}
-      </div>
-    </div>
-  );
-});
-
-CurriculumImage.displayName = 'CurriculumImage';
-
-// Optimized curriculum section component
+// Curriculum section component
 const CurriculumSection = memo(({ data, isReversed = false }) => {
   const sectionId = `${data.id}-section`;
   
@@ -252,7 +260,40 @@ const CurriculumSection = memo(({ data, isReversed = false }) => {
             )}
           </Col>
           <Col lg={6} className={isReversed ? "order-lg-1" : ""}>
-            <CurriculumImage data={data} />
+            <div className="curriculum-image-wrapper" style={{ 
+              aspectRatio: '4/3',
+              position: 'relative',
+              borderRadius: '12px',
+              overflow: 'hidden',
+              backgroundColor: '#f0f0f0'
+            }}>
+              <OptimizedImage
+                src={data.image}
+                alt={`${data.title} - ${data.imageTag} illustration`}
+                width="600"
+                height="450"
+              />
+              <div 
+                className="image-tag"
+                style={{
+                  position: 'absolute',
+                  bottom: '15px',
+                  left: '15px',
+                  background: 'rgba(206, 189, 4, 0.9)',
+                  color: '#132f66',
+                  padding: '4px 12px',
+                  borderRadius: '30px',
+                  fontSize: '0.8rem',
+                  fontWeight: '600',
+                  backdropFilter: 'blur(5px)',
+                  zIndex: 2
+                }}
+                aria-label={`Tag: ${data.imageTag}`}
+              >
+                <i className={`fas ${data.imageIcon} me-2`} aria-hidden="true"></i>
+                {data.imageTag}
+              </div>
+            </div>
           </Col>
         </Row>
       </Container>
@@ -298,8 +339,7 @@ function Curriculum() {
       title: "ECDE (Early Childhood Development Education)",
       subtitle: "Playgroup • Pre-Primary 1 • Pre-Primary 2",
       ageRange: "Ages 2-5 years",
-      image: "/images/ecde",
-      fallbackImage: FALLBACK_IMAGES.ecde,
+      image: "ecde",
       description: "The ECDE level focuses on foundational learning through play-based activities that develop curiosity, creativity, and social skills.",
       learningAreas: [
         "Language Activities", "Mathematical Activities", "Environmental Activities",
@@ -318,8 +358,7 @@ function Curriculum() {
       title: "Primary School",
       subtitle: "Grades 1 - 6",
       ageRange: "Ages 6-11 years",
-      image: "/images/primary",
-      fallbackImage: FALLBACK_IMAGES.primary,
+      image: "primary",
       description: "The Primary level builds on foundational skills and introduces more structured learning.",
       learningAreas: [
         "English", "Kiswahili", "Mathematics", "Science and Technology",
@@ -338,8 +377,7 @@ function Curriculum() {
       title: "Junior Secondary School (JSS)",
       subtitle: "Grades 7 - 9",
       ageRange: "Ages 12-14 years",
-      image: "/images/jss",
-      fallbackImage: FALLBACK_IMAGES.jss,
+      image: "jss",
       description: "Junior Secondary prepares learners for senior school while helping them explore their talents and interests.",
       learningAreas: [
         "English", "Kiswahili", "Mathematics", "Integrated Science",
@@ -482,7 +520,7 @@ function Curriculum() {
           </p>
           <a 
             href="/admissions/apply" 
-            className="btn btn-light px-4 py-2"
+            className="btn btn-light px-4 py-2 d-inline-block"
             style={{
               backgroundColor: '#cebd04',
               color: '#132f66',
@@ -490,7 +528,6 @@ function Curriculum() {
               borderRadius: '40px',
               fontWeight: '600',
               textDecoration: 'none',
-              display: 'inline-block',
               transition: 'all 0.3s ease',
               minHeight: '44px',
               minWidth: '44px',
@@ -518,7 +555,7 @@ function Curriculum() {
         <GetInTouch />
       </Suspense>
 
-      {/* Only critical CSS inline, rest should be in themes.css */}
+      {/* Critical CSS */}
       <style dangerouslySetInnerHTML={{ __html: `
         @keyframes shimmer {
           0% { background-position: -200% 0; }
@@ -535,6 +572,11 @@ function Curriculum() {
           border: 0;
         }
         [tabindex="-1"]:focus {
+          outline: 3px solid #cebd04;
+          outline-offset: 2px;
+        }
+        button:focus-visible,
+        a:focus-visible {
           outline: 3px solid #cebd04;
           outline-offset: 2px;
         }

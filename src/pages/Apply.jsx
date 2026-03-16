@@ -885,6 +885,7 @@ function Apply() {
                     
                     <Row className="mb-3">
                       <Col md={12}>
+                      <div className="apply-form">
                         <Form.Check 
                           type="checkbox" 
                           name="hasAllergies" 
@@ -899,6 +900,7 @@ function Apply() {
                           onChange={handleChange}
                           className="mb-2"
                         />
+                        </div>
                       </Col>
                     </Row>
 
@@ -918,6 +920,7 @@ function Apply() {
                     {/* Terms */}
                     <Row className="mb-4">
                       <Col md={12}>
+                      <div className="apply-form">
                         <Form.Check 
                           required 
                           type="checkbox" 
@@ -939,6 +942,7 @@ function Apply() {
                           }
                           feedback="You must agree to the Terms and Privacy Policy"
                         />
+                        </div>
                       </Col>
                     </Row>
 

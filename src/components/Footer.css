@@ -112,6 +112,18 @@
   text-overflow: clip;
 }
 
+/* Remove underline from email and phone links */
+.footer-contact-link {
+  text-decoration: none;
+  color: rgba(255, 255, 255, 0.8);
+  transition: color 0.2s ease;
+}
+
+.footer-contact-link:hover {
+  color: var(--gold);
+  text-decoration: none;
+}
+
 /* Footer Link Buttons - Optimized */
 .footer-link-btn {
   background: none;
@@ -251,6 +263,7 @@
   }
 }
 
+/* Mobile view - Centered content */
 @media (max-width: 768px) {
   .footer-map {
     height: 140px;
@@ -263,35 +276,59 @@
   .footer-content [class*="col-"] {
     flex: 0 0 100%; /* 1 column on mobile */
     max-width: 100%;
-    text-align: left; /* Keep left alignment */
-    padding-left: 15px; /* Add some padding for mobile */
+    text-align: center !important; /* Center align on mobile */
+    padding-left: 15px;
     padding-right: 15px;
   }
   
   .footer-title {
-    text-align: left;
+    text-align: center !important;
     margin-top: 0.5rem;
     white-space: normal;
   }
   
   .footer-title::after {
-    left: 0; /* Keep left alignment even on mobile */
-    transform: none;
+    left: 50% !important; /* Center the underline */
+    transform: translateX(-50%);
     width: 30px;
   }
   
   .footer-content p {
-    text-align: left;
+    text-align: center !important;
     white-space: normal;
+    justify-content: center;
+  }
+  
+  .footer-contact {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+  }
+  
+  .footer-contact p {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 5px;
   }
   
   .footer-link-btn {
-    text-align: left;
+    text-align: center !important;
     white-space: normal;
+    width: 100%;
+    display: block;
+  }
+  
+  .footer-content ul {
+    text-align: center !important;
+  }
+  
+  .footer-content li {
+    text-align: center !important;
   }
   
   .social-icons {
-    justify-content: flex-start; /* Keep left alignment */
+    justify-content: center !important; /* Center social icons */
   }
   
   .footer-legal-text {
@@ -327,13 +364,18 @@
   .footer-legal-link {
     font-size: 0.7rem;
   }
+  
+  .footer-contact p {
+    flex-wrap: wrap;
+  }
 }
 
 /* Reduced Motion */
 @media (prefers-reduced-motion: reduce) {
   .footer-link-btn,
   .social-icon,
-  .footer-legal-link {
+  .footer-legal-link,
+  .footer-contact-link {
     transition: none;
   }
   

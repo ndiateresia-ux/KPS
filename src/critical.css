@@ -236,10 +236,12 @@ header .apply-btn,
   animation: zoomOut 8s ease forwards;
 }
 
+
 @keyframes zoomOut {
   0% { transform: scale(1.2); }
   100% { transform: scale(1); }
 }
+
 
 /* Overlay table - Critical content */
 .carousel-overlay-table {

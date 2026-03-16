@@ -150,14 +150,6 @@ const Header = () => {
 
   return (
     <>
-      {/* Screen reader announcer for menu state changes */}
-      <div id="menu-announcer" className="visually-hidden" role="status" aria-live="polite"></div>
-      
-      {/* Skip to content link for keyboard users */}
-      <a href="#main-content" className="skip-to-content-link">
-        Skip to main content
-      </a>
-
       <header className={`main-header ${scrolled ? 'header-scrolled' : 'header-transparent'}`} role="banner">
         <Navbar expanded={expanded} expand="lg" className="p-0">
           <Container fluid>
@@ -169,7 +161,7 @@ const Header = () => {
             >
               <div className="logo-wrapper">
                 <img 
-                  src="/images/logo.png" 
+                  src="/images/optimized/logo.png" 
                   alt="" // Decorative image - logo text provides context
                   aria-hidden="true"
                   loading="eager" 

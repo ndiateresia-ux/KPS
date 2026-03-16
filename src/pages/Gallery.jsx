@@ -1,3 +1,4 @@
+// pages/Gallery.jsx
 import { Helmet } from "react-helmet-async";
 import { Container, Row, Col } from "react-bootstrap";
 import { useState, useEffect, useCallback, lazy, Suspense, memo } from "react";
@@ -6,13 +7,29 @@ import { useState, useEffect, useCallback, lazy, Suspense, memo } from "react";
 const GetInTouch = lazy(() => import("../components/GetInTouch"));
 
 // Fallback image
-const FALLBACK_IMAGE = "https://images.unsplash.com/photo-1541339907198-e08756dedf3f?ixlib=rb-4.0.3&auto=format&fit=crop&w=600&q=80";
+const FALLBACK_IMAGE = "/images/optimized/fallback.jpg";
 
-// Memoized gallery image component with accessibility
+// Optimized Gallery Image Component
 const GalleryImage = memo(({ image, onClick }) => {
-  const [imgSrc, setImgSrc] = useState(image.src);
+  const [imgSrc, setImgSrc] = useState('');
   const [loaded, setLoaded] = useState(false);
+  const [error, setError] = useState(false);
   const imageId = `gallery-img-${image.id}`;
+
+  // Set the correct image path based on format
+  useEffect(() => {
+    // Try WebP first, fall back to JPG
+    const basePath = `/images/optimized/gallery/${image.filename}`;
+    setImgSrc(`${basePath}.webp`);
+  }, [image.filename]);
+
+  const handleError = () => {
+    if (!error) {
+      setError(true);
+      // Fall back to optimized JPG
+      setImgSrc(`/images/optimized/gallery/${image.filename}.jpg`);
+    }
+  };
 
   return (
     <div
@@ -51,25 +68,30 @@ const GalleryImage = memo(({ image, onClick }) => {
           aria-hidden="true"
         />
       )}
-      <img
-        id={imageId}
-        src={imgSrc}
-        alt={image.alt}
-        loading="lazy"
-        decoding="async"
-        onLoad={() => setLoaded(true)}
-        onError={(e) => {
-          e.target.onerror = null;
-          setImgSrc(FALLBACK_IMAGE);
-        }}
-        style={{
-          width: '100%',
-          height: '100%',
-          objectFit: 'cover',
-          opacity: loaded ? 1 : 0,
-          transition: 'opacity 0.3s ease, transform 0.3s ease'
-        }}
-      />
+      <picture>
+        {/* WebP version for modern browsers */}
+        <source 
+          srcSet={`/images/optimized/gallery/${image.filename}.webp`}
+          type="image/webp"
+        />
+        {/* Fallback JPG for older browsers */}
+        <img
+          id={imageId}
+          src={`/images/optimized/gallery/${image.filename}.jpg`}
+          alt={image.alt}
+          loading="lazy"
+          decoding="async"
+          onLoad={() => setLoaded(true)}
+          onError={handleError}
+          style={{
+            width: '100%',
+            height: '100%',
+            objectFit: 'cover',
+            opacity: loaded ? 1 : 0,
+            transition: 'opacity 0.3s ease, transform 0.3s ease'
+          }}
+        />
+      </picture>
     </div>
   );
 });
@@ -149,7 +171,6 @@ const LightboxModal = memo(({ selectedImage, onClose, onPrev, onNext }) => {
         padding: '2rem'
       }}
       onClick={onClose}
-      onKeyDown={handleKeyDown}
       role="dialog"
       aria-modal="true"
       aria-label="Image lightbox"
@@ -157,12 +178,6 @@ const LightboxModal = memo(({ selectedImage, onClose, onPrev, onNext }) => {
     >
       <button
         onClick={onClose}
-        onKeyDown={(e) => {
-          if (e.key === 'Enter' || e.key === ' ') {
-            e.preventDefault();
-            onClose();
-          }
-        }}
         style={{
           position: 'absolute',
           top: '20px',
@@ -182,17 +197,10 @@ const LightboxModal = memo(({ selectedImage, onClose, onPrev, onNext }) => {
         aria-label="Close lightbox"
       >
         ✕
-        <span className="visually-hidden">Close</span>
       </button>
       
       <button
         onClick={(e) => { e.stopPropagation(); onPrev(); }}
-        onKeyDown={(e) => {
-          if (e.key === 'Enter' || e.key === ' ') {
-            e.preventDefault();
-            onPrev();
-          }
-        }}
         style={{
           position: 'absolute',
           left: '20px',
@@ -207,26 +215,16 @@ const LightboxModal = memo(({ selectedImage, onClose, onPrev, onNext }) => {
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'center',
-          transition: 'all 0.3s ease',
           minWidth: '44px',
           minHeight: '44px'
         }}
-        onMouseEnter={(e) => e.target.style.backgroundColor = 'rgba(255,255,255,0.3)'}
-        onMouseLeave={(e) => e.target.style.backgroundColor = 'rgba(255,255,255,0.2)'}
         aria-label="Previous image"
       >
         ‹
-        <span className="visually-hidden">Previous</span>
       </button>
       
       <button
         onClick={(e) => { e.stopPropagation(); onNext(); }}
-        onKeyDown={(e) => {
-          if (e.key === 'Enter' || e.key === ' ') {
-            e.preventDefault();
-            onNext();
-          }
-        }}
         style={{
           position: 'absolute',
           right: '20px',
@@ -241,16 +239,12 @@ const LightboxModal = memo(({ selectedImage, onClose, onPrev, onNext }) => {
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'center',
-          transition: 'all 0.3s ease',
           minWidth: '44px',
           minHeight: '44px'
         }}
-        onMouseEnter={(e) => e.target.style.backgroundColor = 'rgba(255,255,255,0.3)'}
-        onMouseLeave={(e) => e.target.style.backgroundColor = 'rgba(255,255,255,0.2)'}
         aria-label="Next image"
       >
         ›
-        <span className="visually-hidden">Next</span>
       </button>
 
       <div
@@ -260,16 +254,22 @@ const LightboxModal = memo(({ selectedImage, onClose, onPrev, onNext }) => {
         }}
         onClick={(e) => e.stopPropagation()}
       >
-        <img
-          src={selectedImage.src}
-          alt={selectedImage.alt}
-          style={{
-            maxWidth: '100%',
-            maxHeight: '90vh',
-            objectFit: 'contain',
-            borderRadius: '8px'
-          }}
-        />
+        <picture>
+          <source 
+            srcSet={`/images/optimized/gallery/${selectedImage.filename}.webp`}
+            type="image/webp"
+          />
+          <img
+            src={`/images/optimized/gallery/${selectedImage.filename}.jpg`}
+            alt={selectedImage.alt}
+            style={{
+              maxWidth: '100%',
+              maxHeight: '90vh',
+              objectFit: 'contain',
+              borderRadius: '8px'
+            }}
+          />
+        </picture>
         <p style={{ 
           color: 'white', 
           textAlign: 'center', 
@@ -291,61 +291,61 @@ function Gallery() {
   const [visibleImages, setVisibleImages] = useState(8);
   const [loading, setLoading] = useState(false);
 
-  // Gallery data organized by categories
+  // Gallery data organized by categories - using filename without extension
   const galleryData = {
     all: [
-      { id: 1, src: "/images/gallery/academics1.jpg", alt: "Classroom learning", category: "academics" },
-      { id: 2, src: "/images/gallery/academics2.jpg", alt: "Science experiment", category: "academics" },
-      { id: 3, src: "/images/gallery/academics3.jpg", alt: "Library reading", category: "academics" },
-      { id: 4, src: "/images/gallery/academics4.jpg", alt: "Computer class", category: "academics" },
-      { id: 5, src: "/images/gallery/sports1.jpg", alt: "Football match", category: "sports" },
-      { id: 6, src: "/images/gallery/sports2.jpg", alt: "Athletics", category: "sports" },
-      { id: 7, src: "/images/gallery/sports3.jpg", alt: "Netball", category: "sports" },
-      { id: 8, src: "/images/gallery/sports4.jpg", alt: "Swimming gala", category: "sports" },
-      { id: 9, src: "/images/gallery/cultural1.jpg", alt: "Traditional dance", category: "cultural" },
-      { id: 10, src: "/images/gallery/cultural2.jpg", alt: "Music festival", category: "cultural" },
-      { id: 11, src: "/images/gallery/cultural3.jpg", alt: "Drama performance", category: "cultural" },
-      { id: 12, src: "/images/gallery/cultural4.jpg", alt: "Art exhibition", category: "cultural" },
-      { id: 13, src: "/images/gallery/events1.jpg", alt: "Graduation", category: "events" },
-      { id: 14, src: "/images/gallery/events2.jpg", alt: "Prize giving day", category: "events" },
-      { id: 15, src: "/images/gallery/events3.jpg", alt: "Parents day", category: "events" },
-      { id: 16, src: "/images/gallery/events4.jpg", alt: "Open day", category: "events" },
-      { id: 17, src: "/images/gallery/facilities1.jpg", alt: "School library", category: "facilities" },
-      { id: 18, src: "/images/gallery/facilities2.jpg", alt: "Science lab", category: "facilities" },
-      { id: 19, src: "/images/gallery/facilities3.jpg", alt: "Playground", category: "facilities" },
-      { id: 20, src: "/images/gallery/facilities4.jpg", alt: "Computer lab", category: "facilities" },
-      { id: 21, src: "/images/gallery/facilities5.jpg", alt: "School van", category: "facilities" },
+      { id: 1, filename: "academics1", alt: "Classroom learning", category: "academics" },
+      { id: 2, filename: "academics2", alt: "Science experiment", category: "academics" },
+      { id: 3, filename: "academics3", alt: "Library reading", category: "academics" },
+      { id: 4, filename: "academics4", alt: "Computer class", category: "academics" },
+      { id: 5, filename: "sports1", alt: "Football match", category: "sports" },
+      { id: 6, filename: "sports2", alt: "Athletics", category: "sports" },
+      { id: 7, filename: "sports3", alt: "Netball", category: "sports" },
+      { id: 8, filename: "sports4", alt: "Swimming gala", category: "sports" },
+      { id: 9, filename: "cultural1", alt: "Traditional dance", category: "cultural" },
+      { id: 10, filename: "cultural2", alt: "Music festival", category: "cultural" },
+      { id: 11, filename: "cultural3", alt: "Drama performance", category: "cultural" },
+      { id: 12, filename: "cultural4", alt: "Art exhibition", category: "cultural" },
+      { id: 13, filename: "events1", alt: "Graduation", category: "events" },
+      { id: 14, filename: "events2", alt: "Prize giving day", category: "events" },
+      { id: 15, filename: "events3", alt: "Parents day", category: "events" },
+      { id: 16, filename: "events4", alt: "Open day", category: "events" },
+      { id: 17, filename: "facilities1", alt: "School library", category: "facilities" },
+      { id: 18, filename: "facilities2", alt: "Science lab", category: "facilities" },
+      { id: 19, filename: "facilities3", alt: "Playground", category: "facilities" },
+      { id: 20, filename: "facilities4", alt: "Computer lab", category: "facilities" },
+      { id: 21, filename: "facilities5", alt: "School van", category: "facilities" },
     ],
     academics: [
-      { id: 1, src: "/images/gallery/academics1.jpg", alt: "Classroom learning" },
-      { id: 2, src: "/images/gallery/academics2.jpg", alt: "Science experiment" },
-      { id: 3, src: "/images/gallery/academics3.jpg", alt: "Library reading" },
-      { id: 4, src: "/images/gallery/academics4.jpg", alt: "Computer class" },
+      { id: 1, filename: "academics1", alt: "Classroom learning" },
+      { id: 2, filename: "academics2", alt: "Science experiment" },
+      { id: 3, filename: "academics3", alt: "Library reading" },
+      { id: 4, filename: "academics4", alt: "Computer class" },
     ],
     sports: [
-      { id: 5, src: "/images/gallery/sports1.jpg", alt: "Football match" },
-      { id: 6, src: "/images/gallery/sports2.jpg", alt: "Athletics" },
-      { id: 7, src: "/images/gallery/sports3.jpg", alt: "Netball" },
-      { id: 8, src: "/images/gallery/sports4.jpg", alt: "Swimming gala" },
+      { id: 5, filename: "sports1", alt: "Football match" },
+      { id: 6, filename: "sports2", alt: "Athletics" },
+      { id: 7, filename: "sports3", alt: "Netball" },
+      { id: 8, filename: "sports4", alt: "Swimming gala" },
     ],
     cultural: [
-      { id: 9, src: "/images/gallery/cultural1.jpg", alt: "Traditional dance" },
-      { id: 10, src: "/images/gallery/cultural2.jpg", alt: "Music festival" },
-      { id: 11, src: "/images/gallery/cultural3.jpg", alt: "Drama performance" },
-      { id: 12, src: "/images/gallery/cultural4.jpg", alt: "Art exhibition" },
+      { id: 9, filename: "cultural1", alt: "Traditional dance" },
+      { id: 10, filename: "cultural2", alt: "Music festival" },
+      { id: 11, filename: "cultural3", alt: "Drama performance" },
+      { id: 12, filename: "cultural4", alt: "Art exhibition" },
     ],
     events: [
-      { id: 13, src: "/images/gallery/events1.jpg", alt: "Graduation" },
-      { id: 14, src: "/images/gallery/events2.jpg", alt: "Prize giving day" },
-      { id: 15, src: "/images/gallery/events3.jpg", alt: "Parents day" },
-      { id: 16, src: "/images/gallery/events4.jpg", alt: "Open day" },
+      { id: 13, filename: "events1", alt: "Graduation" },
+      { id: 14, filename: "events2", alt: "Prize giving day" },
+      { id: 15, filename: "events3", alt: "Parents day" },
+      { id: 16, filename: "events4", alt: "Open day" },
     ],
     facilities: [
-      { id: 17, src: "/images/gallery/facilities1.jpg", alt: "School library" },
-      { id: 18, src: "/images/gallery/facilities2.jpg", alt: "Science lab" },
-      { id: 19, src: "/images/gallery/facilities3.jpg", alt: "Playground" },
-      { id: 20, src: "/images/gallery/facilities4.jpg", alt: "Computer lab" },
-      { id: 21, src: "/images/gallery/facilities5.jpg", alt: "School van" },
+      { id: 17, filename: "facilities1", alt: "School library" },
+      { id: 18, filename: "facilities2", alt: "Science lab" },
+      { id: 19, filename: "facilities3", alt: "Playground" },
+      { id: 20, filename: "facilities4", alt: "Computer lab" },
+      { id: 21, filename: "facilities5", alt: "School van" },
     ]
   };
 
@@ -361,13 +361,12 @@ function Gallery() {
   // Reset visible images when category changes
   useEffect(() => {
     setVisibleImages(8);
-    // Announce category change to screen readers
     const announcer = document.getElementById('gallery-announcer');
     if (announcer) {
       const categoryName = categories.find(c => c.id === activeCategory)?.name || activeCategory;
       announcer.textContent = `Showing ${categoryName} photos`;
     }
-  }, [activeCategory, categories]);
+  }, [activeCategory]);
 
   const openLightbox = useCallback((image) => {
     setSelectedImage(image);
@@ -384,14 +383,14 @@ function Gallery() {
     const currentIndex = currentImages.findIndex(img => img.id === selectedImage.id);
     const prevIndex = currentIndex > 0 ? currentIndex - 1 : currentImages.length - 1;
     setSelectedImage(currentImages[prevIndex]);
-  }, [selectedImage, activeCategory, galleryData]);
+  }, [selectedImage, activeCategory]);
 
   const handleNextImage = useCallback(() => {
     const currentImages = galleryData[activeCategory] || galleryData.all;
     const currentIndex = currentImages.findIndex(img => img.id === selectedImage.id);
     const nextIndex = currentIndex < currentImages.length - 1 ? currentIndex + 1 : 0;
     setSelectedImage(currentImages[nextIndex]);
-  }, [selectedImage, activeCategory, galleryData]);
+  }, [selectedImage, activeCategory]);
 
   const handleLoadMore = useCallback(() => {
     setLoading(true);
@@ -420,7 +419,7 @@ function Gallery() {
         />
       </Helmet>
 
-      {/* Page Title with proper heading hierarchy */}
+      {/* Page Title */}
       <section 
         style={{
           background: 'linear-gradient(135deg, #132f66 0%, #0a1f4d 100%)',
@@ -456,7 +455,7 @@ function Gallery() {
         <Container>
           <h2 id="gallery-heading" className="visually-hidden">Photo Gallery</h2>
           
-          {/* Screen reader announcer for category changes */}
+          {/* Screen reader announcer */}
           <div id="gallery-announcer" className="visually-hidden" role="status" aria-live="polite"></div>
 
           {/* Category Filter */}
@@ -487,7 +486,7 @@ function Gallery() {
             role="list"
             aria-label="Gallery images"
           >
-            {displayedImages.map((image, index) => (
+            {displayedImages.map((image) => (
               <div key={image.id} role="listitem">
                 <GalleryImage
                   image={image}
@@ -502,12 +501,6 @@ function Gallery() {
             <div className="text-center mt-5">
               <button
                 onClick={handleLoadMore}
-                onKeyDown={(e) => {
-                  if (e.key === 'Enter' || e.key === ' ') {
-                    e.preventDefault();
-                    handleLoadMore();
-                  }
-                }}
                 disabled={loading}
                 style={{
                   backgroundColor: '#132f66',
@@ -523,25 +516,12 @@ function Gallery() {
                   minHeight: '44px',
                   minWidth: '44px'
                 }}
-                onMouseEnter={(e) => {
-                  if (!loading) {
-                    e.target.style.backgroundColor = '#0a1f4d';
-                    e.target.style.transform = 'translateY(-2px)';
-                    e.target.style.boxShadow = '0 4px 12px rgba(19,47,102,0.3)';
-                  }
-                }}
-                onMouseLeave={(e) => {
-                  e.target.style.backgroundColor = '#132f66';
-                  e.target.style.transform = 'translateY(0)';
-                  e.target.style.boxShadow = 'none';
-                }}
                 aria-label="Load more photos"
               >
                 {loading ? (
                   <>
                     <i className="fas fa-spinner fa-spin me-2" aria-hidden="true"></i>
                     <span>Loading...</span>
-                    <span className="visually-hidden">Loading more photos</span>
                   </>
                 ) : (
                   <>
@@ -556,7 +536,7 @@ function Gallery() {
       </section>
 
       {/* Featured Video Section */}
-      <section className="py-5 bg-light-custom" aria-labelledby="video-heading">
+      <section className="py-5" style={{ background: '#f8fafc' }} aria-labelledby="video-heading">
         <Container>
           <Row className="align-items-center g-4">
             <Col lg={6}>
@@ -570,21 +550,18 @@ function Gallery() {
                 Watch our school video to see the vibrant life at Kitale Progressive School. 
                 From classroom activities to sports events and cultural celebrations.
               </p>
-              <div style={{ display: 'flex', gap: '2rem', flexWrap: 'wrap' }} role="list" aria-label="School statistics">
-                <div role="listitem">
-                  <span style={{ fontSize: '1.8rem', fontWeight: 'bold', color: '#cebd04' }} aria-hidden="true">20+</span>
+              <div style={{ display: 'flex', gap: '2rem', flexWrap: 'wrap' }}>
+                <div>
+                  <span style={{ fontSize: '1.8rem', fontWeight: 'bold', color: '#cebd04' }}>20+</span>
                   <span style={{ display: 'block', fontSize: '0.9rem', color: '#718096' }}>Years of Excellence</span>
-                  <span className="visually-hidden">20+ Years of Excellence</span>
                 </div>
-                <div role="listitem">
-                  <span style={{ fontSize: '1.8rem', fontWeight: 'bold', color: '#cebd04' }} aria-hidden="true">500+</span>
+                <div>
+                  <span style={{ fontSize: '1.8rem', fontWeight: 'bold', color: '#cebd04' }}>500+</span>
                   <span style={{ display: 'block', fontSize: '0.9rem', color: '#718096' }}>Happy Students</span>
-                  <span className="visually-hidden">500+ Happy Students</span>
                 </div>
-                <div role="listitem">
-                  <span style={{ fontSize: '1.8rem', fontWeight: 'bold', color: '#cebd04' }} aria-hidden="true">50+</span>
+                <div>
+                  <span style={{ fontSize: '1.8rem', fontWeight: 'bold', color: '#cebd04' }}>50+</span>
                   <span style={{ display: 'block', fontSize: '0.9rem', color: '#718096' }}>Expert Teachers</span>
-                  <span className="visually-hidden">50+ Expert Teachers</span>
                 </div>
               </div>
             </Col>
@@ -598,39 +575,41 @@ function Gallery() {
                 boxShadow: '0 10px 30px rgba(0,0,0,0.1)'
               }}>
                 <iframe 
-                    src="https://www.youtube-nocookie.com/embed/Vomydkvag_w"
-                    title="YouTube video"
-                    loading="lazy"
-                    allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-                    allowFullScreen
-                    style={{
-                      position: 'absolute',
-                      top: 0,
-                      left: 0,
-                      width: '100%',
-                      height: '100%',
-                      border: 0
-                    }}
-                  />
+                  src="https://www.youtube-nocookie.com/embed/Vomydkvag_w"
+                  title="School life video"
+                  loading="lazy"
+                  allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                  allowFullScreen
+                  style={{
+                    position: 'absolute',
+                    top: 0,
+                    left: 0,
+                    width: '100%',
+                    height: '100%',
+                    border: 0
+                  }}
+                />
               </div>
             </Col>
           </Row>
         </Container>
       </section>
 
-      {/* Lightbox Modal with accessibility */}
-      <LightboxModal
-        selectedImage={selectedImage}
-        onClose={closeLightbox}
-        onPrev={handlePrevImage}
-        onNext={handleNextImage}
-      />
+      {/* Lightbox Modal */}
+      {selectedImage && (
+        <LightboxModal
+          selectedImage={selectedImage}
+          onClose={closeLightbox}
+          onPrev={handlePrevImage}
+          onNext={handleNextImage}
+        />
+      )}
 
       <Suspense fallback={null}>
         <GetInTouch />
       </Suspense>
 
-      {/* Critical CSS inline with accessibility improvements */}
+      {/* Critical CSS */}
       <style dangerouslySetInnerHTML={{ __html: `
         @keyframes shimmer {
           0% { background-position: -200% 0; }
@@ -656,24 +635,12 @@ function Gallery() {
           outline: 3px solid #cebd04;
           outline-offset: 2px;
         }
-        .gallery-item:hover img,
-        .gallery-item:focus-visible img {
-          transform: scale(1.1);
-        }
-        button:focus-visible,
-        [role="button"]:focus-visible {
+        button:focus-visible {
           outline: 3px solid #cebd04;
           outline-offset: 2px;
         }
-        @media (max-width: 768px) {
-          .gallery-filter {
-            flex-wrap: wrap !important;
-            gap: 0.5rem;
-          }
-        }
         @media (prefers-reduced-motion: reduce) {
           .gallery-item,
-          .gallery-item img,
           button {
             transition: none !important;
             animation: none !important;

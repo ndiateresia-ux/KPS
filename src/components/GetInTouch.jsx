@@ -429,7 +429,8 @@ This message was sent from the Kitale Progressive School website contact form.
                 />
 
                 {/* Terms Checkbox */}
-                <Form.Group className="mb-4">
+              <Form.Group className="mb-4">
+                <div className="custom-checkbox-wrapper">
                   <Form.Check
                     required
                     type="checkbox"
@@ -437,6 +438,7 @@ This message was sent from the Kitale Progressive School website contact form.
                     id="agreeToTerms"
                     checked={formData.agreeToTerms}
                     onChange={handleChange}
+                    className="custom-checkbox-input"
                     label={
                       <span style={{ fontSize: '0.9rem' }}>
                         I agree to the{' '}
@@ -452,7 +454,8 @@ This message was sent from the Kitale Progressive School website contact form.
                     }
                     feedback="You must agree to the Terms and Privacy Policy."
                   />
-                </Form.Group>
+                </div>
+              </Form.Group>
 
                 <Button 
                   type="submit" 
