@@ -1,36 +1,127 @@
+// pages/News.jsx - Fixed BlogCard image loading
 import { Helmet } from "react-helmet-async";
 import { Container, Row, Col } from "react-bootstrap";
-import { useState, useCallback, lazy, Suspense, memo } from "react";
+import { useState, useCallback, lazy, Suspense, memo, useMemo, useRef, useEffect } from "react";
 import { Link } from "react-router-dom";
 
 // Lazy load non-critical components
 const GetInTouch = lazy(() => import("../components/GetInTouch"));
 
-// Fallback images
-const FALLBACK_IMAGES = {
-  newsletter: "https://images.unsplash.com/photo-1586339949916-3e9457bef6d3?ixlib=rb-4.0.3&auto=format&fit=crop&w=600&q=80",
-  blog: "https://images.unsplash.com/photo-1499750310107-5fef28a66643?ixlib=rb-4.0.3&auto=format&fit=crop&w=600&q=80"
-};
+// Optimized Image Component with WebP support and better error handling
+const OptimizedImage = memo(({ src, alt, className = '', width, height, priority = false, fallbackCategory = 'newsletter', onLoad, onError }) => {
+  const [loaded, setLoaded] = useState(false);
+  const [error, setError] = useState(false);
+  const [currentSrc, setCurrentSrc] = useState(src);
+  const imgRef = useRef(null);
+  
+  // Fallback images
+  const FALLBACK_IMAGES = useMemo(() => ({
+    newsletter: "https://images.unsplash.com/photo-1586339949916-3e9457bef6d3?ixlib=rb-4.0.3&auto=format&fit=crop&w=600&q=80&fm=webp",
+    blog: "https://images.unsplash.com/photo-1499750310107-5fef28a66643?ixlib=rb-4.0.3&auto=format&fit=crop&w=600&q=80&fm=webp"
+  }), []);
+
+  // Reset state when src changes
+  useEffect(() => {
+    setCurrentSrc(src);
+    setLoaded(false);
+    setError(false);
+  }, [src]);
+
+  // Handle error - try different formats then fallback to Unsplash
+  const handleError = () => {
+    console.log(`Image failed to load: ${currentSrc}`);
+    
+    if (!error) {
+      // Try different format
+      if (currentSrc.endsWith('.webp')) {
+        // If .webp failed, try .jpg
+        const jpgSrc = currentSrc.replace('.webp', '.jpg');
+        console.log(`Trying JPG fallback: ${jpgSrc}`);
+        setCurrentSrc(jpgSrc);
+        setError(false);
+      } else if (currentSrc.endsWith('.jpg')) {
+        // If .jpg failed, try .png
+        const pngSrc = currentSrc.replace('.jpg', '.png');
+        console.log(`Trying PNG fallback: ${pngSrc}`);
+        setCurrentSrc(pngSrc);
+        setError(false);
+      } else {
+        // All formats failed, use Unsplash fallback
+        console.log('All formats failed, using Unsplash fallback');
+        setError(true);
+        setCurrentSrc(FALLBACK_IMAGES[fallbackCategory]);
+        if (onError) onError();
+      }
+    }
+  };
+
+  // Handle successful load
+  const handleLoad = () => {
+    console.log(`Image loaded successfully: ${currentSrc}`);
+    setLoaded(true);
+    if (onLoad) onLoad();
+  };
+
+  return (
+    <img
+      ref={imgRef}
+      src={currentSrc}
+      alt={alt}
+      loading={priority ? "eager" : "lazy"}
+      fetchpriority={priority ? "high" : "auto"}
+      decoding="async"
+      width={width}
+      height={height}
+      onLoad={handleLoad}
+      onError={handleError}
+      style={{
+        width: '100%',
+        height: '100%',
+        objectFit: 'cover',
+        opacity: loaded ? 1 : 0,
+        transition: 'opacity 0.3s ease'
+      }}
+      className={className}
+    />
+  );
+});
+
+OptimizedImage.displayName = 'OptimizedImage';
 
 // Memoized newsletter card component with accessibility
 const NewsletterCard = memo(({ newsletter, onClick, onDownload }) => {
-  const [imgSrc, setImgSrc] = useState(newsletter.image);
   const [loaded, setLoaded] = useState(false);
+  const cardRef = useRef(null);
   const cardId = `newsletter-${newsletter.id}`;
+
+  const handleKeyDown = useCallback((e) => {
+    if (e.key === 'Enter' || e.key === ' ') {
+      e.preventDefault();
+      onClick(newsletter);
+    }
+  }, [onClick, newsletter]);
+
+  const handleDownloadClick = useCallback((e) => {
+    e.stopPropagation();
+    onDownload(newsletter.pdf, newsletter.title);
+  }, [onDownload, newsletter]);
+
+  // Handle image load
+  const handleImageLoad = useCallback(() => {
+    console.log(`Newsletter image loaded for: ${newsletter.title}`);
+    setLoaded(true);
+  }, [newsletter.title]);
 
   return (
     <div
+      ref={cardRef}
       id={cardId}
       onClick={() => onClick(newsletter)}
-      onKeyDown={(e) => {
-        if (e.key === 'Enter' || e.key === ' ') {
-          e.preventDefault();
-          onClick(newsletter);
-        }
-      }}
+      onKeyDown={handleKeyDown}
       role="article"
       tabIndex={0}
       aria-label={`Newsletter: ${newsletter.title}`}
+      className="newsletter-card"
       style={{
         backgroundColor: 'white',
         borderRadius: '12px',
@@ -38,15 +129,9 @@ const NewsletterCard = memo(({ newsletter, onClick, onDownload }) => {
         boxShadow: '0 4px 12px rgba(0,0,0,0.05)',
         cursor: 'pointer',
         transition: 'transform 0.3s ease, box-shadow 0.3s ease',
-        height: '100%'
-      }}
-      onMouseEnter={(e) => {
-        e.currentTarget.style.transform = 'translateY(-4px)';
-        e.currentTarget.style.boxShadow = '0 8px 24px rgba(0,0,0,0.1)';
-      }}
-      onMouseLeave={(e) => {
-        e.currentTarget.style.transform = 'translateY(0)';
-        e.currentTarget.style.boxShadow = '0 4px 12px rgba(0,0,0,0.05)';
+        height: '100%',
+        display: 'flex',
+        flexDirection: 'column'
       }}
     >
       <div style={{
@@ -64,27 +149,19 @@ const NewsletterCard = memo(({ newsletter, onClick, onDownload }) => {
             bottom: 0,
             background: 'linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%)',
             backgroundSize: '200% 100%',
-            animation: 'shimmer 1.5s infinite'
+            animation: 'shimmer 1.5s infinite',
+            zIndex: 1
           }} aria-hidden="true" />
         )}
-        <img
-          src={imgSrc}
+        
+        <OptimizedImage
+          src={newsletter.image}
           alt={`Cover image for ${newsletter.title}`}
-          loading="lazy"
-          decoding="async"
-          onLoad={() => setLoaded(true)}
-          onError={(e) => {
-            e.target.onerror = null;
-            setImgSrc(FALLBACK_IMAGES.newsletter);
-          }}
-          style={{
-            width: '100%',
-            height: '100%',
-            objectFit: 'cover',
-            opacity: loaded ? 1 : 0,
-            transition: 'opacity 0.3s ease, transform 0.3s ease'
-          }}
+          fallbackCategory="newsletter"
+          priority={newsletter.id === 1}
+          onLoad={handleImageLoad}
         />
+        
         <div style={{
           position: 'absolute',
           top: '1rem',
@@ -95,13 +172,14 @@ const NewsletterCard = memo(({ newsletter, onClick, onDownload }) => {
           borderRadius: '40px',
           fontSize: '0.8rem',
           fontWeight: '600',
-          zIndex: 2
+          zIndex: 2,
+          boxShadow: '0 2px 4px rgba(0,0,0,0.1)'
         }} aria-hidden="true">
           {newsletter.term} {newsletter.year}
         </div>
       </div>
       
-      <div style={{ padding: '1.5rem' }}>
+      <div style={{ padding: '1.5rem', flex: 1, display: 'flex', flexDirection: 'column' }}>
         <h3 style={{
           fontSize: '1.2rem',
           fontWeight: 'bold',
@@ -116,28 +194,28 @@ const NewsletterCard = memo(({ newsletter, onClick, onDownload }) => {
           color: '#718096',
           marginBottom: '0.5rem'
         }}>
+          <i className="far fa-calendar-alt me-2" aria-hidden="true"></i>
           {newsletter.date}
         </p>
         <p style={{
           fontSize: '0.9rem',
           color: '#4a5568',
           marginBottom: '1rem',
-          lineHeight: 1.5
+          lineHeight: 1.5,
+          flex: 1
         }}>
           {newsletter.description}
         </p>
         <button
-          onClick={(e) => {
-            e.stopPropagation();
-            onDownload(newsletter.pdf, newsletter.title);
-          }}
+          onClick={handleDownloadClick}
           onKeyDown={(e) => {
             if (e.key === 'Enter' || e.key === ' ') {
               e.preventDefault();
               e.stopPropagation();
-              onDownload(newsletter.pdf, newsletter.title);
+              handleDownloadClick(e);
             }
           }}
+          className="btn-outline-navy"
           style={{
             backgroundColor: 'transparent',
             border: '2px solid #132f66',
@@ -153,12 +231,12 @@ const NewsletterCard = memo(({ newsletter, onClick, onDownload }) => {
             minWidth: '44px'
           }}
           onMouseEnter={(e) => {
-            e.target.style.backgroundColor = '#132f66';
-            e.target.style.color = 'white';
+            e.currentTarget.style.backgroundColor = '#132f66';
+            e.currentTarget.style.color = 'white';
           }}
           onMouseLeave={(e) => {
-            e.target.style.backgroundColor = 'transparent';
-            e.target.style.color = '#132f66';
+            e.currentTarget.style.backgroundColor = 'transparent';
+            e.currentTarget.style.color = '#132f66';
           }}
           aria-label={`Download ${newsletter.title} PDF`}
         >
@@ -172,43 +250,46 @@ const NewsletterCard = memo(({ newsletter, onClick, onDownload }) => {
 
 NewsletterCard.displayName = 'NewsletterCard';
 
-// Memoized blog card component with accessibility
+// Memoized blog card component with distinct gold/navy styling
 const BlogCard = memo(({ post, onClick }) => {
-  const [imgSrc, setImgSrc] = useState(post.image);
   const [loaded, setLoaded] = useState(false);
+  const cardRef = useRef(null);
   const cardId = `blog-${post.id}`;
+
+  const handleKeyDown = useCallback((e) => {
+    if (e.key === 'Enter' || e.key === ' ') {
+      e.preventDefault();
+      onClick(post);
+    }
+  }, [onClick, post]);
+
+  // Handle image load
+  const handleImageLoad = useCallback(() => {
+    console.log(`Blog image loaded for: ${post.title}`);
+    setLoaded(true);
+  }, [post.title]);
 
   return (
     <div
+      ref={cardRef}
       id={cardId}
       onClick={() => onClick(post)}
-      onKeyDown={(e) => {
-        if (e.key === 'Enter' || e.key === ' ') {
-          e.preventDefault();
-          onClick(post);
-        }
-      }}
+      onKeyDown={handleKeyDown}
       role="article"
       tabIndex={0}
       aria-label={`Blog post: ${post.title}`}
+      className="blog-card"
       style={{
         backgroundColor: 'white',
-        borderRadius: '12px',
+        borderRadius: '16px',
         overflow: 'hidden',
-        boxShadow: '0 4px 12px rgba(0,0,0,0.05)',
+        boxShadow: '0 8px 24px rgba(206, 189, 4, 0.15)',
         cursor: 'pointer',
         transition: 'transform 0.3s ease, box-shadow 0.3s ease',
         height: '100%',
         display: 'flex',
-        flexDirection: 'column'
-      }}
-      onMouseEnter={(e) => {
-        e.currentTarget.style.transform = 'translateY(-4px)';
-        e.currentTarget.style.boxShadow = '0 8px 24px rgba(0,0,0,0.1)';
-      }}
-      onMouseLeave={(e) => {
-        e.currentTarget.style.transform = 'translateY(0)';
-        e.currentTarget.style.boxShadow = '0 4px 12px rgba(0,0,0,0.05)';
+        flexDirection: 'column',
+        border: '1px solid rgba(206, 189, 4, 0.2)'
       }}
     >
       <div style={{
@@ -226,66 +307,60 @@ const BlogCard = memo(({ post, onClick }) => {
             bottom: 0,
             background: 'linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%)',
             backgroundSize: '200% 100%',
-            animation: 'shimmer 1.5s infinite'
+            animation: 'shimmer 1.5s infinite',
+            zIndex: 1
           }} aria-hidden="true" />
         )}
-        <img
-          src={imgSrc}
+        
+        <OptimizedImage
+          src={post.image}
           alt={`Featured image for blog: ${post.title}`}
-          loading="lazy"
-          decoding="async"
-          onLoad={() => setLoaded(true)}
-          onError={(e) => {
-            e.target.onerror = null;
-            setImgSrc(FALLBACK_IMAGES.blog);
-          }}
-          style={{
-            width: '100%',
-            height: '100%',
-            objectFit: 'cover',
-            opacity: loaded ? 1 : 0,
-            transition: 'opacity 0.3s ease, transform 0.3s ease'
-          }}
+          fallbackCategory="blog"
+          onLoad={handleImageLoad}
         />
+        
         <div style={{
           position: 'absolute',
           top: '1rem',
           left: '1rem',
           backgroundColor: '#cebd04',
           color: '#132f66',
-          padding: '0.25rem 1rem',
+          padding: '0.35rem 1.2rem',
           borderRadius: '40px',
           fontSize: '0.8rem',
-          fontWeight: '600',
-          zIndex: 2
+          fontWeight: '700',
+          zIndex: 2,
+          boxShadow: '0 2px 4px rgba(0,0,0,0.1)',
+          letterSpacing: '0.5px'
         }} aria-label={`Category: ${post.category}`}>
           {post.category}
         </div>
       </div>
       
-      <div style={{ padding: '1.5rem', flex: 1, display: 'flex', flexDirection: 'column' }}>
+      <div style={{ padding: '1.8rem 1.5rem', flex: 1, display: 'flex', flexDirection: 'column' }}>
         <div style={{
           display: 'flex',
           alignItems: 'center',
-          gap: '1rem',
-          marginBottom: '0.75rem',
+          gap: '1.5rem',
+          marginBottom: '1rem',
           fontSize: '0.8rem',
-          color: '#718096'
+          color: '#718096',
+          flexWrap: 'wrap'
         }}>
           <span>
-            <i className="far fa-calendar-alt me-1" aria-hidden="true"></i> 
+            <i className="far fa-calendar-alt me-2" style={{ color: '#cebd04' }} aria-hidden="true"></i> 
             <span className="visually-hidden">Published: </span>{post.date}
           </span>
           <span>
-            <i className="far fa-clock me-1" aria-hidden="true"></i> 
+            <i className="far fa-clock me-2" style={{ color: '#cebd04' }} aria-hidden="true"></i> 
             <span className="visually-hidden">Read time: </span>{post.readTime}
           </span>
         </div>
 
         <h3 style={{
-          fontSize: '1.2rem',
+          fontSize: '1.3rem',
           fontWeight: 'bold',
-          marginBottom: '0.75rem',
+          marginBottom: '1rem',
           color: '#132f66',
           lineHeight: 1.3
         }}>
@@ -293,10 +368,10 @@ const BlogCard = memo(({ post, onClick }) => {
         </h3>
 
         <p style={{
-          fontSize: '0.9rem',
+          fontSize: '0.95rem',
           color: '#4a5568',
-          marginBottom: '1rem',
-          lineHeight: 1.5,
+          marginBottom: '1.5rem',
+          lineHeight: 1.6,
           flex: 1
         }}>
           {post.excerpt}
@@ -306,27 +381,29 @@ const BlogCard = memo(({ post, onClick }) => {
           display: 'flex',
           alignItems: 'center',
           gap: '0.75rem',
-          marginBottom: '1rem',
-          padding: '0.5rem',
-          backgroundColor: '#f8fafc',
-          borderRadius: '40px'
+          marginBottom: '1.5rem',
+          padding: '0.75rem',
+          backgroundColor: '#fff9e6',
+          borderRadius: '40px',
+          border: '1px solid rgba(206, 189, 4, 0.3)'
         }}>
           <div style={{
-            width: '36px',
-            height: '36px',
+            width: '40px',
+            height: '40px',
             borderRadius: '50%',
-            backgroundColor: '#132f66',
+            background: 'linear-gradient(135deg, #132f66 0%, #1e3a7a 100%)',
             color: 'white',
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center',
             fontSize: '1rem',
-            fontWeight: 'bold'
+            fontWeight: 'bold',
+            boxShadow: '0 2px 8px rgba(19,47,102,0.2)'
           }} aria-hidden="true">
             {post.author.charAt(0)}
           </div>
           <div>
-            <div style={{ fontSize: '0.9rem', fontWeight: '600', color: '#2c3e50' }}>
+            <div style={{ fontSize: '0.9rem', fontWeight: '700', color: '#132f66' }}>
               {post.author}
             </div>
             <div style={{ fontSize: '0.75rem', color: '#718096' }}>
@@ -336,27 +413,31 @@ const BlogCard = memo(({ post, onClick }) => {
         </div>
 
         <button
+          className="btn-gold"
           style={{
-            backgroundColor: 'transparent',
-            border: '2px solid #132f66',
+            backgroundColor: '#cebd04',
+            border: 'none',
             color: '#132f66',
-            padding: '0.5rem 1rem',
+            padding: '0.75rem 1rem',
             borderRadius: '40px',
-            fontSize: '0.85rem',
-            fontWeight: '600',
+            fontSize: '0.9rem',
+            fontWeight: '700',
             cursor: 'pointer',
             transition: 'all 0.3s ease',
             width: '100%',
             minHeight: '44px',
-            minWidth: '44px'
+            minWidth: '44px',
+            boxShadow: '0 4px 12px rgba(206, 189, 4, 0.3)'
           }}
           onMouseEnter={(e) => {
-            e.target.style.backgroundColor = '#132f66';
-            e.target.style.color = 'white';
+            e.currentTarget.style.backgroundColor = '#b09e03';
+            e.currentTarget.style.transform = 'translateY(-2px)';
+            e.currentTarget.style.boxShadow = '0 6px 16px rgba(206, 189, 4, 0.4)';
           }}
           onMouseLeave={(e) => {
-            e.target.style.backgroundColor = 'transparent';
-            e.target.style.color = '#132f66';
+            e.currentTarget.style.backgroundColor = '#cebd04';
+            e.currentTarget.style.transform = 'translateY(0)';
+            e.currentTarget.style.boxShadow = '0 4px 12px rgba(206, 189, 4, 0.3)';
           }}
           aria-label={`Read full article: ${post.title}`}
         >
@@ -370,17 +451,32 @@ const BlogCard = memo(({ post, onClick }) => {
 BlogCard.displayName = 'BlogCard';
 
 // Modal component with accessibility
-const Modal = ({ show, onClose, children, title }) => {
-  if (!show) return null;
+const Modal = memo(({ show, onClose, children, title }) => {
+  const modalRef = useRef(null);
+  const closeButtonRef = useRef(null);
 
-  const handleKeyDown = (e) => {
+  useEffect(() => {
+    if (show && modalRef.current) {
+      closeButtonRef.current?.focus();
+      document.body.style.overflow = 'hidden';
+    }
+    
+    return () => {
+      document.body.style.overflow = 'unset';
+    };
+  }, [show]);
+
+  const handleKeyDown = useCallback((e) => {
     if (e.key === 'Escape') {
       onClose();
     }
-  };
+  }, [onClose]);
+
+  if (!show) return null;
 
   return (
     <div
+      ref={modalRef}
       style={{
         position: 'fixed',
         top: 0,
@@ -405,16 +501,18 @@ const Modal = ({ show, onClose, children, title }) => {
       <div
         style={{
           backgroundColor: 'white',
-          borderRadius: '16px',
+          borderRadius: '24px',
           maxWidth: '800px',
           width: '100%',
           maxHeight: '90vh',
           overflowY: 'auto',
-          position: 'relative'
+          position: 'relative',
+          boxShadow: '0 20px 40px rgba(0,0,0,0.2)'
         }}
         onClick={(e) => e.stopPropagation()}
       >
         <button
+          ref={closeButtonRef}
           onClick={onClose}
           onKeyDown={(e) => {
             if (e.key === 'Enter' || e.key === ' ') {
@@ -426,7 +524,7 @@ const Modal = ({ show, onClose, children, title }) => {
             position: 'absolute',
             top: '1rem',
             right: '1rem',
-            background: 'white',
+            background: '#132f66',
             border: 'none',
             borderRadius: '50%',
             width: '44px',
@@ -436,8 +534,18 @@ const Modal = ({ show, onClose, children, title }) => {
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center',
-            boxShadow: '0 2px 8px rgba(0,0,0,0.1)',
-            zIndex: 10
+            boxShadow: '0 2px 8px rgba(0,0,0,0.2)',
+            zIndex: 10,
+            color: 'white',
+            transition: 'all 0.2s ease'
+          }}
+          onMouseEnter={(e) => {
+            e.currentTarget.style.backgroundColor = '#0a1f4d';
+            e.currentTarget.style.transform = 'scale(1.1)';
+          }}
+          onMouseLeave={(e) => {
+            e.currentTarget.style.backgroundColor = '#132f66';
+            e.currentTarget.style.transform = 'scale(1)';
           }}
           aria-label="Close modal"
         >
@@ -448,7 +556,9 @@ const Modal = ({ show, onClose, children, title }) => {
       </div>
     </div>
   );
-};
+});
+
+Modal.displayName = 'Modal';
 
 function News() {
   const [showNewsletterModal, setShowNewsletterModal] = useState(false);
@@ -456,14 +566,14 @@ function News() {
   const [selectedBlog, setSelectedBlog] = useState(null);
   const [showBlogModal, setShowBlogModal] = useState(false);
 
-  // Newsletter data
-  const newsletters = [
+  // Newsletter data - memoized with correct image paths
+  const newsletters = useMemo(() => [
     {
       id: 1,
       term: "Term 1",
       year: "2025",
       title: "Term 1 Newsletter 2025",
-      image: "/images/newsletters/term1-2025.jpg",
+      image: "/images/term1-2025.jpg",
       pdf: "/pdfs/newsletters/term1-2025.pdf",
       date: "April 2025",
       description: "Welcome back to school, new academic year highlights, and parent information."
@@ -473,7 +583,7 @@ function News() {
       term: "Term 2",
       year: "2024",
       title: "Term 2 Newsletter 2024",
-      image: "/images/newsletters/term2-2024.jpg",
+      image: "/images/term2-2024.jpg",
       pdf: "/pdfs/newsletters/term2-2024.pdf",
       date: "August 2024",
       description: "Recap of Term 2 activities, examination results, and upcoming events."
@@ -483,15 +593,15 @@ function News() {
       term: "Term 3",
       year: "2024",
       title: "Term 3 Newsletter 2024",
-      image: "/images/newsletters/term3-2024.jpg",
+      image: "/images/term3-2024.jpg",
       pdf: "/pdfs/newsletters/term3-2024.pdf",
       date: "December 2024",
       description: "End of year summary, graduation ceremony, and holiday programs."
     }
-  ];
+  ], []);
 
-  // Blog data
-  const blogPosts = [
+  // Blog data - memoized with correct image paths
+  const blogPosts = useMemo(() => [
     {
       id: 1,
       title: "The Importance of Early Childhood Education",
@@ -510,7 +620,7 @@ function News() {
           <p>Through guided play, children develop cognitive skills, language abilities, social competence, physical coordination, and emotional regulation. Our classrooms are designed as learning environments where every activity has educational purpose.</p>
         </div>
       `,
-      image: "/images/blog/early-childhood.jpg",
+      image: "/images/childhoodblog.jpg",
       author: "Ms. Jane Akinyi",
       authorTitle: "ECDE Coordinator",
       date: "March 15, 2025",
@@ -535,7 +645,7 @@ function News() {
           <p>Start conversations early, visit the school together, connect with future classmates, and develop independence gradually. These steps can make the transition smoother.</p>
         </div>
       `,
-      image: "/images/blog/boarding-prep.jpg",
+      image: "/images/boardingblog.webp",
       author: "Mr. Peter Mwangi",
       authorTitle: "Boarding Master",
       date: "March 10, 2025",
@@ -561,31 +671,28 @@ function News() {
           <p>Our teachers participate in ongoing professional development to understand CBC philosophy and implement learner-centered teaching methods. They learn to facilitate rather than lecture, to observe and respond to individual learner needs.</p>
         </div>
       `,
-      image: "/images/blog/cbc-curriculum.jpg",
+      image: "/images/cbc-curriculumblog.jpg",
       author: "Mrs. Sarah Wanjiku",
       authorTitle: "Academic Director",
       date: "March 5, 2025",
       category: "Academics",
       readTime: "7 min read"
     }
-  ];
+  ], []);
 
   const handleNewsletterClick = useCallback((newsletter) => {
     setSelectedNewsletter(newsletter);
     setShowNewsletterModal(true);
-    document.body.style.overflow = 'hidden';
   }, []);
 
   const handleBlogClick = useCallback((blog) => {
     setSelectedBlog(blog);
     setShowBlogModal(true);
-    document.body.style.overflow = 'hidden';
   }, []);
 
   const handleCloseModal = useCallback(() => {
     setShowNewsletterModal(false);
     setShowBlogModal(false);
-    document.body.style.overflow = 'unset';
   }, []);
 
   const handleDownload = useCallback((pdfUrl, title) => {
@@ -608,15 +715,17 @@ function News() {
           name="description" 
           content="Stay updated with the latest news, events, blog posts, and termly newsletters at Kitale Progressive School." 
         />
+        <link rel="preconnect" href="https://images.unsplash.com" />
+        <link rel="dns-prefetch" href="https://images.unsplash.com" />
       </Helmet>
 
-      {/* Page Header with proper heading hierarchy */}
+      {/* Page Header */}
       <section 
         style={{
           background: 'linear-gradient(135deg, #132f66 0%, #0a1f4d 100%)',
           color: 'white',
           paddingTop: '120px',
-          paddingBottom: '40px',
+          paddingBottom: '60px',
           textAlign: 'center'
         }}
         aria-labelledby="page-title"
@@ -685,17 +794,31 @@ function News() {
         </Container>
       </section>
 
-      {/* Blog Section */}
-      <section id="blog-section" className="py-5 bg-white" aria-labelledby="blog-heading">
+      {/* Blog Section - Distinct with Gold Theme */}
+      <section id="blog-section" className="py-5" style={{ 
+        background: 'linear-gradient(135deg, #fff9e6 0%, #fff 100%)',
+        borderTop: '4px solid #cebd04',
+        borderBottom: '4px solid #cebd04'
+      }} aria-labelledby="blog-heading">
         <Container>
           <div className="text-center mb-5">
+            <div style={{
+              display: 'inline-block',
+              backgroundColor: '#cebd04',
+              padding: '0.5rem 2rem',
+              borderRadius: '40px',
+              marginBottom: '1.5rem'
+            }}>
+              <span style={{ fontSize: '2rem', marginRight: '0.5rem' }}>📝</span>
+              <span style={{ fontWeight: '700', color: '#132f66', fontSize: '1.1rem' }}>Latest from Our Blog</span>
+            </div>
             <h2 id="blog-heading" style={{
               fontSize: 'clamp(1.5rem, 4vw, 2rem)',
               fontWeight: 'bold',
               color: '#132f66',
               marginBottom: '1rem'
             }}>
-              Latest from Our Blog
+              Insights & Stories
             </h2>
             <p style={{
               fontSize: '1rem',
@@ -703,14 +826,14 @@ function News() {
               maxWidth: '700px',
               margin: '0 auto'
             }}>
-              Insights, stories, and updates from our school community
+              Discover insights, stories, and updates from our school community
             </p>
           </div>
 
           <div 
             style={{
               display: 'grid',
-              gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))',
+              gridTemplateColumns: 'repeat(auto-fit, minmax(350px, 1fr))',
               gap: '2rem'
             }}
             role="list"
@@ -741,20 +864,12 @@ function News() {
               {selectedNewsletter.title}
             </h2>
             
-            <img
+            <OptimizedImage
               src={selectedNewsletter.image}
               alt={`Cover image for ${selectedNewsletter.title}`}
-              style={{
-                width: '100%',
-                maxHeight: '300px',
-                objectFit: 'contain',
-                borderRadius: '8px',
-                marginBottom: '1.5rem'
-              }}
-              onError={(e) => {
-                e.target.onerror = null;
-                e.target.src = FALLBACK_IMAGES.newsletter;
-              }}
+              fallbackCategory="newsletter"
+              priority={true}
+              onLoad={() => console.log('Modal image loaded')}
             />
             
             <p style={{
@@ -771,6 +886,7 @@ function News() {
               color: '#718096',
               marginBottom: '1.5rem'
             }}>
+              <i className="far fa-calendar-alt me-2" style={{ color: '#cebd04' }} aria-hidden="true"></i>
               Published: {selectedNewsletter.date}
             </p>
             
@@ -797,12 +913,14 @@ function News() {
                 minWidth: '44px'
               }}
               onMouseEnter={(e) => {
-                e.target.style.backgroundColor = '#0a1f4d';
-                e.target.style.transform = 'translateY(-2px)';
+                e.currentTarget.style.backgroundColor = '#0a1f4d';
+                e.currentTarget.style.transform = 'translateY(-2px)';
+                e.currentTarget.style.boxShadow = '0 4px 12px rgba(19,47,102,0.3)';
               }}
               onMouseLeave={(e) => {
-                e.target.style.backgroundColor = '#132f66';
-                e.target.style.transform = 'translateY(0)';
+                e.currentTarget.style.backgroundColor = '#132f66';
+                e.currentTarget.style.transform = 'translateY(0)';
+                e.currentTarget.style.boxShadow = 'none';
               }}
               aria-label={`Download ${selectedNewsletter.title} PDF`}
             >
@@ -835,39 +953,31 @@ function News() {
               color: '#718096',
               flexWrap: 'wrap'
             }}>
-              <span className="badge" style={{
+              <span style={{
                 backgroundColor: '#cebd04',
                 color: '#132f66',
                 padding: '0.25rem 1rem',
                 borderRadius: '40px',
-                fontWeight: '600'
+                fontWeight: '700',
+                fontSize: '0.8rem'
               }}>
                 {selectedBlog.category}
               </span>
               <span>
-                <i className="far fa-clock me-1" aria-hidden="true"></i> 
+                <i className="far fa-clock me-2" style={{ color: '#cebd04' }} aria-hidden="true"></i> 
                 <span className="visually-hidden">Read time: </span>{selectedBlog.readTime}
               </span>
               <span>
-                <i className="far fa-calendar-alt me-1" aria-hidden="true"></i> 
+                <i className="far fa-calendar-alt me-2" style={{ color: '#cebd04' }} aria-hidden="true"></i> 
                 <span className="visually-hidden">Published: </span>{selectedBlog.date}
               </span>
             </div>
 
-            <img
+            <OptimizedImage
               src={selectedBlog.image}
               alt={`Featured image for ${selectedBlog.title}`}
-              style={{
-                width: '100%',
-                maxHeight: '300px',
-                objectFit: 'cover',
-                borderRadius: '8px',
-                marginBottom: '1.5rem'
-              }}
-              onError={(e) => {
-                e.target.onerror = null;
-                e.target.src = FALLBACK_IMAGES.blog;
-              }}
+              fallbackCategory="blog"
+              priority={true}
             />
 
             <div style={{
@@ -876,25 +986,27 @@ function News() {
               gap: '1rem',
               marginBottom: '2rem',
               padding: '1rem',
-              backgroundColor: '#f8fafc',
-              borderRadius: '40px'
+              background: 'linear-gradient(135deg, #fff9e6 0%, #fff 100%)',
+              borderRadius: '40px',
+              border: '1px solid rgba(206, 189, 4, 0.3)'
             }}>
               <div style={{
                 width: '48px',
                 height: '48px',
                 borderRadius: '50%',
-                backgroundColor: '#132f66',
+                background: 'linear-gradient(135deg, #132f66 0%, #1e3a7a 100%)',
                 color: 'white',
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'center',
                 fontSize: '1.2rem',
-                fontWeight: 'bold'
+                fontWeight: 'bold',
+                boxShadow: '0 2px 8px rgba(19,47,102,0.2)'
               }} aria-hidden="true">
                 {selectedBlog.author.charAt(0)}
               </div>
               <div>
-                <div style={{ fontSize: '1rem', fontWeight: '600', color: '#2c3e50' }}>
+                <div style={{ fontSize: '1rem', fontWeight: '700', color: '#132f66' }}>
                   {selectedBlog.author}
                 </div>
                 <div style={{ fontSize: '0.85rem', color: '#718096' }}>
@@ -923,25 +1035,28 @@ function News() {
                   }
                 }}
                 style={{
-                  backgroundColor: 'transparent',
-                  border: '2px solid #132f66',
+                  backgroundColor: '#cebd04',
+                  border: 'none',
                   color: '#132f66',
-                  padding: '0.5rem 2rem',
+                  padding: '0.75rem 2.5rem',
                   borderRadius: '40px',
                   fontSize: '0.9rem',
-                  fontWeight: '600',
+                  fontWeight: '700',
                   cursor: 'pointer',
                   transition: 'all 0.3s ease',
                   minHeight: '44px',
-                  minWidth: '44px'
+                  minWidth: '44px',
+                  boxShadow: '0 4px 12px rgba(206, 189, 4, 0.3)'
                 }}
                 onMouseEnter={(e) => {
-                  e.target.style.backgroundColor = '#132f66';
-                  e.target.style.color = 'white';
+                  e.currentTarget.style.backgroundColor = '#b09e03';
+                  e.currentTarget.style.transform = 'translateY(-2px)';
+                  e.currentTarget.style.boxShadow = '0 6px 16px rgba(206, 189, 4, 0.4)';
                 }}
                 onMouseLeave={(e) => {
-                  e.target.style.backgroundColor = 'transparent';
-                  e.target.style.color = '#132f66';
+                  e.currentTarget.style.backgroundColor = '#cebd04';
+                  e.currentTarget.style.transform = 'translateY(0)';
+                  e.currentTarget.style.boxShadow = '0 4px 12px rgba(206, 189, 4, 0.3)';
                 }}
                 aria-label="Close blog post"
               >
@@ -956,64 +1071,9 @@ function News() {
         <GetInTouch />
       </Suspense>
 
-      {/* Critical CSS inline with accessibility improvements */}
+      {/* Critical CSS - Minified */}
       <style dangerouslySetInnerHTML={{ __html: `
-        @keyframes shimmer {
-          0% { background-position: -200% 0; }
-          100% { background-position: 200% 0; }
-        }
-        .visually-hidden {
-          position: absolute;
-          width: 1px;
-          height: 1px;
-          padding: 0;
-          margin: -1px;
-          overflow: hidden;
-          clip: rect(0, 0, 0, 0);
-          border: 0;
-        }
-        .blog-content h2 {
-          font-size: 1.5rem;
-          font-weight: bold;
-          color: #132f66;
-          margin: 2rem 0 1rem;
-        }
-        .blog-content h3 {
-          font-size: 1.2rem;
-          font-weight: bold;
-          color: #2c3e50;
-          margin: 1.5rem 0 0.75rem;
-        }
-        .blog-content p {
-          margin-bottom: 1rem;
-          line-height: 1.7;
-        }
-        .blog-content ul {
-          margin: 1rem 0;
-          padding-left: 2rem;
-        }
-        .blog-content li {
-          margin-bottom: 0.5rem;
-        }
-        button:focus-visible,
-        [role="article"]:focus-visible {
-          outline: 3px solid #cebd04;
-          outline-offset: 2px;
-        }
-        @media (max-width: 768px) {
-          .blog-content h2 {
-            font-size: 1.3rem;
-          }
-          .blog-content h3 {
-            font-size: 1.1rem;
-          }
-        }
-        @media (prefers-reduced-motion: reduce) {
-          * {
-            transition: none !important;
-            animation: none !important;
-          }
-        }
+        @keyframes shimmer{0%{background-position:-200% 0}100%{background-position:200% 0}}.visually-hidden{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);border:0}.newsletter-card,.blog-card{transition:transform .3s ease,box-shadow .3s ease!important}.newsletter-card:focus-visible,.newsletter-card:hover{transform:translateY(-6px)!important;box-shadow:0 12px 30px rgba(19,47,102,0.15)!important;outline:3px solid #cebd04;outline-offset:2px}.blog-card:focus-visible,.blog-card:hover{transform:translateY(-6px)!important;box-shadow:0 15px 40px rgba(206,189,4,0.25)!important;outline:3px solid #132f66;outline-offset:2px}button:focus-visible,[role=article]:focus-visible{outline:3px solid #cebd04;outline-offset:2px}.blog-content h2{font-size:1.5rem;font-weight:700;color:#132f66;margin:2rem 0 1rem;border-left:4px solid #cebd04;padding-left:1rem}.blog-content h3{font-size:1.2rem;font-weight:600;color:#2c3e50;margin:1.5rem 0 .75rem}.blog-content p{margin-bottom:1rem;line-height:1.7}.blog-content ul,.blog-content ol{margin:1rem 0;padding-left:2rem}.blog-content li{margin-bottom:.5rem}@media (max-width:768px){.blog-content h2{font-size:1.3rem}.blog-content h3{font-size:1.1rem}}@media (prefers-reduced-motion:reduce){.newsletter-card,.blog-card,.newsletter-card:focus-visible,.newsletter-card:hover,.blog-card:focus-visible,.blog-card:hover,button{transition:none!important;animation:none!important;transform:none!important}}
       `}} />
     </>
   );

@@ -1,16 +1,17 @@
-// pages/Facilities.jsx
+// pages/Facilities.jsx - Fully Optimized
 import { Helmet } from "react-helmet-async";
 import { Container, Row, Col, Card, Button } from "react-bootstrap";
-import { useState, useCallback, lazy, Suspense, memo, useEffect } from "react";
+import { useState, useCallback, lazy, Suspense, memo, useEffect, useMemo, useRef } from "react";
 
 // Lazy load non-critical components
 const GetInTouch = lazy(() => import("../components/GetInTouch"));
 
 // Optimized image component with WebP support and objectFit prop
-const OptimizedImage = memo(({ src, alt, width, height, className = '', objectFit = 'cover' }) => {
+const OptimizedImage = memo(({ src, alt, width, height, className = '', objectFit = 'cover', priority = false }) => {
   const [imgSrc, setImgSrc] = useState('');
   const [isLoaded, setIsLoaded] = useState(false);
   const [error, setError] = useState(false);
+  const imgRef = useRef(null);
   
   // Extract filename from path
   useEffect(() => {
@@ -20,23 +21,50 @@ const OptimizedImage = memo(({ src, alt, width, height, className = '', objectFi
     }
   }, [src]);
 
+  // Check WebP support
+  const supportsWebP = useMemo(() => {
+    if (typeof window === 'undefined') return true;
+    const canvas = document.createElement('canvas');
+    return canvas.toDataURL('image/webp').indexOf('image/webp') === 5;
+  }, []);
+
+  // Preload critical images
+  useEffect(() => {
+    if (priority && imgSrc) {
+      const link = document.createElement('link');
+      link.rel = 'preload';
+      link.as = 'image';
+      link.href = supportsWebP ? `/images/optimized/${imgSrc}.webp` : `/images/optimized/${imgSrc}.jpg`;
+      link.type = supportsWebP ? 'image/webp' : 'image/jpeg';
+      document.head.appendChild(link);
+      
+      return () => {
+        if (link.parentNode) document.head.removeChild(link);
+      };
+    }
+  }, [priority, imgSrc, supportsWebP]);
+
   if (error) {
     return (
-      <div style={{ 
-        backgroundColor: '#f0f0f0',
-        width: '100%',
-        height: '100%',
-        minHeight: height || '200px',
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'center',
-        color: '#666',
-        fontSize: '0.875rem',
-        borderRadius: '12px',
-        aspectRatio: width && height ? `${width}/${height}` : 'auto'
-      }}>
+      <div 
+        style={{ 
+          backgroundColor: '#f0f0f0',
+          width: '100%',
+          height: '100%',
+          minHeight: height || '200px',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          color: '#666',
+          fontSize: '0.875rem',
+          borderRadius: '12px',
+          aspectRatio: width && height ? `${width}/${height}` : 'auto'
+        }}
+        role="img"
+        aria-label={`${alt} (image failed to load)`}
+      >
         <div className="text-center">
-          <div style={{ fontSize: '2rem', marginBottom: '0.5rem' }}>📷</div>
+          <div style={{ fontSize: '2rem', marginBottom: '0.5rem' }} aria-hidden="true">📷</div>
           <div>{alt}</div>
           <div style={{ fontSize: '0.75rem', marginTop: '0.5rem' }}>Image coming soon</div>
         </div>
@@ -49,8 +77,12 @@ const OptimizedImage = memo(({ src, alt, width, height, className = '', objectFi
       position: 'relative', 
       width: '100%', 
       height: '100%',
-      aspectRatio: width && height ? `${width}/${height}` : 'auto'
+      aspectRatio: width && height ? `${width}/${height}` : 'auto',
+      backgroundColor: '#f0f0f0',
+      borderRadius: '12px',
+      overflow: 'hidden'
     }}>
+      {/* Loading skeleton */}
       {!isLoaded && (
         <div 
           style={{
@@ -62,7 +94,6 @@ const OptimizedImage = memo(({ src, alt, width, height, className = '', objectFi
             background: 'linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%)',
             backgroundSize: '200% 100%',
             animation: 'shimmer 1.5s infinite',
-            borderRadius: '12px',
             zIndex: 1
           }}
           aria-hidden="true"
@@ -77,9 +108,11 @@ const OptimizedImage = memo(({ src, alt, width, height, className = '', objectFi
         />
         {/* Fallback JPG */}
         <img
+          ref={imgRef}
           src={`/images/optimized/${imgSrc}.jpg`}
           alt={alt}
-          loading="lazy"
+          loading={priority ? "eager" : "lazy"}
+          fetchpriority={priority ? "high" : "auto"}
           decoding="async"
           width={width}
           height={height}
@@ -88,12 +121,11 @@ const OptimizedImage = memo(({ src, alt, width, height, className = '', objectFi
           style={{
             width: '100%',
             height: '100%',
-            objectFit: objectFit, // Use the prop here
+            objectFit: objectFit,
             opacity: isLoaded ? 1 : 0,
             transition: 'opacity 0.3s ease, transform 0.3s ease',
             position: 'relative',
-            zIndex: 2,
-            borderRadius: '12px'
+            zIndex: 2
           }}
           className={className}
         />
@@ -105,31 +137,36 @@ const OptimizedImage = memo(({ src, alt, width, height, className = '', objectFi
 OptimizedImage.displayName = 'OptimizedImage';
 
 // Memoized facility image card component with enhanced accessibility
-const FacilityImageCard = memo(({ src, alt, onClick }) => {
+const FacilityImageCard = memo(({ src, alt, onClick, priority = false }) => {
   const [loaded, setLoaded] = useState(false);
   const cardId = `facility-${alt.replace(/\s+/g, '-').toLowerCase()}`;
+  const buttonRef = useRef(null);
+
+  const handleKeyDown = useCallback((e) => {
+    if (e.key === 'Enter' || e.key === ' ') {
+      e.preventDefault();
+      onClick();
+    }
+  }, [onClick]);
 
   return (
     <div 
       id={cardId}
-      className="facility-image-card cursor-pointer"
+      className="facility-image-card"
       onClick={onClick}
-      onKeyDown={(e) => {
-        if (e.key === 'Enter' || e.key === ' ') {
-          e.preventDefault();
-          onClick();
-        }
-      }}
+      onKeyDown={handleKeyDown}
       role="button"
       tabIndex={0}
       aria-label={`View larger image of ${alt}`}
+      ref={buttonRef}
       style={{
         position: 'relative',
         borderRadius: '12px',
         overflow: 'hidden',
         aspectRatio: '4/3',
         cursor: 'pointer',
-        backgroundColor: '#f0f0f0'
+        backgroundColor: '#f0f0f0',
+        transition: 'transform 0.3s ease, box-shadow 0.3s ease'
       }}
     >
       <OptimizedImage 
@@ -137,7 +174,8 @@ const FacilityImageCard = memo(({ src, alt, onClick }) => {
         alt={alt}
         width="400"
         height="300"
-        objectFit="cover" // Cover works best for gallery thumbnails
+        objectFit="cover"
+        priority={priority}
       />
       <div 
         style={{
@@ -150,7 +188,8 @@ const FacilityImageCard = memo(({ src, alt, onClick }) => {
           padding: '1rem 0.5rem 0.5rem 0.5rem',
           fontSize: '0.9rem',
           fontWeight: '500',
-          zIndex: 3
+          zIndex: 3,
+          pointerEvents: 'none'
         }}
         aria-hidden="true"
       >
@@ -163,40 +202,47 @@ const FacilityImageCard = memo(({ src, alt, onClick }) => {
 FacilityImageCard.displayName = 'FacilityImageCard';
 
 // Memoized tab button component with enhanced accessibility
-const TabButton = memo(({ eventKey, active, icon, label, onClick }) => (
-  <button
-    onClick={() => onClick(eventKey)}
-    onKeyDown={(e) => {
-      if (e.key === 'Enter' || e.key === ' ') {
-        e.preventDefault();
-        onClick(eventKey);
-      }
-    }}
-    aria-pressed={active}
-    aria-label={`${label} tab${active ? ', currently selected' : ''}`}
-    style={{
-      padding: '0.75rem 1.5rem',
-      borderRadius: '40px',
-      border: 'none',
-      backgroundColor: active ? '#132f66' : 'transparent',
-      color: active ? 'white' : '#132f66',
-      fontWeight: '600',
-      fontSize: '1rem',
-      cursor: 'pointer',
-      transition: 'all 0.2s ease',
-      boxShadow: active ? '0 4px 12px rgba(19,47,102,0.2)' : 'none',
-      display: 'inline-flex',
-      alignItems: 'center',
-      gap: '0.5rem',
-      minHeight: '44px',
-      minWidth: '44px'
-    }}
-  >
-    <span aria-hidden="true">{icon}</span>
-    <span>{label}</span>
-    {active && <span className="visually-hidden">(selected)</span>}
-  </button>
-));
+const TabButton = memo(({ eventKey, active, icon, label, onClick }) => {
+  const buttonRef = useRef(null);
+
+  const handleKeyDown = useCallback((e) => {
+    if (e.key === 'Enter' || e.key === ' ') {
+      e.preventDefault();
+      onClick(eventKey);
+    }
+  }, [onClick, eventKey]);
+
+  return (
+    <button
+      ref={buttonRef}
+      onClick={() => onClick(eventKey)}
+      onKeyDown={handleKeyDown}
+      aria-pressed={active}
+      aria-label={`${label} tab${active ? ', currently selected' : ''}`}
+      style={{
+        padding: '0.75rem 1.5rem',
+        borderRadius: '40px',
+        border: 'none',
+        backgroundColor: active ? '#132f66' : 'transparent',
+        color: active ? 'white' : '#132f66',
+        fontWeight: '600',
+        fontSize: '1rem',
+        cursor: 'pointer',
+        transition: 'all 0.2s ease',
+        boxShadow: active ? '0 4px 12px rgba(19,47,102,0.2)' : 'none',
+        display: 'inline-flex',
+        alignItems: 'center',
+        gap: '0.5rem',
+        minHeight: '44px',
+        minWidth: '44px'
+      }}
+    >
+      <span aria-hidden="true">{icon}</span>
+      <span>{label}</span>
+      {active && <span className="visually-hidden">(selected)</span>}
+    </button>
+  );
+});
 
 TabButton.displayName = 'TabButton';
 
@@ -230,21 +276,52 @@ RoutineRow.displayName = 'RoutineRow';
 
 // Memoized image modal with accessibility improvements
 const ImageModal = memo(({ selectedImage, onClose }) => {
-  if (!selectedImage) return null;
+  const modalRef = useRef(null);
+  const closeButtonRef = useRef(null);
 
-  const handleKeyDown = (e) => {
+  useEffect(() => {
+    // Focus trap
+    if (modalRef.current) {
+      closeButtonRef.current?.focus();
+    }
+
+    // Prevent body scroll
+    document.body.style.overflow = 'hidden';
+    
+    return () => {
+      document.body.style.overflow = '';
+    };
+  }, []);
+
+  const handleKeyDown = useCallback((e) => {
     if (e.key === 'Escape') {
       onClose();
     }
-  };
+  }, [onClose]);
+
+  const handleBackdropClick = useCallback((e) => {
+    if (e.target === modalRef.current) {
+      onClose();
+    }
+  }, [onClose]);
 
   // Extract filename from the selected image path
-  const getImageSrc = (path) => {
+  const getImageSrc = useCallback((path) => {
     if (!path) return '';
     const filename = path.split('/').pop().replace(/\.(jpg|jpeg|png)$/i, '');
+    
+    // Check WebP support
+    const supportsWebP = (() => {
+      const canvas = document.createElement('canvas');
+      return canvas.toDataURL('image/webp').indexOf('image/webp') === 5;
+    })();
+
     return (
       <picture>
-        <source srcSet={`/images/optimized/${filename}.webp`} type="image/webp" />
+        <source 
+          srcSet={supportsWebP ? `/images/optimized/${filename}.webp` : `/images/optimized/${filename}.jpg`} 
+          type={supportsWebP ? 'image/webp' : 'image/jpeg'} 
+        />
         <img
           src={`/images/optimized/${filename}.jpg`}
           alt="Enlarged view of facility"
@@ -254,17 +331,22 @@ const ImageModal = memo(({ selectedImage, onClose }) => {
             objectFit: 'contain',
             borderRadius: '8px'
           }}
+          loading="eager"
         />
       </picture>
     );
-  };
+  }, []);
+
+  if (!selectedImage) return null;
 
   return (
     <div 
+      ref={modalRef}
       role="dialog"
       aria-modal="true"
       aria-label="Image enlarged view"
       onKeyDown={handleKeyDown}
+      onClick={handleBackdropClick}
       style={{
         position: 'fixed',
         top: 0,
@@ -278,7 +360,6 @@ const ImageModal = memo(({ selectedImage, onClose }) => {
         justifyContent: 'center',
         padding: '2rem'
       }}
-      onClick={onClose}
     >
       <div 
         style={{
@@ -289,6 +370,7 @@ const ImageModal = memo(({ selectedImage, onClose }) => {
         onClick={(e) => e.stopPropagation()}
       >
         <button
+          ref={closeButtonRef}
           onClick={onClose}
           onKeyDown={(e) => {
             if (e.key === 'Enter' || e.key === ' ') {
@@ -330,36 +412,36 @@ function Facilities() {
   const [activeTab, setActiveTab] = useState("boarding");
   const [selectedImage, setSelectedImage] = useState(null);
 
-  // Boarding facility images - just the paths, OptimizedImage will handle WebP
-  const boardingImages = {
+  // Boarding facility images - memoized
+  const boardingImages = useMemo(() => ({
     dormitory: "/images/facilities/dormitory.jpg",
     commonRoom: "/images/facilities/common-room.jpg",
     dining: "/images/facilities/dining-hall.jpg",
     studyArea: "/images/facilities/study-area.jpg",
     recreation: "/images/facilities/recreation.jpg",
     chapel: "/images/facilities/chapel.jpg"
-  };
+  }), []);
 
-  // Kitchen and menu images
-  const kitchenImages = {
+  // Kitchen and menu images - memoized
+  const kitchenImages = useMemo(() => ({
     kitchen: "/images/facilities/kitchen.jpg",
     diningHall: "/images/facilities/dining-hall-2.jpg",
     foodPrep: "/images/facilities/food-preparation.jpg",
     storage: "/images/facilities/food-storage.jpg"
-  };
+  }), []);
 
-  // Images you will provide
-  const weeklyMenuImage = "/images/menu.png";
-  const boardingItemsImage = "/images/boarding-items.jpg";
+  // Images you will provide - memoized
+  const weeklyMenuImage = useMemo(() => "/images/menu.png", []);
+  const boardingItemsImage = useMemo(() => "/images/boarding-items.jpg", []);
 
-  // PDF documents
-  const pdfDocuments = {
+  // PDF documents - memoized
+  const pdfDocuments = useMemo(() => ({
     itemsList: "/pdfs/boarding-items-list.pdf",
     weeklyMenu: "/pdfs/weekly-menu.pdf"
-  };
+  }), []);
 
-  // Boarding daily routine
-  const dailyRoutine = [
+  // Boarding daily routine - memoized
+  const dailyRoutine = useMemo(() => [
     { time: "6:00 AM - 6:45 AM", activity: "Morning Prep (Study Time)" },
     { time: "7:00 AM - 7:45 AM", activity: "Breakfast" },
     { time: "8:00 AM - 5:00 PM", activity: "Classes (with breaks)" },
@@ -369,7 +451,7 @@ function Facilities() {
     { time: "8:00 PM - 9:00 PM", activity: "Evening Prep (Homework)" },
     { time: "9:00 PM", activity: "Lights Out (Younger Students)" },
     { time: "10:00 PM", activity: "Lights Out (Older Students)" }
-  ];
+  ], []);
 
   // Handle document download
   const handleDownload = useCallback((pdfUrl, filename) => {
@@ -493,6 +575,7 @@ function Facilities() {
                     src={boardingImages.dormitory} 
                     alt="Dormitory" 
                     onClick={() => handleViewImage(boardingImages.dormitory)}
+                    priority={true}
                   />
                 </Col>
                 <Col md={4} role="listitem">
@@ -603,7 +686,7 @@ function Facilities() {
                             alt="Boarding Items Checklist"
                             width="800"
                             height="600"
-                            objectFit="contain" // This ensures the whole image is visible
+                            objectFit="contain"
                           />
                         </div>
                         <div className="mt-2">
@@ -663,6 +746,7 @@ function Facilities() {
                     src={kitchenImages.kitchen} 
                     alt="Modern Kitchen" 
                     onClick={() => handleViewImage(kitchenImages.kitchen)}
+                    priority={true}
                   />
                 </Col>
                 <Col md={6} role="listitem">
@@ -688,7 +772,7 @@ function Facilities() {
                 </Col>
               </Row>
 
-              {/* Weekly Menu - UPDATED with proper dimensions and objectFit="contain" */}
+              {/* Weekly Menu */}
               <Row className="mb-5">
                 <Col lg={12}>
                   <Card className="border-0 shadow-sm">
@@ -723,9 +807,9 @@ function Facilities() {
                           <OptimizedImage 
                             src={weeklyMenuImage}
                             alt="Weekly Menu"
-                            width="800"  // Corrected dimensions
-                            height="1000" // Corrected dimensions
-                            objectFit="contain" // This ensures the whole menu is visible
+                            width="800"
+                            height="1000"
+                            objectFit="contain"
                           />
                         </div>
                         <div className="mt-2">
@@ -798,179 +882,9 @@ function Facilities() {
         <GetInTouch />
       </Suspense>
 
-      {/* Critical CSS inline */}
+      {/* Critical CSS - Minified */}
       <style dangerouslySetInnerHTML={{ __html: `
-        @keyframes shimmer {
-          0% { background-position: -200% 0; }
-          100% { background-position: 200% 0; }
-        }
-        
-        .visually-hidden {
-          position: absolute;
-          width: 1px;
-          height: 1px;
-          padding: 0;
-          margin: -1px;
-          overflow: hidden;
-          clip: rect(0, 0, 0, 0);
-          border: 0;
-        }
-        
-        .cursor-pointer { cursor: pointer; }
-        
-        .facility-image-card {
-          transition: transform 0.3s ease;
-          position: relative;
-          overflow: hidden;
-        }
-        
-        .facility-image-card:hover,
-        .facility-image-card:focus-visible {
-          transform: scale(1.02);
-          outline: 3px solid #cebd04;
-          outline-offset: 2px;
-        }
-        
-        .facility-image-card:hover img,
-        .facility-image-card:focus-visible img {
-          transform: scale(1.05);
-        }
-
-        /* Routine Table Styles */
-        .routine-header {
-          display: flex;
-          padding: 1rem 1.5rem;
-          background: linear-gradient(135deg, #132f66 0%, #1e3a7a 100%);
-          color: white;
-          border-radius: 12px 12px 0 0;
-          font-weight: 700;
-          font-size: 1rem;
-          letter-spacing: 0.5px;
-        }
-
-        .time-column {
-          width: 200px;
-        }
-
-        .activity-column {
-          flex: 1;
-          display: flex;
-          align-items: center;
-          gap: 0.75rem;
-        }
-
-        .activity-icon {
-          font-size: 1.2rem;
-          min-width: 24px;
-        }
-
-        .routine-body {
-          border: 1px solid #e9ecef;
-          border-top: none;
-          border-radius: 0 0 12px 12px;
-          overflow: hidden;
-        }
-
-        .routine-row {
-          display: flex;
-          padding: 1rem 1.5rem;
-          border-bottom: 1px solid #e9ecef;
-          transition: all 0.2s ease;
-        }
-
-        .routine-row:last-child {
-          border-bottom: none;
-        }
-
-        .routine-row-even {
-          background-color: #ffffff;
-        }
-
-        .routine-row-odd {
-          background-color: #f8fafc;
-        }
-
-        .routine-row:hover,
-        .routine-row:focus-within {
-          background-color: #e6f0ff !important;
-          transform: scale(1.01);
-          box-shadow: 0 2px 8px rgba(0,0,0,0.05);
-          position: relative;
-          z-index: 1;
-          outline: 3px solid #cebd04;
-          outline-offset: -3px;
-        }
-
-        .routine-row.prep-time {
-          border-left: 4px solid #4299e1;
-        }
-
-        .routine-row.meal-time {
-          border-left: 4px solid #cebd04;
-        }
-
-        .routine-row.lights-out {
-          border-left: 4px solid #4a5568;
-        }
-
-        .routine-legend {
-          display: flex;
-          gap: 2rem;
-          margin-top: 1rem;
-          font-size: 0.85rem;
-          color: #4a5568;
-        }
-
-        .routine-legend span {
-          display: flex;
-          align-items: center;
-          gap: 0.5rem;
-        }
-
-        button:focus-visible {
-          outline: 3px solid #cebd04;
-          outline-offset: 2px;
-        }
-
-        @media (max-width: 768px) {
-          .routine-header {
-            display: none;
-          }
-
-          .routine-row {
-            flex-direction: column;
-            gap: 0.5rem;
-            padding: 1rem;
-          }
-
-          .time-column {
-            width: 100%;
-            font-weight: 700;
-            color: #132f66;
-          }
-
-          .activity-column {
-            margin-left: 0;
-          }
-
-          .routine-legend {
-            flex-wrap: wrap;
-            gap: 1rem;
-          }
-        }
-
-        @media (prefers-reduced-motion: reduce) {
-          .facility-image-card,
-          .facility-image-card img,
-          .routine-row,
-          * {
-            transition: none !important;
-            animation: none !important;
-          }
-          .routine-row:hover {
-            transform: none !important;
-          }
-        }
+        @keyframes shimmer{0%{background-position:-200% 0}100%{background-position:200% 0}}.visually-hidden{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);border:0}.cursor-pointer{cursor:pointer}.facility-image-card{transition:transform .3s ease,box-shadow .3s ease;position:relative;overflow:hidden;border-radius:12px;aspect-ratio:4/3}.facility-image-card:focus-visible,.facility-image-card:hover{transform:scale(1.02);outline:3px solid #cebd04;outline-offset:2px}.facility-image-card:focus-visible img,.facility-image-card:hover img{transform:scale(1.05)}.routine-header{display:flex;padding:1rem 1.5rem;background:linear-gradient(135deg,#132f66 0,#1e3a7a 100%);color:#fff;border-radius:12px 12px 0 0;font-weight:700;font-size:1rem;letter-spacing:.5px}.time-column{width:200px}.activity-column{flex:1;display:flex;align-items:center;gap:.75rem}.activity-icon{font-size:1.2rem;min-width:24px}.routine-body{border:1px solid #e9ecef;border-top:none;border-radius:0 0 12px 12px;overflow:hidden}.routine-row{display:flex;padding:1rem 1.5rem;border-bottom:1px solid #e9ecef;transition:all .2s ease}.routine-row:last-child{border-bottom:none}.routine-row-even{background-color:#fff}.routine-row-odd{background-color:#f8fafc}.routine-row:focus-within,.routine-row:hover{background-color:#e6f0ff!important;transform:scale(1.01);box-shadow:0 2px 8px rgba(0,0,0,.05);position:relative;z-index:1;outline:3px solid #cebd04;outline-offset:-3px}.routine-row.prep-time{border-left:4px solid #4299e1}.routine-row.meal-time{border-left:4px solid #cebd04}.routine-row.lights-out{border-left:4px solid #4a5568}.routine-legend{display:flex;gap:2rem;margin-top:1rem;font-size:.85rem;color:#4a5568}.routine-legend span{display:flex;align-items:center;gap:.5rem}button:focus-visible{outline:3px solid #cebd04;outline-offset:2px}@media (max-width:768px){.routine-header{display:none}.routine-row{flex-direction:column;gap:.5rem;padding:1rem}.time-column{width:100%;font-weight:700;color:#132f66}.routine-legend{flex-wrap:wrap;gap:1rem}}@media (prefers-reduced-motion:reduce){.facility-image-card,.facility-image-card img,.routine-row,.routine-row:focus-within,.routine-row:hover,*{transition:none!important;animation:none!important;transform:none!important}}
       `}} />
     </>
   );

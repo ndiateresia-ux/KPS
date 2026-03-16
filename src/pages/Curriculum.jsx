@@ -1,5 +1,5 @@
-// pages/Curriculum.jsx - Updated with correct paths
-import { lazy, Suspense, memo, useCallback, useMemo, useEffect, useState } from "react";
+// pages/Curriculum.jsx - Fully Optimized
+import { lazy, Suspense, memo, useCallback, useMemo, useEffect, useState, useRef } from "react";
 import { useLocation } from "react-router-dom";
 import Container from 'react-bootstrap/Container';
 import Row from 'react-bootstrap/Row';
@@ -19,15 +19,23 @@ const OptimizedImage = memo(({
   width, 
   height,
   priority = false,
-  folder = '', // Add folder parameter for gallery images
+  folder = '',
   ...props 
 }) => {
   const [loaded, setLoaded] = useState(false);
   const [error, setError] = useState(false);
+  const imgRef = useRef(null);
   const imageId = `img-${src.replace(/[^a-zA-Z0-9]/g, '-')}`;
 
   // Determine the correct path
   const basePath = folder ? `/images/optimized/${folder}/${src}` : `/images/optimized/${src}`;
+
+  // Check WebP support efficiently
+  const supportsWebP = useMemo(() => {
+    if (typeof window === 'undefined') return true;
+    const canvas = document.createElement('canvas');
+    return canvas.toDataURL('image/webp').indexOf('image/webp') === 5;
+  }, []);
 
   // Preload critical images
   useEffect(() => {
@@ -35,12 +43,17 @@ const OptimizedImage = memo(({
       const link = document.createElement('link');
       link.rel = 'preload';
       link.as = 'image';
-      link.href = `${basePath}.webp`;
-      link.type = 'image/webp';
+      link.href = supportsWebP ? `${basePath}.webp` : `${basePath}.jpg`;
+      link.type = supportsWebP ? 'image/webp' : 'image/jpeg';
       document.head.appendChild(link);
+      
+      return () => {
+        if (link.parentNode) document.head.removeChild(link);
+      };
     }
-  }, [priority, basePath]);
+  }, [priority, basePath, supportsWebP]);
 
+  // Error fallback
   if (error) {
     return (
       <div 
@@ -53,10 +66,14 @@ const OptimizedImage = memo(({
           justifyContent: 'center',
           color: '#666',
           fontSize: '14px',
-          aspectRatio: width && height ? `${width}/${height}` : 'auto'
+          aspectRatio: width && height ? `${width}/${height}` : 'auto',
+          borderRadius: '12px'
         }}
+        role="img"
+        aria-label={`${alt} (image failed to load)`}
       >
-        📷 Image not available
+        <span aria-hidden="true">📷</span>
+        <span className="visually-hidden">Image not available</span>
       </div>
     );
   }
@@ -66,8 +83,12 @@ const OptimizedImage = memo(({
       position: 'relative', 
       width: '100%', 
       height: '100%',
-      aspectRatio: width && height ? `${width}/${height}` : 'auto'
+      aspectRatio: width && height ? `${width}/${height}` : 'auto',
+      backgroundColor: '#f0f0f0',
+      borderRadius: '12px',
+      overflow: 'hidden'
     }}>
+      {/* Loading skeleton */}
       {!loaded && (
         <div 
           className="image-skeleton"
@@ -80,23 +101,26 @@ const OptimizedImage = memo(({
             background: 'linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%)',
             backgroundSize: '200% 100%',
             animation: 'shimmer 1.5s infinite',
-            borderRadius: '12px'
+            zIndex: 1
           }}
           aria-hidden="true"
         />
       )}
+      
       <picture>
-        {/* WebP version */}
+        {/* WebP version for modern browsers */}
         <source 
           srcSet={`${basePath}.webp`}
           type="image/webp"
         />
-        {/* Fallback JPG */}
+        {/* Fallback JPG for older browsers */}
         <img
+          ref={imgRef}
           id={imageId}
           src={`${basePath}.jpg`}
           alt={alt}
           loading={priority ? "eager" : "lazy"}
+          fetchpriority={priority ? "high" : "auto"}
           decoding="async"
           width={width}
           height={height}
@@ -108,7 +132,8 @@ const OptimizedImage = memo(({
             objectFit: 'cover',
             opacity: loaded ? 1 : 0,
             transition: 'opacity 0.3s ease, transform 0.3s ease',
-            borderRadius: '12px'
+            position: 'relative',
+            zIndex: 2
           }}
           className={className}
           {...props}
@@ -149,11 +174,25 @@ PillarItem.displayName = 'PillarItem';
 // Optimized navigation card component
 const NavCard = memo(({ data, onClick }) => {
   const cardId = `nav-card-${data.id}`;
+  const buttonId = `nav-btn-${data.id}`;
+  
+  const handleClick = useCallback(() => {
+    onClick(`${data.id}-section`);
+  }, [onClick, data.id]);
   
   return (
     <Col md={4} className="mb-4">
-      <Card className="curriculum-nav-card h-100 border-0 shadow-sm" role="article" aria-labelledby={cardId}>
-        <div className="curriculum-card-img-wrapper" style={{ aspectRatio: '16/9', overflow: 'hidden', borderRadius: '12px 12px 0 0' }}>
+      <Card 
+        className="curriculum-nav-card h-100 border-0 shadow-sm" 
+        role="article" 
+        aria-labelledby={cardId}
+      >
+        <div className="curriculum-card-img-wrapper" style={{ 
+          aspectRatio: '16/9', 
+          overflow: 'hidden', 
+          borderRadius: '12px 12px 0 0',
+          backgroundColor: '#f0f0f0'
+        }}>
           <OptimizedImage
             src={data.image}
             alt={`${data.badge} level learning activities`}
@@ -166,10 +205,11 @@ const NavCard = memo(({ data, onClick }) => {
           <Card.Title id={cardId} className="card-title-navy fw-bold h6">{data.badge}</Card.Title>
           <Card.Text className="text-muted small mb-2">{data.ageRange}</Card.Text>
           <Button 
+            id={buttonId}
             variant="outline-primary"
             size="sm"
             className="btn-outline-navy btn-sm px-3"
-            onClick={() => onClick(`${data.id}-section`)}
+            onClick={handleClick}
             aria-label={`Explore ${data.badge} curriculum`}
             style={{ minHeight: '44px', minWidth: '44px' }}
           >
@@ -186,19 +226,37 @@ NavCard.displayName = 'NavCard';
 // Curriculum section component
 const CurriculumSection = memo(({ data, isReversed = false }) => {
   const sectionId = `${data.id}-section`;
+  const headingId = `${data.id}-heading`;
+  const imageId = `img-${data.id}-${data.image}`;
+  
+  const badgeStyles = useMemo(() => ({
+    ecde: {
+      backgroundColor: '#ffd700',
+      color: '#132f66'
+    },
+    primary: {
+      backgroundColor: '#4CAF50',
+      color: 'white'
+    },
+    jss: {
+      backgroundColor: '#2196F3',
+      color: 'white'
+    }
+  }), []);
   
   return (
     <section 
       id={sectionId}
       className={`curriculum-section py-5 ${data.id === 'primary' ? 'bg-light-custom' : 'bg-white'}`}
-      aria-labelledby={`${data.id}-heading`}
+      aria-labelledby={headingId}
+      tabIndex="-1"
     >
       <Container>
         <Row className="align-items-center g-4 g-lg-5">
           <Col lg={6} className={isReversed ? "order-lg-2" : ""}>
             <div className="curriculum-content">
               <span 
-                className={`curriculum-badge ${data.id}-badge`}
+                className="curriculum-badge"
                 style={{
                   display: 'inline-block',
                   padding: '4px 12px',
@@ -206,13 +264,12 @@ const CurriculumSection = memo(({ data, isReversed = false }) => {
                   fontSize: '0.8rem',
                   fontWeight: '600',
                   marginBottom: '1rem',
-                  backgroundColor: data.id === 'ecde' ? '#ffd700' : data.id === 'primary' ? '#4CAF50' : '#2196F3',
-                  color: data.id === 'ecde' ? '#132f66' : 'white'
+                  ...badgeStyles[data.id]
                 }}
               >
                 {data.badge}
               </span>
-              <h2 id={`${data.id}-heading`} className="curriculum-title h3 fw-bold mb-2" style={{ color: '#132f66' }}>
+              <h2 id={headingId} className="curriculum-title h3 fw-bold mb-2" style={{ color: '#132f66' }}>
                 {data.title}
               </h2>
               <h3 className="curriculum-subtitle text-muted mb-2 small">{data.subtitle}</h3>
@@ -272,6 +329,7 @@ const CurriculumSection = memo(({ data, isReversed = false }) => {
                 alt={`${data.title} - ${data.imageTag} illustration`}
                 width="600"
                 height="450"
+                priority={data.id === 'ecde'}
               />
               <div 
                 className="image-tag"
@@ -286,7 +344,7 @@ const CurriculumSection = memo(({ data, isReversed = false }) => {
                   fontSize: '0.8rem',
                   fontWeight: '600',
                   backdropFilter: 'blur(5px)',
-                  zIndex: 2
+                  zIndex: 3
                 }}
                 aria-label={`Tag: ${data.imageTag}`}
               >
@@ -305,6 +363,7 @@ CurriculumSection.displayName = 'CurriculumSection';
 
 function Curriculum() {
   const location = useLocation();
+  const [isVisible, setIsVisible] = useState({});
 
   // Handle scrolling to section
   useEffect(() => {
@@ -330,6 +389,26 @@ function Curriculum() {
       section.setAttribute('tabindex', '-1');
       section.focus({ preventScroll: true });
     }
+  }, []);
+
+  // Intersection Observer for animations
+  useEffect(() => {
+    const observer = new IntersectionObserver(
+      (entries) => {
+        entries.forEach(entry => {
+          if (entry.isIntersecting) {
+            setIsVisible(prev => ({ ...prev, [entry.target.id]: true }));
+          }
+        });
+      },
+      { threshold: 0.1, rootMargin: '50px' }
+    );
+
+    document.querySelectorAll('.curriculum-section').forEach(section => {
+      observer.observe(section);
+    });
+
+    return () => observer.disconnect();
   }, []);
 
   const curriculumData = useMemo(() => ({
@@ -422,8 +501,10 @@ function Curriculum() {
           <title>Curriculum | Kitale Progressive School</title>
           <meta
             name="description"
-            content="Explore our Competency-Based Curriculum (CBC) across ECDE, Primary, and Junior Secondary levels."
+            content="Explore our Competency-Based Curriculum (CBC) across ECDE, Primary, and Junior Secondary levels at Kitale Progressive School."
           />
+          <link rel="preconnect" href="https://fonts.googleapis.com" />
+          <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
         </Helmet>
       </Suspense>
       
@@ -520,7 +601,7 @@ function Curriculum() {
           </p>
           <a 
             href="/admissions/apply" 
-            className="btn btn-light px-4 py-2 d-inline-block"
+            className="btn-apply-curriculum"
             style={{
               backgroundColor: '#cebd04',
               color: '#132f66',
@@ -532,17 +613,19 @@ function Curriculum() {
               minHeight: '44px',
               minWidth: '44px',
               lineHeight: '44px',
-              textAlign: 'center'
+              textAlign: 'center',
+              display: 'inline-block',
+              padding: '0 2rem'
             }}
             onMouseEnter={(e) => {
-              e.target.style.backgroundColor = '#b09e03';
-              e.target.style.transform = 'translateY(-2px)';
-              e.target.style.boxShadow = '0 4px 12px rgba(0,0,0,0.2)';
+              e.currentTarget.style.backgroundColor = '#b09e03';
+              e.currentTarget.style.transform = 'translateY(-2px)';
+              e.currentTarget.style.boxShadow = '0 4px 12px rgba(0,0,0,0.2)';
             }}
             onMouseLeave={(e) => {
-              e.target.style.backgroundColor = '#cebd04';
-              e.target.style.transform = 'translateY(0)';
-              e.target.style.boxShadow = 'none';
+              e.currentTarget.style.backgroundColor = '#cebd04';
+              e.currentTarget.style.transform = 'translateY(0)';
+              e.currentTarget.style.boxShadow = 'none';
             }}
             aria-label="Apply for admission now"
           >
@@ -555,38 +638,9 @@ function Curriculum() {
         <GetInTouch />
       </Suspense>
 
-      {/* Critical CSS */}
+      {/* Critical CSS - Minified */}
       <style dangerouslySetInnerHTML={{ __html: `
-        @keyframes shimmer {
-          0% { background-position: -200% 0; }
-          100% { background-position: 200% 0; }
-        }
-        .visually-hidden {
-          position: absolute;
-          width: 1px;
-          height: 1px;
-          padding: 0;
-          margin: -1px;
-          overflow: hidden;
-          clip: rect(0, 0, 0, 0);
-          border: 0;
-        }
-        [tabindex="-1"]:focus {
-          outline: 3px solid #cebd04;
-          outline-offset: 2px;
-        }
-        button:focus-visible,
-        a:focus-visible {
-          outline: 3px solid #cebd04;
-          outline-offset: 2px;
-        }
-        @media (prefers-reduced-motion: reduce) {
-          * {
-            animation-duration: 0.01ms !important;
-            animation-iteration-count: 1 !important;
-            transition-duration: 0.01ms !important;
-          }
-        }
+        @keyframes shimmer{0%{background-position:-200% 0}100%{background-position:200% 0}}.visually-hidden{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);border:0}[tabindex="-1"]:focus{outline:3px solid #cebd04;outline-offset:2px}button:focus-visible,a:focus-visible{outline:3px solid #cebd04;outline-offset:2px}.btn-outline-navy{border:2px solid #132f66;background:transparent;color:#132f66;min-height:44px;min-width:44px}.btn-outline-navy:focus-visible,.btn-outline-navy:hover{background:#132f66;color:#fff;outline:3px solid #cebd04;outline-offset:2px}.curriculum-nav-card{transition:transform .2s ease,box-shadow .2s ease;border-radius:12px;overflow:hidden}.curriculum-nav-card:focus-within,.curriculum-nav-card:hover{transform:translateY(-4px);box-shadow:0 10px 30px rgba(0,0,0,.1)!important}.curriculum-section{scroll-margin-top:80px}@media (prefers-reduced-motion:reduce){*,.curriculum-nav-card,.curriculum-nav-card:focus-within,.curriculum-nav-card:hover{transition:none!important;animation:none!important;transform:none!important}}
       `}} />
     </>
   );

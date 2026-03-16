@@ -1,46 +1,87 @@
-// pages/Gallery.jsx
+// pages/Gallery.jsx - Fully Optimized
 import { Helmet } from "react-helmet-async";
 import { Container, Row, Col } from "react-bootstrap";
-import { useState, useEffect, useCallback, lazy, Suspense, memo } from "react";
+import { useState, useEffect, useCallback, lazy, Suspense, memo, useMemo, useRef } from "react";
 
 // Lazy load non-critical components
 const GetInTouch = lazy(() => import("../components/GetInTouch"));
 
-// Fallback image
-const FALLBACK_IMAGE = "/images/optimized/fallback.jpg";
-
-// Optimized Gallery Image Component
-const GalleryImage = memo(({ image, onClick }) => {
-  const [imgSrc, setImgSrc] = useState('');
+// Optimized Gallery Image Component with WebP support
+const GalleryImage = memo(({ image, onClick, priority = false }) => {
   const [loaded, setLoaded] = useState(false);
   const [error, setError] = useState(false);
+  const imgRef = useRef(null);
   const imageId = `gallery-img-${image.id}`;
 
-  // Set the correct image path based on format
-  useEffect(() => {
-    // Try WebP first, fall back to JPG
-    const basePath = `/images/optimized/gallery/${image.filename}`;
-    setImgSrc(`${basePath}.webp`);
-  }, [image.filename]);
+  // Check WebP support
+  const supportsWebP = useMemo(() => {
+    if (typeof window === 'undefined') return true;
+    const canvas = document.createElement('canvas');
+    return canvas.toDataURL('image/webp').indexOf('image/webp') === 5;
+  }, []);
 
-  const handleError = () => {
-    if (!error) {
-      setError(true);
-      // Fall back to optimized JPG
-      setImgSrc(`/images/optimized/gallery/${image.filename}.jpg`);
+  // Preload priority images
+  useEffect(() => {
+    if (priority && image.filename) {
+      const link = document.createElement('link');
+      link.rel = 'preload';
+      link.as = 'image';
+      link.href = supportsWebP 
+        ? `/images/optimized/gallery/${image.filename}.webp`
+        : `/images/optimized/gallery/${image.filename}.jpg`;
+      link.type = supportsWebP ? 'image/webp' : 'image/jpeg';
+      document.head.appendChild(link);
+      
+      return () => {
+        if (link.parentNode) document.head.removeChild(link);
+      };
     }
-  };
+  }, [priority, image.filename, supportsWebP]);
+
+  const handleKeyDown = useCallback((e) => {
+    if (e.key === 'Enter' || e.key === ' ') {
+      e.preventDefault();
+      onClick(image);
+    }
+  }, [onClick, image]);
+
+  // Error fallback
+  if (error) {
+    return (
+      <div
+        className="gallery-item"
+        onClick={() => onClick(image)}
+        onKeyDown={handleKeyDown}
+        role="button"
+        tabIndex={0}
+        aria-label={`View larger image of ${image.alt}`}
+        style={{
+          position: 'relative',
+          borderRadius: '12px',
+          overflow: 'hidden',
+          aspectRatio: '4/3',
+          cursor: 'pointer',
+          backgroundColor: '#f0f0f0',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          color: '#666',
+          fontSize: '0.875rem'
+        }}
+      >
+        <div className="text-center">
+          <div style={{ fontSize: '2rem', marginBottom: '0.5rem' }} aria-hidden="true">📷</div>
+          <div>{image.alt}</div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div
-      className="gallery-item cursor-pointer"
+      className="gallery-item"
       onClick={() => onClick(image)}
-      onKeyDown={(e) => {
-        if (e.key === 'Enter' || e.key === ' ') {
-          e.preventDefault();
-          onClick(image);
-        }
-      }}
+      onKeyDown={handleKeyDown}
       role="button"
       tabIndex={0}
       aria-label={`View larger image of ${image.alt}`}
@@ -50,9 +91,11 @@ const GalleryImage = memo(({ image, onClick }) => {
         overflow: 'hidden',
         aspectRatio: '4/3',
         cursor: 'pointer',
-        backgroundColor: '#f0f0f0'
+        backgroundColor: '#f0f0f0',
+        transition: 'transform 0.3s ease, box-shadow 0.3s ease'
       }}
     >
+      {/* Loading skeleton */}
       {!loaded && (
         <div 
           style={{
@@ -63,11 +106,13 @@ const GalleryImage = memo(({ image, onClick }) => {
             bottom: 0,
             background: 'linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%)',
             backgroundSize: '200% 100%',
-            animation: 'shimmer 1.5s infinite'
+            animation: 'shimmer 1.5s infinite',
+            zIndex: 1
           }}
           aria-hidden="true"
         />
       )}
+      
       <picture>
         {/* WebP version for modern browsers */}
         <source 
@@ -76,19 +121,25 @@ const GalleryImage = memo(({ image, onClick }) => {
         />
         {/* Fallback JPG for older browsers */}
         <img
+          ref={imgRef}
           id={imageId}
           src={`/images/optimized/gallery/${image.filename}.jpg`}
           alt={image.alt}
-          loading="lazy"
+          loading={priority ? "eager" : "lazy"}
+          fetchpriority={priority ? "high" : "auto"}
           decoding="async"
+          width="400"
+          height="300"
           onLoad={() => setLoaded(true)}
-          onError={handleError}
+          onError={() => setError(true)}
           style={{
             width: '100%',
             height: '100%',
             objectFit: 'cover',
             opacity: loaded ? 1 : 0,
-            transition: 'opacity 0.3s ease, transform 0.3s ease'
+            transition: 'opacity 0.3s ease, transform 0.3s ease',
+            position: 'relative',
+            zIndex: 2
           }}
         />
       </picture>
@@ -99,64 +150,97 @@ const GalleryImage = memo(({ image, onClick }) => {
 GalleryImage.displayName = 'GalleryImage';
 
 // Memoized filter button component with accessibility
-const FilterButton = memo(({ category, isActive, onClick }) => (
-  <button
-    onClick={() => onClick(category.id)}
-    onKeyDown={(e) => {
-      if (e.key === 'Enter' || e.key === ' ') {
-        e.preventDefault();
-        onClick(category.id);
-      }
-    }}
-    aria-pressed={isActive}
-    aria-label={`${category.name} photos${isActive ? ', currently selected' : ''}`}
-    style={{
-      padding: '0.5rem 1rem',
-      borderRadius: '40px',
-      border: 'none',
-      backgroundColor: isActive ? '#132f66' : 'transparent',
-      color: isActive ? 'white' : '#4a5568',
-      fontWeight: '500',
-      fontSize: '0.9rem',
-      cursor: 'pointer',
-      transition: 'all 0.2s ease',
-      display: 'inline-flex',
-      alignItems: 'center',
-      gap: '0.5rem',
-      whiteSpace: 'nowrap',
-      minHeight: '44px',
-      minWidth: '44px'
-    }}
-  >
-    <span style={{ fontSize: '1.1rem' }} aria-hidden="true">{category.icon}</span>
-    <span>{category.name}</span>
-    {isActive && <span className="visually-hidden"> (selected)</span>}
-  </button>
-));
+const FilterButton = memo(({ category, isActive, onClick }) => {
+  const buttonRef = useRef(null);
+
+  const handleKeyDown = useCallback((e) => {
+    if (e.key === 'Enter' || e.key === ' ') {
+      e.preventDefault();
+      onClick(category.id);
+    }
+  }, [onClick, category.id]);
+
+  return (
+    <button
+      ref={buttonRef}
+      onClick={() => onClick(category.id)}
+      onKeyDown={handleKeyDown}
+      aria-pressed={isActive}
+      aria-label={`${category.name} photos${isActive ? ', currently selected' : ''}`}
+      style={{
+        padding: '0.5rem 1rem',
+        borderRadius: '40px',
+        border: 'none',
+        backgroundColor: isActive ? '#132f66' : 'transparent',
+        color: isActive ? 'white' : '#4a5568',
+        fontWeight: '500',
+        fontSize: '0.9rem',
+        cursor: 'pointer',
+        transition: 'all 0.2s ease',
+        display: 'inline-flex',
+        alignItems: 'center',
+        gap: '0.5rem',
+        whiteSpace: 'nowrap',
+        minHeight: '44px',
+        minWidth: '44px'
+      }}
+    >
+      <span style={{ fontSize: '1.1rem' }} aria-hidden="true">{category.icon}</span>
+      <span>{category.name}</span>
+      {isActive && <span className="visually-hidden"> (selected)</span>}
+    </button>
+  );
+});
 
 FilterButton.displayName = 'FilterButton';
 
 // Memoized lightbox modal with accessibility
 const LightboxModal = memo(({ selectedImage, onClose, onPrev, onNext }) => {
-  if (!selectedImage) return null;
+  const modalRef = useRef(null);
+  const closeButtonRef = useRef(null);
+  const prevButtonRef = useRef(null);
+  const nextButtonRef = useRef(null);
 
+  // Handle keyboard navigation
   const handleKeyDown = useCallback((e) => {
     if (e.key === 'Escape') {
       onClose();
     } else if (e.key === 'ArrowLeft') {
+      e.preventDefault();
       onPrev();
     } else if (e.key === 'ArrowRight') {
+      e.preventDefault();
       onNext();
     }
   }, [onClose, onPrev, onNext]);
 
+  // Focus trap and event listeners
   useEffect(() => {
+    if (modalRef.current) {
+      closeButtonRef.current?.focus();
+    }
+    
     document.addEventListener('keydown', handleKeyDown);
-    return () => document.removeEventListener('keydown', handleKeyDown);
+    document.body.style.overflow = 'hidden';
+    
+    return () => {
+      document.removeEventListener('keydown', handleKeyDown);
+      document.body.style.overflow = 'unset';
+    };
   }, [handleKeyDown]);
+
+  // Check WebP support for lightbox
+  const supportsWebP = useMemo(() => {
+    if (typeof window === 'undefined') return true;
+    const canvas = document.createElement('canvas');
+    return canvas.toDataURL('image/webp').indexOf('image/webp') === 5;
+  }, []);
+
+  if (!selectedImage) return null;
 
   return (
     <div
+      ref={modalRef}
       style={{
         position: 'fixed',
         top: 0,
@@ -177,6 +261,7 @@ const LightboxModal = memo(({ selectedImage, onClose, onPrev, onNext }) => {
       tabIndex={-1}
     >
       <button
+        ref={closeButtonRef}
         onClick={onClose}
         style={{
           position: 'absolute',
@@ -192,14 +277,18 @@ const LightboxModal = memo(({ selectedImage, onClose, onPrev, onNext }) => {
           zIndex: 100001,
           display: 'flex',
           alignItems: 'center',
-          justifyContent: 'center'
+          justifyContent: 'center',
+          minWidth: '44px',
+          minHeight: '44px'
         }}
         aria-label="Close lightbox"
       >
         ✕
+        <span className="visually-hidden">Close</span>
       </button>
       
       <button
+        ref={prevButtonRef}
         onClick={(e) => { e.stopPropagation(); onPrev(); }}
         style={{
           position: 'absolute',
@@ -216,14 +305,18 @@ const LightboxModal = memo(({ selectedImage, onClose, onPrev, onNext }) => {
           alignItems: 'center',
           justifyContent: 'center',
           minWidth: '44px',
-          minHeight: '44px'
+          minHeight: '44px',
+          transition: 'background-color 0.2s ease'
         }}
+        onMouseEnter={(e) => e.currentTarget.style.backgroundColor = 'rgba(255,255,255,0.3)'}
+        onMouseLeave={(e) => e.currentTarget.style.backgroundColor = 'rgba(255,255,255,0.2)'}
         aria-label="Previous image"
       >
         ‹
       </button>
       
       <button
+        ref={nextButtonRef}
         onClick={(e) => { e.stopPropagation(); onNext(); }}
         style={{
           position: 'absolute',
@@ -240,8 +333,11 @@ const LightboxModal = memo(({ selectedImage, onClose, onPrev, onNext }) => {
           alignItems: 'center',
           justifyContent: 'center',
           minWidth: '44px',
-          minHeight: '44px'
+          minHeight: '44px',
+          transition: 'background-color 0.2s ease'
         }}
+        onMouseEnter={(e) => e.currentTarget.style.backgroundColor = 'rgba(255,255,255,0.3)'}
+        onMouseLeave={(e) => e.currentTarget.style.backgroundColor = 'rgba(255,255,255,0.2)'}
         aria-label="Next image"
       >
         ›
@@ -256,8 +352,11 @@ const LightboxModal = memo(({ selectedImage, onClose, onPrev, onNext }) => {
       >
         <picture>
           <source 
-            srcSet={`/images/optimized/gallery/${selectedImage.filename}.webp`}
-            type="image/webp"
+            srcSet={supportsWebP 
+              ? `/images/optimized/gallery/${selectedImage.filename}.webp`
+              : `/images/optimized/gallery/${selectedImage.filename}.jpg`
+            }
+            type={supportsWebP ? 'image/webp' : 'image/jpeg'}
           />
           <img
             src={`/images/optimized/gallery/${selectedImage.filename}.jpg`}
@@ -268,6 +367,7 @@ const LightboxModal = memo(({ selectedImage, onClose, onPrev, onNext }) => {
               objectFit: 'contain',
               borderRadius: '8px'
             }}
+            loading="eager"
           />
         </picture>
         <p style={{ 
@@ -290,9 +390,10 @@ function Gallery() {
   const [activeCategory, setActiveCategory] = useState("all");
   const [visibleImages, setVisibleImages] = useState(8);
   const [loading, setLoading] = useState(false);
+  const announcerRef = useRef(null);
 
-  // Gallery data organized by categories - using filename without extension
-  const galleryData = {
+  // Gallery data organized by categories - memoized
+  const galleryData = useMemo(() => ({
     all: [
       { id: 1, filename: "academics1", alt: "Classroom learning", category: "academics" },
       { id: 2, filename: "academics2", alt: "Science experiment", category: "academics" },
@@ -347,26 +448,25 @@ function Gallery() {
       { id: 20, filename: "facilities4", alt: "Computer lab" },
       { id: 21, filename: "facilities5", alt: "School van" },
     ]
-  };
+  }), []);
 
-  const categories = [
+  const categories = useMemo(() => [
     { id: "all", name: "All", icon: "🖼️" },
     { id: "academics", name: "Academics", icon: "📚" },
     { id: "sports", name: "Sports", icon: "⚽" },
     { id: "cultural", name: "Cultural", icon: "🎭" },
     { id: "events", name: "Events", icon: "🎉" },
     { id: "facilities", name: "Facilities", icon: "🏫" }
-  ];
+  ], []);
 
   // Reset visible images when category changes
   useEffect(() => {
     setVisibleImages(8);
-    const announcer = document.getElementById('gallery-announcer');
-    if (announcer) {
+    if (announcerRef.current) {
       const categoryName = categories.find(c => c.id === activeCategory)?.name || activeCategory;
-      announcer.textContent = `Showing ${categoryName} photos`;
+      announcerRef.current.textContent = `Showing ${categoryName} photos`;
     }
-  }, [activeCategory]);
+  }, [activeCategory, categories]);
 
   const openLightbox = useCallback((image) => {
     setSelectedImage(image);
@@ -383,21 +483,24 @@ function Gallery() {
     const currentIndex = currentImages.findIndex(img => img.id === selectedImage.id);
     const prevIndex = currentIndex > 0 ? currentIndex - 1 : currentImages.length - 1;
     setSelectedImage(currentImages[prevIndex]);
-  }, [selectedImage, activeCategory]);
+  }, [selectedImage, activeCategory, galleryData]);
 
   const handleNextImage = useCallback(() => {
     const currentImages = galleryData[activeCategory] || galleryData.all;
     const currentIndex = currentImages.findIndex(img => img.id === selectedImage.id);
     const nextIndex = currentIndex < currentImages.length - 1 ? currentIndex + 1 : 0;
     setSelectedImage(currentImages[nextIndex]);
-  }, [selectedImage, activeCategory]);
+  }, [selectedImage, activeCategory, galleryData]);
 
   const handleLoadMore = useCallback(() => {
     setLoading(true);
-    setTimeout(() => {
-      setVisibleImages(prev => prev + 8);
-      setLoading(false);
-    }, 500);
+    // Use requestAnimationFrame for smooth loading
+    requestAnimationFrame(() => {
+      setTimeout(() => {
+        setVisibleImages(prev => prev + 8);
+        setLoading(false);
+      }, 300);
+    });
   }, []);
 
   const handleCategoryChange = useCallback((categoryId) => {
@@ -405,8 +508,16 @@ function Gallery() {
   }, []);
 
   // Get current category images and limit visible ones
-  const currentImages = galleryData[activeCategory] || galleryData.all;
-  const displayedImages = currentImages.slice(0, visibleImages);
+  const currentImages = useMemo(() => 
+    galleryData[activeCategory] || galleryData.all,
+    [activeCategory, galleryData]
+  );
+  
+  const displayedImages = useMemo(() => 
+    currentImages.slice(0, visibleImages),
+    [currentImages, visibleImages]
+  );
+  
   const hasMoreImages = visibleImages < currentImages.length;
 
   return (
@@ -456,7 +567,13 @@ function Gallery() {
           <h2 id="gallery-heading" className="visually-hidden">Photo Gallery</h2>
           
           {/* Screen reader announcer */}
-          <div id="gallery-announcer" className="visually-hidden" role="status" aria-live="polite"></div>
+          <div 
+            ref={announcerRef}
+            className="visually-hidden" 
+            role="status" 
+            aria-live="polite"
+            aria-atomic="true"
+          ></div>
 
           {/* Category Filter */}
           <div 
@@ -486,11 +603,12 @@ function Gallery() {
             role="list"
             aria-label="Gallery images"
           >
-            {displayedImages.map((image) => (
+            {displayedImages.map((image, index) => (
               <div key={image.id} role="listitem">
                 <GalleryImage
                   image={image}
                   onClick={openLightbox}
+                  priority={index < 4 && activeCategory === 'all'} // Prioritize first 4 images in all category
                 />
               </div>
             ))}
@@ -609,46 +727,9 @@ function Gallery() {
         <GetInTouch />
       </Suspense>
 
-      {/* Critical CSS */}
+      {/* Critical CSS - Minified */}
       <style dangerouslySetInnerHTML={{ __html: `
-        @keyframes shimmer {
-          0% { background-position: -200% 0; }
-          100% { background-position: 200% 0; }
-        }
-        .visually-hidden {
-          position: absolute;
-          width: 1px;
-          height: 1px;
-          padding: 0;
-          margin: -1px;
-          overflow: hidden;
-          clip: rect(0, 0, 0, 0);
-          border: 0;
-        }
-        .cursor-pointer { cursor: pointer; }
-        .gallery-item {
-          transition: transform 0.3s ease;
-        }
-        .gallery-item:hover,
-        .gallery-item:focus-visible {
-          transform: scale(1.03);
-          outline: 3px solid #cebd04;
-          outline-offset: 2px;
-        }
-        button:focus-visible {
-          outline: 3px solid #cebd04;
-          outline-offset: 2px;
-        }
-        @media (prefers-reduced-motion: reduce) {
-          .gallery-item,
-          button {
-            transition: none !important;
-            animation: none !important;
-          }
-          .gallery-item:hover {
-            transform: none !important;
-          }
-        }
+        @keyframes shimmer{0%{background-position:-200% 0}100%{background-position:200% 0}}.visually-hidden{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);border:0}.gallery-item{transition:transform .3s ease,box-shadow .3s ease;border-radius:12px;overflow:hidden;aspect-ratio:4/3;cursor:pointer}.gallery-item:focus-visible,.gallery-item:hover{transform:scale(1.03);outline:3px solid #cebd04;outline-offset:2px}button:focus-visible{outline:3px solid #cebd04;outline-offset:2px}.cursor-pointer{cursor:pointer}@media (prefers-reduced-motion:reduce){.gallery-item,.gallery-item:focus-visible,.gallery-item:hover,button{transition:none!important;animation:none!important;transform:none!important}}
       `}} />
     </>
   );

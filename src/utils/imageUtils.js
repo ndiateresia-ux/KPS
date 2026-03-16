@@ -1,33 +1,37 @@
 // utils/imageUtils.js
-// Simple utility to handle image paths and formats
-
-// Check if browser supports WebP
-export const supportsWebP = () => {
-  const canvas = document.createElement('canvas');
-  return canvas.toDataURL('image/webp').indexOf('image/webp') === 5;
+export const getResponsiveSizes = (breakpoints = { sm: 400, md: 800, lg: 1200, xl: 1600 }) => {
+  return Object.entries(breakpoints)
+    .map(([bp, size]) => `(max-width: ${bp}px) ${size}px`)
+    .join(', ');
 };
 
-// Get optimized image path based on format
-export const getImagePath = (imageName, format = 'webp') => {
-  // Remove extension if present
-  const baseName = imageName.replace(/\.(jpg|jpeg|png|gif)$/i, '');
-  return `/images/optimized/${baseName}.${format}`;
+export const generateImagePath = (baseName, size, format = 'webp') => {
+  return `/images/optimized/${baseName}-${size}w.${format}`;
 };
 
-// Get fallback image path (for browsers that don't support WebP)
-export const getFallbackImagePath = (imageName) => {
-  const baseName = imageName.replace(/\.(jpg|jpeg|png|gif)$/i, '');
-  return `/images/optimized/${baseName}.jpg`;
+export const getOptimalImageSize = (containerWidth) => {
+  if (containerWidth >= 1600) return 1600;
+  if (containerWidth >= 1200) return 1200;
+  if (containerWidth >= 800) return 800;
+  return 400;
 };
 
-// Preload critical images
-export const preloadCriticalImages = (images) => {
-  images.forEach(image => {
-    const link = document.createElement('link');
-    link.rel = 'preload';
-    link.as = 'image';
-    link.href = image;
-    link.type = 'image/webp';
-    document.head.appendChild(link);
+// Preconnect to important origins
+export const addPreconnects = () => {
+  const origins = [
+    'https://fonts.googleapis.com',
+    'https://fonts.gstatic.com'
+  ];
+  
+  origins.forEach(origin => {
+    if (!document.querySelector(`link[href="${origin}"]`)) {
+      const link = document.createElement('link');
+      link.rel = 'preconnect';
+      link.href = origin;
+      if (origin.includes('gstatic')) {
+        link.crossOrigin = 'anonymous';
+      }
+      document.head.appendChild(link);
+    }
   });
 };

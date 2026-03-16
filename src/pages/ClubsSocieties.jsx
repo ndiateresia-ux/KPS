@@ -1,18 +1,18 @@
-// pages/ClubsSocieties.jsx
+// pages/ClubsSocieties.jsx - Fully Optimized
 import { Helmet } from "react-helmet-async";
 import { Container, Row, Col, Card } from "react-bootstrap";
-import { useState, lazy, Suspense, memo, useCallback, useEffect } from "react";
+import { useState, lazy, Suspense, memo, useCallback, useEffect, useMemo, useRef } from "react";
 
 // Lazy load non-critical components
 const GetInTouch = lazy(() => import("../components/GetInTouch"));
 
-// Unsplash fallback images based on club category
+// Unsplash fallback images based on club category (optimized with size parameters)
 const UNSPLASH_FALLBACKS = {
-  academic: "https://images.unsplash.com/photo-1522202176988-66273c2fd55f?w=400&q=75&auto=format", // Students studying
-  cultural: "https://images.unsplash.com/photo-1516450360452-9312f5e86fc7?w=400&q=75&auto=format", // Cultural dance
-  sports: "https://images.unsplash.com/photo-1461896836934-ffe607ba8211?w=400&q=75&auto=format", // Sports
-  service: "https://images.unsplash.com/photo-1559027615-cd4628902d4a?w=400&q=75&auto=format", // Community service
-  default: "https://images.unsplash.com/photo-1541339907198-e08756dedf3f?w=400&q=75&auto=format" // Default campus
+  academic: "https://images.unsplash.com/photo-1522202176988-66273c2fd55f?w=400&q=75&auto=format&fm=webp", // Students studying
+  cultural: "https://images.unsplash.com/photo-1516450360452-9312f5e86fc7?w=400&q=75&auto=format&fm=webp", // Cultural dance
+  sports: "https://images.unsplash.com/photo-1461896836934-ffe607ba8211?w=400&q=75&auto=format&fm=webp", // Sports
+  service: "https://images.unsplash.com/photo-1559027615-cd4628902d4a?w=400&q=75&auto=format&fm=webp", // Community service
+  default: "https://images.unsplash.com/photo-1541339907198-e08756dedf3f?w=400&q=75&auto=format&fm=webp" // Default campus
 };
 
 // Category mapping for fallback images
@@ -25,7 +25,8 @@ const getCategoryFallback = (club) => {
 };
 
 // Optimized image component with WebP support and Unsplash fallback
-const OptimizedImage = memo(({ src, alt, width, height, color, category = 'default' }) => {
+const OptimizedImage = memo(({ src, alt, width, height, color, category = 'default', priority = false }) => {
+  const imgRef = useRef(null);
   const [imgSrc, setImgSrc] = useState('');
   const [isLoaded, setIsLoaded] = useState(false);
   const [error, setError] = useState(false);
@@ -39,17 +40,47 @@ const OptimizedImage = memo(({ src, alt, width, height, color, category = 'defau
       // Use category-based Unsplash fallback
       setImgSrc(getCategoryFallback({ category }));
     } else if (isUnsplash) {
-      // Optimize Unsplash URLs
+      // Optimize Unsplash URLs for WebP
       const baseUrl = src.split('?')[0];
-      setImgSrc(`${baseUrl}?w=400&q=75&auto=format`);
+      setImgSrc(`${baseUrl}?w=400&q=75&auto=format&fm=webp`);
     } else {
       // For local images, assume they're in the optimized folder
-      setImgSrc(src);
+      // Check WebP support
+      const supportsWebP = checkWebPSupport();
+      if (supportsWebP) {
+        setImgSrc(`/images/optimized/${src}.webp`);
+      } else {
+        setImgSrc(`/images/optimized/${src}.jpg`);
+      }
     }
   }, [src, isUnsplash, useFallback, category]);
 
+  // Check WebP support efficiently
+  const checkWebPSupport = () => {
+    const canvas = document.createElement('canvas');
+    return canvas.toDataURL('image/webp').indexOf('image/webp') === 5;
+  };
+
+  // Preload critical images
+  useEffect(() => {
+    if (priority && imgSrc) {
+      const link = document.createElement('link');
+      link.rel = 'preload';
+      link.as = 'image';
+      link.href = imgSrc;
+      link.type = isUnsplash || useFallback ? 'image/webp' : 'image/webp';
+      document.head.appendChild(link);
+      
+      return () => {
+        if (link.parentNode) document.head.removeChild(link);
+      };
+    }
+  }, [priority, imgSrc, isUnsplash, useFallback]);
+
   // Fallback image based on category color (SVG)
-  const svgFallback = `data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='${width}' height='${height}' viewBox='0 0 ${width} ${height}'%3E%3Crect width='${width}' height='${height}' fill='%23${color?.replace('#', '') || 'f0f0f0'}'/%3E%3Ctext x='50%25' y='50%25' font-family='Arial' font-size='14' fill='%23999' text-anchor='middle' dy='.3em'%3E${alt}%3C/text%3E%3C/svg%3E`;
+  const svgFallback = useMemo(() => {
+    return `data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='${width}' height='${height}' viewBox='0 0 ${width} ${height}'%3E%3Crect width='${width}' height='${height}' fill='%23${color?.replace('#', '') || 'f0f0f0'}'/%3E%3Ctext x='50%25' y='50%25' font-family='Arial' font-size='14' fill='%23999' text-anchor='middle' dy='.3em'%3E${alt}%3C/text%3E%3C/svg%3E`;
+  }, [width, height, color, alt]);
 
   const handleError = () => {
     if (!useFallback) {
@@ -66,99 +97,87 @@ const OptimizedImage = memo(({ src, alt, width, height, color, category = 'defau
 
   if (error) {
     return (
-      <div className="club-image-container" style={{ 
-        backgroundColor: color || '#f0f0f0',
-        width: '100%',
-        height: '100%',
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'center',
-        color: '#666',
-        fontSize: '0.875rem'
-      }}>
-        📷 {alt}
+      <div 
+        className="club-image-container" 
+        style={{ 
+          backgroundColor: color || '#f0f0f0',
+          width: '100%',
+          height: '100%',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          color: '#666',
+          fontSize: '0.875rem',
+          minHeight: '200px'
+        }}
+        role="img"
+        aria-label={`${alt} (image failed to load)`}
+      >
+        <span aria-hidden="true">📷</span>
+        <span className="visually-hidden">Image not available</span>
       </div>
     );
   }
 
   return (
-    <div className="club-image-container" style={{ 
-      backgroundColor: color || '#f0f0f0',
-      position: 'relative',
-      overflow: 'hidden',
-      width: '100%',
-      height: '100%'
-    }}>
+    <div 
+      className="club-image-container" 
+      style={{ 
+        backgroundColor: color || '#f0f0f0',
+        position: 'relative',
+        overflow: 'hidden',
+        width: '100%',
+        height: '100%',
+        minHeight: '200px'
+      }}
+    >
+      {/* Loading shimmer effect */}
       {!isLoaded && (
-        <div style={{
-          position: 'absolute',
-          top: 0,
-          left: 0,
-          right: 0,
-          bottom: 0,
-          background: `linear-gradient(90deg, ${color}15 25%, ${color}25 50%, ${color}15 75%)`,
-          backgroundSize: '200% 100%',
-          animation: 'shimmer 1.5s infinite',
-          zIndex: 1
-        }} />
+        <div 
+          style={{
+            position: 'absolute',
+            top: 0,
+            left: 0,
+            right: 0,
+            bottom: 0,
+            background: `linear-gradient(90deg, ${color}15 25%, ${color}25 50%, ${color}15 75%)`,
+            backgroundSize: '200% 100%',
+            animation: 'shimmer 1.5s infinite',
+            zIndex: 1
+          }}
+          aria-hidden="true"
+        />
       )}
       
-      {isUnsplash || useFallback ? (
-        // Unsplash images (optimized)
-        <img
-          src={imgSrc}
-          alt={alt}
-          loading="lazy"
-          decoding="async"
-          width={width}
-          height={height}
-          onLoad={() => setIsLoaded(true)}
-          onError={handleError}
-          style={{
-            width: '100%',
-            height: '100%',
-            objectFit: 'cover',
-            opacity: isLoaded ? 1 : 0,
-            transition: 'opacity 0.3s ease',
-            position: 'relative',
-            zIndex: 2
-          }}
-        />
-      ) : (
-        // Local images with WebP support
-        <picture>
-          <source 
-            srcSet={`/images/optimized/${src}.webp`}
-            type="image/webp"
-          />
-          <img
-            src={`/images/optimized/${src}.jpg`}
-            alt={alt}
-            loading="lazy"
-            decoding="async"
-            width={width}
-            height={height}
-            onLoad={() => setIsLoaded(true)}
-            onError={handleError}
-            style={{
-              width: '100%',
-              height: '100%',
-              objectFit: 'cover',
-              opacity: isLoaded ? 1 : 0,
-              transition: 'opacity 0.3s ease',
-              position: 'relative',
-              zIndex: 2
-            }}
-          />
-        </picture>
-      )}
+      {/* Image with proper loading attributes */}
+      <img
+        ref={imgRef}
+        src={imgSrc}
+        alt={alt}
+        loading={priority ? 'eager' : 'lazy'}
+        fetchpriority={priority ? 'high' : 'auto'}
+        decoding="async"
+        width={width}
+        height={height}
+        onLoad={() => setIsLoaded(true)}
+        onError={handleError}
+        style={{
+          width: '100%',
+          height: '100%',
+          objectFit: 'cover',
+          opacity: isLoaded ? 1 : 0,
+          transition: 'opacity 0.3s ease',
+          position: 'relative',
+          zIndex: 2
+        }}
+      />
     </div>
   );
 });
 
 OptimizedImage.displayName = 'OptimizedImage';
 
-// Memoized club card component with enhanced accessibility and better desktop layout
+// Memoized club card component with enhanced accessibility
 const ClubCard = memo(({ club, index, category }) => {
   const cardId = `club-${index}-${club.name.toLowerCase().replace(/\s+/g, '-')}`;
   
@@ -179,6 +198,7 @@ const ClubCard = memo(({ club, index, category }) => {
               height="300"
               color={club.color}
               category={category}
+              priority={index < 2} // Prioritize first 2 images per category
             />
           </Col>
           {/* Content column - larger on desktop */}
@@ -319,13 +339,13 @@ function ClubsSocieties() {
   }, []);
 
   // Memoize club data with optimized image paths and category
-  const clubsData = {
+  const clubsData = useMemo(() => ({
     academic: [
       {
         name: "Young Scientists Club",
         description: "Fostering curiosity through hands-on experiments and environmental projects.",
         activities: ["Science fairs", "Nature walks", "Experiments", "Conservation"],
-        image: "young-scientists", // Will try local first, then Unsplash fallback
+        image: "young-scientists",
         icon: "🔬",
         color: "#132f66",
         category: "academic"
@@ -449,7 +469,7 @@ function ClubsSocieties() {
         image: "art-club",
         icon: "🎨",
         color: "#0a1f4d",
-        category: "cultural" // Art is cultural
+        category: "cultural"
       },
       {
         name: "Swimming Club",
@@ -508,32 +528,34 @@ function ClubsSocieties() {
         category: "service"
       }
     ]
-  };
+  }), []);
 
-  const categories = [
+  const categories = useMemo(() => [
     { id: "academic", name: "Academic", icon: "📚" },
     { id: "cultural", name: "Cultural", icon: "🎭" },
     { id: "talent", name: "Sports", icon: "⚽" },
     { id: "service", name: "Service", icon: "🌱" }
-  ];
+  ], []);
 
-  const highlights = [
+  const highlights = useMemo(() => [
     { icon: "🏆", title: "Chess Champions", text: "County Champions 2023" },
     { icon: "🎵", title: "Music Festival", text: "Top Awards 2023" },
     { icon: "🇨🇳", title: "Chinese Club", text: "New! Join Today" },
     { icon: "⚽", title: "Sports Teams", text: "Multiple Tournaments" }
-  ];
+  ], []);
 
-  const benefits = [
+  const benefits = useMemo(() => [
     { icon: "bi-people", title: "Social Skills", text: "Make friends, learn teamwork, and develop communication skills." },
     { icon: "bi-star", title: "Talent Discovery", text: "Explore interests and discover hidden talents." },
     { icon: "bi-trophy", title: "Leadership", text: "Take on responsibilities and build confidence." }
-  ];
+  ], []);
 
-  // Preconnect to external domains
+  // Preconnect to external domains efficiently
   useEffect(() => {
     const domains = ['https://images.unsplash.com'];
+    
     domains.forEach(domain => {
+      // Check if preconnect already exists
       if (!document.querySelector(`link[rel="preconnect"][href="${domain}"]`)) {
         const link = document.createElement('link');
         link.rel = 'preconnect';
@@ -541,7 +563,22 @@ function ClubsSocieties() {
         document.head.appendChild(link);
       }
     });
+    
+    // Add dns-prefetch as fallback for older browsers
+    domains.forEach(domain => {
+      if (!document.querySelector(`link[rel="dns-prefetch"][href="${domain}"]`)) {
+        const link = document.createElement('link');
+        link.rel = 'dns-prefetch';
+        link.href = domain;
+        document.head.appendChild(link);
+      }
+    });
   }, []);
+
+  // Get current category name for screen reader
+  const currentCategory = useMemo(() => {
+    return categories.find(c => c.id === activeTab)?.name || 'Academic';
+  }, [activeTab, categories]);
 
   return (
     <>
@@ -552,6 +589,7 @@ function ClubsSocieties() {
           content="Explore our diverse clubs and societies at Kitale Progressive School. From academic to cultural, sports to service - discover your passion." 
         />
         <link rel="preconnect" href="https://images.unsplash.com" />
+        <link rel="dns-prefetch" href="https://images.unsplash.com" />
       </Helmet>
       
       {/* Page Header */}
@@ -615,13 +653,13 @@ function ClubsSocieties() {
           <h2 id="clubs-heading" className="visually-hidden">Clubs by Category</h2>
           
           {/* Screen reader announcer for tab changes */}
-          <div id="tab-announcer" className="visually-hidden" role="status" aria-live="polite">
-            {`Showing ${categories.find(c => c.id === activeTab)?.name} clubs`}
+          <div className="visually-hidden" role="status" aria-live="polite" aria-atomic="true">
+            {`Showing ${currentCategory} clubs`}
           </div>
           
           <TabNav categories={categories} activeTab={activeTab} onTabChange={handleTabChange} />
 
-          <Row className="g-4" role="list" aria-label={`${categories.find(c => c.id === activeTab)?.name} clubs`}>
+          <Row className="g-4" role="list" aria-label={`${currentCategory} clubs`}>
             {clubsData[activeTab]?.map((club, index) => (
               <ClubCard 
                 key={`club-${activeTab}-${index}`} 
@@ -672,7 +710,10 @@ function ClubsSocieties() {
               border: 'none',
               minHeight: '44px',
               minWidth: '44px',
-              textDecoration: 'none'
+              textDecoration: 'none',
+              display: 'inline-flex',
+              alignItems: 'center',
+              justifyContent: 'center'
             }}
             aria-label="Apply for admission now"
           >
@@ -685,232 +726,9 @@ function ClubsSocieties() {
         <GetInTouch />
       </Suspense>
 
-      {/* Critical CSS inline */}
+      {/* Critical CSS - Minified */}
       <style dangerouslySetInnerHTML={{ __html: `
-        .club-card {
-          transition: transform 0.2s ease, box-shadow 0.2s ease;
-          border-radius: 12px;
-          overflow: hidden;
-          height: 100%;
-        }
-        
-        .club-card .row {
-          height: 100%;
-          margin: 0;
-        }
-        
-        .club-card:hover,
-        .club-card:focus-within {
-          transform: translateY(-4px);
-          box-shadow: 0 10px 30px rgba(0,0,0,0.1) !important;
-        }
-        
-        .club-image-container {
-          overflow: hidden;
-          background-color: #f0f0f0;
-          width: 100%;
-          height: 100%;
-          min-height: 200px;
-          aspect-ratio: 4/3;
-        }
-        
-        .club-image-container img {
-          transition: transform 0.3s ease;
-          width: 100%;
-          height: 100%;
-          object-fit: cover;
-          object-position: center;
-        }
-        
-        .club-card:hover .club-image-container img,
-        .club-card:focus-within .club-image-container img {
-          transform: scale(1.05);
-        }
-        
-        .activity-badge {
-          background: #f0f0f0;
-          padding: 0.25rem 0.75rem;
-          border-radius: 30px;
-          font-size: 0.75rem;
-          white-space: nowrap;
-        }
-        
-        .text-truncate {
-          overflow: hidden;
-          text-overflow: ellipsis;
-          white-space: nowrap;
-        }
-        
-        /* Desktop styles */
-        @media (min-width: 768px) {
-          .club-card .col-md-4 {
-            height: auto;
-            min-height: 220px;
-            padding: 0 !important;
-          }
-          
-          .club-card .col-md-8 {
-            height: auto;
-            min-height: 220px;
-            display: flex;
-            flex-direction: column;
-          }
-          
-          .club-card .card-body {
-            padding: 1rem !important;
-            display: flex;
-            flex-direction: column;
-            height: 100%;
-            overflow: hidden;
-          }
-          
-          .club-description {
-            display: -webkit-box;
-            -webkit-line-clamp: 3;
-            -webkit-box-orient: vertical;
-            overflow: hidden;
-            text-overflow: ellipsis;
-            line-height: 1.5;
-            max-height: 4.5em;
-            margin-bottom: 0.5rem !important;
-            flex-shrink: 0;
-          }
-          
-          .club-card .card-title {
-            max-width: 200px;
-          }
-          
-          .club-card .card-body > div:last-child {
-            flex: 1;
-            display: flex;
-            flex-direction: column;
-            min-height: 0;
-          }
-          
-          .activities-container {
-            max-height: 70px;
-            overflow-y: auto;
-            padding-right: 4px;
-          }
-          
-          .activities-container::-webkit-scrollbar {
-            width: 4px;
-          }
-          
-          .activities-container::-webkit-scrollbar-track {
-            background: #f1f1f1;
-            border-radius: 4px;
-          }
-          
-          .activities-container::-webkit-scrollbar-thumb {
-            background: #132f66;
-            border-radius: 4px;
-          }
-        }
-        
-        /* Large desktop styles */
-        @media (min-width: 1200px) {
-          .club-card .col-md-4 {
-            min-height: 240px;
-          }
-          
-          .club-card .col-md-8 {
-            min-height: 240px;
-          }
-          
-          .club-description {
-            -webkit-line-clamp: 3;
-            max-height: 4.5em;
-          }
-          
-          .activities-container {
-            max-height: 85px;
-          }
-        }
-        
-        /* Mobile styles */
-        @media (max-width: 767px) {
-          .club-card .col-md-4 {
-            height: 200px;
-            width: 100%;
-          }
-          
-          .club-image-container {
-            min-height: 200px;
-          }
-          
-          .club-description {
-            margin-bottom: 0.5rem;
-          }
-        }
-        
-        .btn-outline-navy {
-          border: 2px solid #132f66;
-          background: transparent;
-          color: #132f66;
-          min-height: 44px;
-          min-width: 44px;
-        }
-        
-        .btn-outline-navy:hover,
-        .btn-outline-navy:focus-visible {
-          background: #132f66;
-          color: white;
-          outline: 3px solid #cebd04;
-          outline-offset: 2px;
-        }
-        
-        .btn-navy {
-          background: #132f66;
-          color: white;
-          border: none;
-        }
-        
-        .btn-navy:focus-visible {
-          outline: 3px solid #cebd04;
-          outline-offset: 2px;
-        }
-        
-        .club-highlight-card,
-        .benefit-card {
-          transition: transform 0.2s ease;
-          border-radius: 8px;
-        }
-        
-        .club-highlight-card:hover,
-        .benefit-card:hover {
-          transform: translateY(-2px);
-          background: #f8f9fa;
-        }
-        
-        .visually-hidden {
-          position: absolute;
-          width: 1px;
-          height: 1px;
-          padding: 0;
-          margin: -1px;
-          overflow: hidden;
-          clip: rect(0, 0, 0, 0);
-          border: 0;
-        }
-        
-        @keyframes shimmer {
-          0% { background-position: 200% 0; }
-          100% { background-position: -200% 0; }
-        }
-        
-        @media (prefers-reduced-motion: reduce) {
-          .club-card,
-          .club-image-container img,
-          .club-card:hover,
-          .club-card:focus-within,
-          .club-highlight-card,
-          .benefit-card {
-            transition: none !important;
-            animation: none !important;
-            transform: none !important;
-          }
-        }
+        .club-card{transition:transform .2s ease,box-shadow .2s ease;border-radius:12px;overflow:hidden;height:100%}.club-card .row{height:100%;margin:0}.club-card:focus-within,.club-card:hover{transform:translateY(-4px);box-shadow:0 10px 30px rgba(0,0,0,.1)!important}.club-image-container{overflow:hidden;background-color:#f0f0f0;width:100%;height:100%;min-height:200px;aspect-ratio:4/3}.club-image-container img{transition:transform .3s ease;width:100%;height:100%;object-fit:cover;object-position:center}.club-card:focus-within .club-image-container img,.club-card:hover .club-image-container img{transform:scale(1.05)}.activity-badge{background:#f0f0f0;padding:.25rem .75rem;border-radius:30px;font-size:.75rem;white-space:nowrap}.text-truncate{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}@media (min-width:768px){.club-card .col-md-4{height:auto;min-height:220px;padding:0!important}.club-card .col-md-8{height:auto;min-height:220px;display:flex;flex-direction:column}.club-card .card-body{padding:1rem!important;display:flex;flex-direction:column;height:100%;overflow:hidden}.club-description{display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden;text-overflow:ellipsis;line-height:1.5;max-height:4.5em;margin-bottom:.5rem!important;flex-shrink:0}.club-card .card-title{max-width:200px}.club-card .card-body>div:last-child{flex:1;display:flex;flex-direction:column;min-height:0}.activities-container{max-height:70px;overflow-y:auto;padding-right:4px}.activities-container::-webkit-scrollbar{width:4px}.activities-container::-webkit-scrollbar-track{background:#f1f1f1;border-radius:4px}.activities-container::-webkit-scrollbar-thumb{background:#132f66;border-radius:4px}}@media (min-width:1200px){.club-card .col-md-4{min-height:240px}.club-card .col-md-8{min-height:240px}.club-description{-webkit-line-clamp:3;max-height:4.5em}.activities-container{max-height:85px}}@media (max-width:767px){.club-card .col-md-4{height:200px;width:100%}.club-image-container{min-height:200px}.club-description{margin-bottom:.5rem}}.btn-outline-navy{border:2px solid #132f66;background:transparent;color:#132f66;min-height:44px;min-width:44px}.btn-outline-navy:focus-visible,.btn-outline-navy:hover{background:#132f66;color:#fff;outline:3px solid #cebd04;outline-offset:2px}.btn-navy{background:#132f66;color:#fff;border:none}.btn-navy:focus-visible{outline:3px solid #cebd04;outline-offset:2px}.club-highlight-card,.benefit-card{transition:transform .2s ease;border-radius:8px}.club-highlight-card:hover,.benefit-card:hover{transform:translateY(-2px);background:#f8f9fa}.visually-hidden{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);border:0}@keyframes shimmer{0%{background-position:200% 0}100%{background-position:-200% 0}}@media (prefers-reduced-motion:reduce){.club-card,.club-image-container img,.club-card:focus-within,.club-card:hover,.club-highlight-card,.benefit-card{transition:none!important;animation:none!important;transform:none!important}}
       `}} />
     </>
   );
