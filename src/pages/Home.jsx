@@ -373,7 +373,7 @@ function Home() {
                 <span className="pathway-age-overlay">Grades 7-9</span>
               </div>
               <button 
-                onClick={() => handleLinkClick('/academics/curriculum#junior-section')} 
+                onClick={() => handleLinkClick('/academics/curriculum#juniorSecondary-section')} 
                 className="pathway-link-overlay"
                 aria-label="Learn more about Junior Secondary"
               >
