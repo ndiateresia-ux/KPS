@@ -820,6 +820,7 @@ Kitale Progressive School
                   <FormInput
                     label="Full Name"
                     name="fullName"
+                     autocomplete="off"
                     value={formData.fullName}
                     onChange={handleChange}
                     placeholder="Enter your full name"
@@ -831,6 +832,7 @@ Kitale Progressive School
                     label="Email Address"
                     type="email"
                     name="email"
+                     autocomplete="off"
                     value={formData.email}
                     onChange={handleChange}
                     placeholder="Enter your email"
@@ -866,6 +868,7 @@ Kitale Progressive School
                     label="How Would You Like to Help?"
                     as="select"
                     name="supportType"
+                     autocomplete="off"
                     value={formData.supportType}
                     onChange={handleChange}
                     required
@@ -877,6 +880,7 @@ Kitale Progressive School
                     <FormInput
                       label="Please specify"
                       name="otherSupportType"
+                       autocomplete="off"
                       value={formData.otherSupportType}
                       onChange={handleChange}
                       placeholder="Tell us how you would like to help"
@@ -890,6 +894,7 @@ Kitale Progressive School
                     as="textarea"
                     rows={4}
                     name="message"
+                     autocomplete="off"
                     value={formData.message}
                     onChange={handleChange}
                     placeholder="Tell us more about your support..."

@@ -610,6 +610,7 @@ Kitale Progressive School
                   onChange={handleChange}
                   placeholder="e.g. Mueni Achieng"
                   required
+                   autocomplete="off"
                   feedback="Please enter your name."
                 />
 
@@ -621,12 +622,14 @@ Kitale Progressive School
                   onChange={handleChange}
                   placeholder="name@example.com"
                   required
+                   autocomplete="off"
                   feedback="Please enter a valid email address."
                 />
 
                 <FormInput 
                   label="Inquiry Subject"
                   name="subject"
+                   autocomplete="off"
                   value={formData.subject}
                   onChange={handleChange}
                   placeholder="e.g. Admissions, fees"
@@ -640,6 +643,7 @@ Kitale Progressive School
                   value={formData.message}
                   onChange={handleChange}
                   placeholder="Write your message here..."
+                   autocomplete="off"
                   required
                   feedback="Please enter your message."
                 />

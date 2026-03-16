@@ -986,6 +986,7 @@ function Apply() {
                           value={formData.parentName}
                           onChange={handleChange}
                           placeholder="James Vincent"
+                           autocomplete="off"
                           required
                           feedback="Please enter parent/guardian name"
                           autoComplete="name"
@@ -996,6 +997,7 @@ function Apply() {
                           label="Email Address"
                           type="email"
                           name="email"
+                          autocomplete="off"
                           value={formData.email}
                           onChange={handleChange}
                           placeholder="example@email.com"
@@ -1020,6 +1022,7 @@ function Apply() {
                           label="Relationship to Child"
                           as="select"
                           name="relationship"
+                           autocomplete="off"
                           value={formData.relationship}
                           onChange={handleChange}
                           required
@@ -1045,6 +1048,7 @@ function Apply() {
                           name="address"
                           value={formData.address}
                           onChange={handleChange}
+                           autocomplete="off"
                           placeholder="123 Street, Nairobi"
                           autoComplete="street-address"
                         />
@@ -1061,6 +1065,7 @@ function Apply() {
                           name="childName"
                           value={formData.childName}
                           onChange={handleChange}
+                           autocomplete="off"
                           placeholder="Prince Vincent"
                           required
                           feedback="Please enter child's name"
@@ -1075,6 +1080,7 @@ function Apply() {
                           label="Date of Birth"
                           type="date"
                           name="dateOfBirth"
+                           autocomplete="off"
                           value={formData.dateOfBirth}
                           onChange={handleChange}
                           required
@@ -1087,6 +1093,7 @@ function Apply() {
                           label="Gender"
                           as="select"
                           name="gender"
+                           autocomplete="off"
                           value={formData.gender}
                           onChange={handleChange}
                           required
@@ -1103,6 +1110,7 @@ function Apply() {
                           label="Nationality"
                           as="select"
                           name="nationality"
+                           autocomplete="off"
                           value={formData.nationality}
                           onChange={handleChange}
                           options={[
@@ -1124,6 +1132,7 @@ function Apply() {
                           <FormInput
                             label="Specify Nationality"
                             name="otherNationality"
+                             autocomplete="off"
                             value={formData.otherNationality}
                             onChange={handleChange}
                             placeholder="Enter nationality"
@@ -1140,6 +1149,7 @@ function Apply() {
                           name="previousSchool"
                           value={formData.previousSchool}
                           onChange={handleChange}
+                           autocomplete="off"
                           placeholder="Enter previous school"
                           autoComplete="off"
                         />
@@ -1149,6 +1159,7 @@ function Apply() {
                           label="Grade Applying For"
                           as="select"
                           name="gradeApplying"
+                           autocomplete="off"
                           value={formData.gradeApplying}
                           onChange={handleChange}
                           required
@@ -1166,6 +1177,7 @@ function Apply() {
                             label={`Stay Status ${formData.gradeApplying === "Playgroup" ? "(Full Day or Half Day)" : ""}`}
                             as="select"
                             name="stayStatus"
+                             autocomplete="off"
                             value={formData.stayStatus}
                             onChange={handleChange}
                             required
