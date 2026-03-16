@@ -1,4 +1,4 @@
-// pages/Home.jsx - Fully Optimized with Same Image Locations
+// pages/Home.jsx - Fully Optimized with Dynamic Preload
 import { Helmet } from "react-helmet-async";
 import { Carousel, Container, Row, Col, Button, Card } from "react-bootstrap";
 import { useLocation, useNavigate } from "react-router-dom";
@@ -143,27 +143,35 @@ function Home() {
     });
   }, [navigate]);
 
-  // Preload critical images with responsive media queries
+  // ===== OPTIMIZED: Dynamic preload for LCP image =====
   useEffect(() => {
+    // Check WebP support
+    const supportsWebP = (() => {
+      const canvas = document.createElement('canvas');
+      return canvas.toDataURL('image/webp').indexOf('image/webp') === 5;
+    })();
+
     // Preload desktop version
     const linkDesktop = document.createElement('link');
     linkDesktop.rel = 'preload';
     linkDesktop.as = 'image';
-    linkDesktop.href = '/images/optimized/gate3.webp';
-    linkDesktop.type = 'image/webp';
-    linkDesktop.media = '(min-width: 1200px)';
+    linkDesktop.href = supportsWebP ? '/images/optimized/gate3.webp' : '/images/optimized/gate3.jpg';
+    linkDesktop.type = supportsWebP ? 'image/webp' : 'image/jpeg';
+    linkDesktop.media = '(min-width: 768px)';
+    linkDesktop.fetchPriority = 'high';
     document.head.appendChild(linkDesktop);
 
     // Preload mobile version
     const linkMobile = document.createElement('link');
     linkMobile.rel = 'preload';
     linkMobile.as = 'image';
-    linkMobile.href = '/images/optimized/gate3.webp';
-    linkMobile.type = 'image/webp';
-    linkMobile.media = '(max-width: 1199px)';
+    linkMobile.href = supportsWebP ? '/images/optimized/gate3-mobile.webp' : '/images/optimized/gate3-mobile.jpg';
+    linkMobile.type = supportsWebP ? 'image/webp' : 'image/jpeg';
+    linkMobile.media = '(max-width: 767px)';
+    linkMobile.fetchPriority = 'high';
     document.head.appendChild(linkMobile);
 
-    // Preload logo (tiny file - should be under 5KB after optimization)
+    // Preload logo (tiny file)
     const linkLogo = document.createElement('link');
     linkLogo.rel = 'preload';
     linkLogo.as = 'image';
@@ -171,12 +179,15 @@ function Home() {
     linkLogo.type = 'image/png';
     document.head.appendChild(linkLogo);
 
+    // Cleanup function - removes preload links when component unmounts
     return () => {
       [linkDesktop, linkMobile, linkLogo].forEach(link => {
-        if (link.parentNode) document.head.removeChild(link);
+        if (link.parentNode) {
+          document.head.removeChild(link);
+        }
       });
     };
-  }, []);
+  }, []); // Empty dependency array = runs once when component mounts
 
   // Memoized data
   const whyChooseUsItems = useMemo(() => [
@@ -268,32 +279,9 @@ function Home() {
           name="description"
           content="Kitale Progressive School - Excellence in Education, Holistic Development and Safe Boarding Environment since 2004."
         />
-        {/* Essential preconnects only - removed unnecessary ones */}
+        {/* Essential preconnects only */}
         <link rel="preconnect" href="https://fonts.googleapis.com" />
         <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
-        
-        {/* Preload critical images with media queries */}
-        <link 
-          rel="preload" 
-          as="image" 
-          href="/images/optimized/gate3.webp" 
-          type="image/webp"
-          media="(min-width: 1200px)"
-        />
-        <link 
-          rel="preload" 
-          as="image" 
-          href="/images/optimized/gate3.webp" 
-          type="image/webp"
-          media="(max-width: 1199px)"
-        />
-        
-        {/* Add width and height attributes to prevent layout shift */}
-        <style>{`
-          img, picture {
-            aspect-ratio: attr(width) / attr(height);
-          }
-        `}</style>
       </Helmet>
 
       {/* HERO CAROUSEL - LCP element with responsive WebP images */}
@@ -311,16 +299,16 @@ function Home() {
             <Carousel.Item key={index}>
               <div className="carousel-image-wrapper">
                 <picture>
-                  {/* WebP with responsive srcset - keeps same file but adds sizes hint */}
+                  {/* WebP with responsive srcset */}
                   <source 
                     srcSet={item.webp}
                     type="image/webp"
-                    media="(min-width: 1200px)"
+                    media="(min-width: 768px)"
                   />
                   <source 
                     srcSet={item.webp}
                     type="image/webp"
-                    media="(max-width: 1199px)"
+                    media="(max-width: 767px)"
                   />
                   {/* Fallback JPEG */}
                   <img 
@@ -340,7 +328,7 @@ function Home() {
           ))}
         </Carousel>
         
-        {/* Overlay table - unchanged */}
+        {/* Overlay table */}
         <div className="carousel-overlay-table" aria-label="Quick access to school information">
           <div className="welcome-header">
             <h1 className="welcome-title-overlay">Welcome to Kitale Progressive School</h1>
@@ -727,17 +715,9 @@ function Home() {
         <GetInTouch />
       </Suspense>
 
-      {/* Critical CSS - Minified for performance */}
+      {/* Critical CSS - Minified */}
       <style dangerouslySetInnerHTML={{ __html: `
-        @keyframes zoomOut{
-        0%{transform:scale(1.2)}
-        100%{transform:scale(1)}}
-        .visually-hidden{position:absolute;
-        width:1px;
-        height:1px;
-        padding:0;
-        margin:-1px;
-        overflow:hidden;clip:rect(0,0,0,0);border:0}.carousel-image-wrapper{overflow:hidden;height:100%}.carousel-zoom{animation:zoomOut 8s ease forwards}.card-custom{transition:transform .3s ease,box-shadow .3s ease;border-radius:12px;overflow:hidden}.card-custom:focus-within,.card-custom:hover{transform:translateY(-5px);box-shadow:0 20px 40px rgba(0,0,0,.1)!important}button:focus-visible,[role=button]:focus-visible,a:focus-visible{outline:3px solid #cebd04;outline-offset:2px}.btn-apply,.btn-contact,.btn-fees{padding:.75rem 2rem;border-radius:40px;font-weight:600;font-size:1rem;cursor:pointer;transition:all .3s ease;min-height:44px;min-width:44px;border:none}.btn-apply{background-color:#cebd04;color:#132f66}.btn-apply:hover{background-color:#b09e03;transform:translateY(-2px);box-shadow:0 4px 12px rgba(0,0,0,.2)}.btn-contact,.btn-fees{background-color:transparent;color:#fff;border:2px solid #fff}.btn-contact:hover,.btn-fees:hover{background-color:#fff;color:#132f66;transform:translateY(-2px)}@media (max-width:768px){.carousel-zoom{animation:zoomOut 6s ease forwards}}@media (prefers-reduced-motion:reduce){.carousel-zoom,.card-custom:focus-within,.card-custom:hover,button:hover{animation:none!important;transform:none!important;transition:none!important}}
+        @keyframes zoomOut{0%{transform:scale(1.2)}100%{transform:scale(1)}}.visually-hidden{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);border:0}.carousel-image-wrapper{overflow:hidden;height:100%}.carousel-zoom{animation:zoomOut 8s ease forwards}.card-custom{transition:transform .3s ease,box-shadow .3s ease;border-radius:12px;overflow:hidden}.card-custom:focus-within,.card-custom:hover{transform:translateY(-5px);box-shadow:0 20px 40px rgba(0,0,0,.1)!important}button:focus-visible,[role=button]:focus-visible,a:focus-visible{outline:3px solid #cebd04;outline-offset:2px}.btn-apply,.btn-contact,.btn-fees{padding:.75rem 2rem;border-radius:40px;font-weight:600;font-size:1rem;cursor:pointer;transition:all .3s ease;min-height:44px;min-width:44px;border:none}.btn-apply{background-color:#cebd04;color:#132f66}.btn-apply:hover{background-color:#b09e03;transform:translateY(-2px);box-shadow:0 4px 12px rgba(0,0,0,.2)}.btn-contact,.btn-fees{background-color:transparent;color:#fff;border:2px solid #fff}.btn-contact:hover,.btn-fees:hover{background-color:#fff;color:#132f66;transform:translateY(-2px)}@media (max-width:768px){.carousel-zoom{animation:zoomOut 6s ease forwards}}@media (prefers-reduced-motion:reduce){.carousel-zoom,.card-custom:focus-within,.card-custom:hover,button:hover{animation:none!important;transform:none!important;transition:none!important}}
       `}} />
     </>
   );
