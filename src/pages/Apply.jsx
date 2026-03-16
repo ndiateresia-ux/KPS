@@ -612,17 +612,41 @@ function Apply() {
     }))
   ];
 
+  // Application journey steps data
+  const journeySteps = [
+    {
+      icon: "fa-file-text",
+      title: "1. Complete Application",
+      description: "Fill out the online form with parent/guardian and student details. Ensure all information is accurate."
+    },
+    {
+      icon: "fa-google",
+      title: "2. Verify with Google",
+      description: "Sign in with your Google account to verify your identity and securely submit the application."
+    },
+    {
+      icon: "fa-envelope",
+      title: "3. Receive Confirmation",
+      description: "Get an instant email confirmation with your application ID and PDF copy for your records."
+    },
+    {
+      icon: "fa-phone",
+      title: "4. Admissions Interview",
+      description: "Our admissions team will contact you within 3-5 business days to schedule an interview."
+    }
+  ];
+
   return (
     <>
       <Helmet>
-        <title>Application Form | Kitale Progressive School</title>
+        <title>Admissions Application | Kitale Progressive School</title>
         <meta 
           name="description" 
-          content="Apply for admission to Kitale Progressive School. Complete the application form to begin your child's educational journey with us." 
+          content="Begin your child's journey at Kitale Progressive School. Complete our admissions application and track your progress through each step of the process." 
         />
       </Helmet>
       
-      {/* Page Title with proper heading hierarchy */}
+      {/* Page Title - Updated to Admissions */}
       <section 
         className="page-title-section" 
         style={{ 
@@ -640,7 +664,7 @@ function Apply() {
       >
         <Container>
           <h1 id="page-title" className="display-5 fw-bold mb-3" style={{ color: 'white' }}>
-            Application Form
+            Admissions Application
           </h1>
           <p className="lead mb-0" style={{ 
             fontSize: 'clamp(1rem, 4vw, 1.2rem)', 
@@ -650,6 +674,60 @@ function Apply() {
           }}>
             Begin your child's journey with Kitale Progressive School
           </p>
+        </Container>
+      </section>
+
+      {/* Application Journey Section - NEW informative section */}
+      <section className="journey-section py-5" aria-label="Application journey steps">
+        <Container>
+          <h2 className="section-header text-center mb-5" style={{ color: '#132f66' }}>
+            Your Admissions Journey
+          </h2>
+          <p className="text-center mb-5" style={{ maxWidth: '800px', margin: '0 auto', fontSize: '1.1rem' }}>
+            We've streamlined our admissions process to make it simple and transparent. 
+            Follow these four easy steps to secure your child's place at Kitale Progressive School.
+          </p>
+          
+          <Row className="g-4 justify-content-center">
+            {journeySteps.map((step, index) => (
+              <Col key={index} md={6} lg={3}>
+                <div className="journey-step-card text-center p-4 h-100" 
+                     style={{ 
+                       background: 'white', 
+                       borderRadius: '12px',
+                       boxShadow: '0 8px 20px rgba(0,0,0,0.02), 0 2px 6px rgba(0,20,40,0.05)',
+                       border: '1px solid #eef2f6',
+                       transition: 'transform 0.2s ease'
+                     }}>
+                  <div className="step-icon mb-3" 
+                       style={{ 
+                         width: '70px', 
+                         height: '70px', 
+                         background: '#f0f5fa', 
+                         borderRadius: '50%',
+                         display: 'flex',
+                         alignItems: 'center',
+                         justifyContent: 'center',
+                         margin: '0 auto 1.5rem',
+                         color: '#132f66',
+                         fontSize: '2rem'
+                       }}>
+                    <i className={`fas ${step.icon}`} aria-hidden="true"></i>
+                  </div>
+                  <h3 className="h5 fw-bold mb-3" style={{ color: '#132f66' }}>{step.title}</h3>
+                  <p className="text-muted mb-0" style={{ fontSize: '0.95rem' }}>{step.description}</p>
+                </div>
+              </Col>
+            ))}
+          </Row>
+          
+          {/* Timeline indicator */}
+          <div className="text-center mt-5 pt-3">
+            <p className="text-muted">
+              <i className="fas fa-clock me-2" aria-hidden="true"></i>
+              Average completion time: 8-10 minutes
+            </p>
+          </div>
         </Container>
       </section>
 
@@ -669,7 +747,7 @@ function Apply() {
 
               <Card className="shadow-lg border-0">
                 <Card.Body className="p-4 p-lg-5">
-                  <h2 className="section-heading h4 mb-4">Application Form</h2>
+                  <h2 className="section-heading h4 mb-4">Complete Your Application</h2>
                   
                   <Form 
                     noValidate 
@@ -678,7 +756,7 @@ function Apply() {
                     aria-label="Admission application form"
                   >
                     
-                    {/* Parent Info - h2 becomes h3 for proper nesting */}
+                    {/* Parent Info */}
                     <h3 className="text-navy fw-bold h5 mb-3 pb-2 border-bottom">Parent/Guardian Information</h3>
                     
                     <Row className="g-3">
@@ -1016,7 +1094,7 @@ function Apply() {
           border-radius: 40px;
           font-weight: 600;
           transition: all 0.3s ease;
-          min-height: 44px; /* Touch target size */
+          min-height: 44px;
           min-width: 44px;
         }
         .btn-navy:hover:not(:disabled) {
@@ -1027,6 +1105,15 @@ function Apply() {
         .btn-navy:focus-visible {
           outline: 3px solid #cebd04;
           outline-offset: 2px;
+        }
+        .journey-step-card:hover {
+          transform: translateY(-5px);
+          box-shadow: 0 16px 24px -8px rgba(0,35,70,0.15) !important;
+        }
+        .section-header {
+          font-size: 2.2rem;
+          font-weight: 600;
+          color: #132f66;
         }
         .fade-in { animation: fadeIn 0.3s ease; }
         @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
@@ -1056,6 +1143,7 @@ function Apply() {
         @media (prefers-reduced-motion: reduce) {
           * { animation-duration: 0.01ms !important; transition-duration: 0.01ms !important; }
           .spinner-border { animation: none; }
+          .journey-step-card:hover { transform: none; }
         }
       `}} />
     </>
