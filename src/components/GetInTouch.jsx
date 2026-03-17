@@ -633,6 +633,7 @@ Kitale Progressive School
                   value={formData.subject}
                   onChange={handleChange}
                   placeholder="e.g. Admissions, fees"
+                  required
                 />
 
                 <FormInput 
