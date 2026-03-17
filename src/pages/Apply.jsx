@@ -1049,6 +1049,7 @@ function Apply() {
                           value={formData.address}
                           onChange={handleChange}
                            autocomplete="off"
+                           required
                           placeholder="123 Street, Nairobi"
                           autoComplete="street-address"
                         />
@@ -1113,6 +1114,7 @@ function Apply() {
                            autocomplete="off"
                           value={formData.nationality}
                           onChange={handleChange}
+                          required
                           options={[
                             { value: "Kenyan", label: "Kenyan" },
                             { value: "Ugandan", label: "Ugandan" },
@@ -1122,6 +1124,7 @@ function Apply() {
                             { value: "Other", label: "Other" }
                           ]}
                           autoComplete="country"
+                         
                         />
                       </Col>
                     </Row>
@@ -1136,6 +1139,7 @@ function Apply() {
                             value={formData.otherNationality}
                             onChange={handleChange}
                             placeholder="Enter nationality"
+                            required
                             autoComplete="off"
                           />
                         </Col>
