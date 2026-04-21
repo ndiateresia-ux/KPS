@@ -7,8 +7,8 @@
   --card-white: #ffffff;
   --text-dark: #000000;
   --navy-dark: #061A3A;
-  --navy: #0D2B5E;
-  --navy-light: #1A4A7A;
+  --navy: #031739;
+  --navy-light: #2675ff;
   --royal-blue: #2B5F8A;
    --gray-light: #f8f9fa;
 }
@@ -37,7 +37,7 @@
 }
 
 .header-transparent .brand-text small {
-  color: var(--secondary) !important;
+  color: var(--primaryy) !important;
 }
 
 .header-transparent .brand-text {
@@ -58,7 +58,7 @@
 }
 
 .header-scrolled .brand-text small {
-  color: var(--secondary) !important;
+  color: var(--primary) !important;
 }
 
 /* Brand/Logo styles */
@@ -135,7 +135,7 @@
 /* Active state */
 .nav-link.active,
 .nav-link[aria-current="page"] {
-  color: var(--secondary) !important;
+  color: var(--primary) !important;
   font-weight: 700;
 }
 

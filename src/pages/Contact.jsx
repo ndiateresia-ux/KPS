@@ -745,39 +745,13 @@ Kitale Progressive School
           </Col>
         </Row>
 
-        {/* What Parents Gain Section */}
-        <div className="text-center mb-4">
-          <h2 className="section-heading h3 mb-2">What Your Child Gains at Kitale Progressive School</h2>
-          <p className="text-muted">A complete education that prepares learners for the future</p>
-        </div>
-
-        <Row className="g-4 mb-5">
-          {benefits.map((benefit, idx) => (
-            <Col key={idx} xs={6} md={4} lg={2}>
-              <BenefitCard {...benefit} />
-            </Col>
-          ))}
-        </Row>
-
-        {/* Parent Testimonials */}
-        <div className="text-center mb-4">
-          <h2 className="section-heading h3 mb-2">What Parents Say About Us</h2>
-          <p className="text-muted">Real experiences from families who have chosen Kitale Progressive School</p>
-        </div>
-
-        <Row className="g-4 mb-5">
-          {testimonials.map((testimonial, idx) => (
-            <Col key={idx} md={4}>
-              <TestimonialCard {...testimonial} />
-            </Col>
-          ))}
-        </Row>
+     
 
         {/* Contact Options Section */}
-        <Row className="mb-4">
+        <Row id='getintouch' className="mb-4">
           <Col lg={12}>
             <div className="text-center mb-4">
-              <h2 className="section-heading h3 mb-2">Get in Touch With Us</h2>
+              <h2 className="section-heading h3 mb-4">Contact Us</h2>
               <p className="text-muted">We'd love to hear from you and answer any questions you may have</p>
             </div>
           </Col>

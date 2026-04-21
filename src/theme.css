@@ -8,7 +8,7 @@
   --white: #fefefe;
   --gray-light: #f8f9fa;
   --text-dark: #000000;
-  --gradient-primary: linear-gradient(135deg, #031739, #2675ff);
+  --gradient-primary: linear-gradient(135deg, #002463, #144598,#618dde);
   --gradient-hover: linear-gradient(135deg, #031c45, #1a6bff);
   --gradient-dark: linear-gradient(135deg, #021331, #0d65fb);
 }

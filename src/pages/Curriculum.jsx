@@ -248,7 +248,7 @@ const CTABanner = memo(({ title, description, primaryText, primaryLink, secondar
         </Button>
       </Link>
       <Link to={secondaryLink}>
-        <Button variant="outline-light" className="btn-outline-light" style={{ minHeight: '40px', borderRadius: '40px', fontSize: '0.85rem' }}>
+        <Button variant="outline-light" className="btn-navy" style={{ minHeight: '40px', borderRadius: '40px', fontSize: '0.85rem' }}>
           {secondaryText}
         </Button>
       </Link>
