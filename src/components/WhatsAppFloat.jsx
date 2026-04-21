@@ -84,7 +84,7 @@ const WhatsAppFloat = memo(function WhatsAppFloat() {
 
   if (!isVisible) return null;
 
-  const whatsappLink = "https://wa.me/254780841116?text=Hello%20Kitale%20Progressive%20School%2C%20I%20would%20like%20to%20inquire%20about...";
+  const whatsappLink = "https://wa.me/254736756595?text=Hello%20Kitale%20Progressive%20School%2C%20I%20would%20like%20to%20inquire%20about...";
 
   return (
     <div className={styles.container}>

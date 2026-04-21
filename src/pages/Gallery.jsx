@@ -1,4 +1,4 @@
-// pages/Gallery.jsx - Fully Optimized
+// pages/Gallery.jsx - Fully Updated with Theme CSS Integration
 import { Helmet } from "react-helmet-async";
 import { Container, Row, Col } from "react-bootstrap";
 import { useState, useEffect, useCallback, lazy, Suspense, memo, useMemo, useRef } from "react";
@@ -6,19 +6,12 @@ import { useState, useEffect, useCallback, lazy, Suspense, memo, useMemo, useRef
 // Lazy load non-critical components
 const GetInTouch = lazy(() => import("../components/GetInTouch"));
 
-// Optimized Gallery Image Component with WebP support
+// Optimized Gallery Image Component with theme classes
 const GalleryImage = memo(({ image, onClick, priority = false }) => {
   const [loaded, setLoaded] = useState(false);
   const [error, setError] = useState(false);
   const imgRef = useRef(null);
   const imageId = `gallery-img-${image.id}`;
-
-  // Check WebP support
-  const supportsWebP = useMemo(() => {
-    if (typeof window === 'undefined') return true;
-    const canvas = document.createElement('canvas');
-    return canvas.toDataURL('image/webp').indexOf('image/webp') === 5;
-  }, []);
 
   // Preload priority images
   useEffect(() => {
@@ -26,17 +19,15 @@ const GalleryImage = memo(({ image, onClick, priority = false }) => {
       const link = document.createElement('link');
       link.rel = 'preload';
       link.as = 'image';
-      link.href = supportsWebP 
-        ? `/images/optimized/gallery/${image.filename}.webp`
-        : `/images/optimized/gallery/${image.filename}.jpg`;
-      link.type = supportsWebP ? 'image/webp' : 'image/jpeg';
+      link.href = `/images/optimized/gallery/${image.filename}.webp`;
+      link.type = 'image/webp';
       document.head.appendChild(link);
       
       return () => {
         if (link.parentNode) document.head.removeChild(link);
       };
     }
-  }, [priority, image.filename, supportsWebP]);
+  }, [priority, image.filename]);
 
   const handleKeyDown = useCallback((e) => {
     if (e.key === 'Enter' || e.key === ' ') {
@@ -49,7 +40,7 @@ const GalleryImage = memo(({ image, onClick, priority = false }) => {
   if (error) {
     return (
       <div
-        className="gallery-item"
+        className="gallery-item bg-light-custom"
         onClick={() => onClick(image)}
         onKeyDown={handleKeyDown}
         role="button"
@@ -61,11 +52,10 @@ const GalleryImage = memo(({ image, onClick, priority = false }) => {
           overflow: 'hidden',
           aspectRatio: '4/3',
           cursor: 'pointer',
-          backgroundColor: '#f0f0f0',
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'center',
-          color: '#666',
+          color: 'var(--text-dark)',
           fontSize: '0.875rem'
         }}
       >
@@ -91,22 +81,20 @@ const GalleryImage = memo(({ image, onClick, priority = false }) => {
         overflow: 'hidden',
         aspectRatio: '4/3',
         cursor: 'pointer',
-        backgroundColor: '#f0f0f0',
+        backgroundColor: 'var(--gray-light)',
         transition: 'transform 0.3s ease, box-shadow 0.3s ease'
       }}
     >
       {/* Loading skeleton */}
       {!loaded && (
         <div 
+          className="image-skeleton"
           style={{
             position: 'absolute',
             top: 0,
             left: 0,
             right: 0,
             bottom: 0,
-            background: 'linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%)',
-            backgroundSize: '200% 100%',
-            animation: 'shimmer 1.5s infinite',
             zIndex: 1
           }}
           aria-hidden="true"
@@ -114,30 +102,27 @@ const GalleryImage = memo(({ image, onClick, priority = false }) => {
       )}
       
       <picture>
-        {/* WebP version for modern browsers */}
         <source 
           srcSet={`/images/optimized/gallery/${image.filename}.webp`}
           type="image/webp"
         />
-        {/* Fallback JPG for older browsers */}
         <img
           ref={imgRef}
           id={imageId}
           src={`/images/optimized/gallery/${image.filename}.jpg`}
           alt={image.alt}
           loading={priority ? "eager" : "lazy"}
-          fetchpriority={priority ? "high" : "auto"}
+          fetchPriority={priority ? "high" : "auto"}
           decoding="async"
           width="400"
           height="300"
           onLoad={() => setLoaded(true)}
           onError={() => setError(true)}
+          className={`curriculum-image ${loaded ? 'loaded' : ''}`}
           style={{
             width: '100%',
             height: '100%',
             objectFit: 'cover',
-            opacity: loaded ? 1 : 0,
-            transition: 'opacity 0.3s ease, transform 0.3s ease',
             position: 'relative',
             zIndex: 2
           }}
@@ -149,7 +134,7 @@ const GalleryImage = memo(({ image, onClick, priority = false }) => {
 
 GalleryImage.displayName = 'GalleryImage';
 
-// Memoized filter button component with accessibility
+// Memoized filter button component with theme
 const FilterButton = memo(({ category, isActive, onClick }) => {
   const buttonRef = useRef(null);
 
@@ -167,12 +152,13 @@ const FilterButton = memo(({ category, isActive, onClick }) => {
       onKeyDown={handleKeyDown}
       aria-pressed={isActive}
       aria-label={`${category.name} photos${isActive ? ', currently selected' : ''}`}
+      className={`filter-button ${isActive ? 'active' : ''}`}
       style={{
         padding: '0.5rem 1rem',
         borderRadius: '40px',
-        border: 'none',
-        backgroundColor: isActive ? '#132f66' : 'transparent',
-        color: isActive ? 'white' : '#4a5568',
+        border: isActive ? 'none' : '2px solid var(--gray-light)',
+        backgroundColor: isActive ? 'var(--navy)' : 'transparent',
+        color: isActive ? 'var(--white)' : 'var(--text-dark)',
         fontWeight: '500',
         fontSize: '0.9rem',
         cursor: 'pointer',
@@ -194,12 +180,10 @@ const FilterButton = memo(({ category, isActive, onClick }) => {
 
 FilterButton.displayName = 'FilterButton';
 
-// Memoized lightbox modal with accessibility
+// Memoized lightbox modal with theme
 const LightboxModal = memo(({ selectedImage, onClose, onPrev, onNext }) => {
   const modalRef = useRef(null);
   const closeButtonRef = useRef(null);
-  const prevButtonRef = useRef(null);
-  const nextButtonRef = useRef(null);
 
   // Handle keyboard navigation
   const handleKeyDown = useCallback((e) => {
@@ -214,7 +198,6 @@ const LightboxModal = memo(({ selectedImage, onClose, onPrev, onNext }) => {
     }
   }, [onClose, onPrev, onNext]);
 
-  // Focus trap and event listeners
   useEffect(() => {
     if (modalRef.current) {
       closeButtonRef.current?.focus();
@@ -229,18 +212,12 @@ const LightboxModal = memo(({ selectedImage, onClose, onPrev, onNext }) => {
     };
   }, [handleKeyDown]);
 
-  // Check WebP support for lightbox
-  const supportsWebP = useMemo(() => {
-    if (typeof window === 'undefined') return true;
-    const canvas = document.createElement('canvas');
-    return canvas.toDataURL('image/webp').indexOf('image/webp') === 5;
-  }, []);
-
   if (!selectedImage) return null;
 
   return (
     <div
       ref={modalRef}
+      className="modal-overlay"
       style={{
         position: 'fixed',
         top: 0,
@@ -252,7 +229,8 @@ const LightboxModal = memo(({ selectedImage, onClose, onPrev, onNext }) => {
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'center',
-        padding: '2rem'
+        padding: '2rem',
+        backdropFilter: 'blur(5px)'
       }}
       onClick={onClose}
       role="dialog"
@@ -263,11 +241,12 @@ const LightboxModal = memo(({ selectedImage, onClose, onPrev, onNext }) => {
       <button
         ref={closeButtonRef}
         onClick={onClose}
+        className="modal-close-btn"
         style={{
           position: 'absolute',
           top: '20px',
           right: '20px',
-          background: 'white',
+          background: 'var(--white)',
           border: 'none',
           borderRadius: '50%',
           width: '44px',
@@ -278,18 +257,19 @@ const LightboxModal = memo(({ selectedImage, onClose, onPrev, onNext }) => {
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'center',
-          minWidth: '44px',
-          minHeight: '44px'
+          boxShadow: '0 2px 8px rgba(0,0,0,0.2)',
+          transition: 'transform 0.2s ease'
         }}
+        onMouseEnter={(e) => e.currentTarget.style.transform = 'scale(1.1)'}
+        onMouseLeave={(e) => e.currentTarget.style.transform = 'scale(1)'}
         aria-label="Close lightbox"
       >
         ✕
-        <span className="visually-hidden">Close</span>
       </button>
       
       <button
-        ref={prevButtonRef}
         onClick={(e) => { e.stopPropagation(); onPrev(); }}
+        className="lightbox-nav prev"
         style={{
           position: 'absolute',
           left: '20px',
@@ -304,20 +284,24 @@ const LightboxModal = memo(({ selectedImage, onClose, onPrev, onNext }) => {
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'center',
-          minWidth: '44px',
-          minHeight: '44px',
-          transition: 'background-color 0.2s ease'
+          transition: 'background-color 0.2s ease, transform 0.2s ease'
         }}
-        onMouseEnter={(e) => e.currentTarget.style.backgroundColor = 'rgba(255,255,255,0.3)'}
-        onMouseLeave={(e) => e.currentTarget.style.backgroundColor = 'rgba(255,255,255,0.2)'}
+        onMouseEnter={(e) => {
+          e.currentTarget.style.backgroundColor = 'rgba(255,255,255,0.3)';
+          e.currentTarget.style.transform = 'scale(1.05)';
+        }}
+        onMouseLeave={(e) => {
+          e.currentTarget.style.backgroundColor = 'rgba(255,255,255,0.2)';
+          e.currentTarget.style.transform = 'scale(1)';
+        }}
         aria-label="Previous image"
       >
         ‹
       </button>
       
       <button
-        ref={nextButtonRef}
         onClick={(e) => { e.stopPropagation(); onNext(); }}
+        className="lightbox-nav next"
         style={{
           position: 'absolute',
           right: '20px',
@@ -332,12 +316,16 @@ const LightboxModal = memo(({ selectedImage, onClose, onPrev, onNext }) => {
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'center',
-          minWidth: '44px',
-          minHeight: '44px',
-          transition: 'background-color 0.2s ease'
+          transition: 'background-color 0.2s ease, transform 0.2s ease'
         }}
-        onMouseEnter={(e) => e.currentTarget.style.backgroundColor = 'rgba(255,255,255,0.3)'}
-        onMouseLeave={(e) => e.currentTarget.style.backgroundColor = 'rgba(255,255,255,0.2)'}
+        onMouseEnter={(e) => {
+          e.currentTarget.style.backgroundColor = 'rgba(255,255,255,0.3)';
+          e.currentTarget.style.transform = 'scale(1.05)';
+        }}
+        onMouseLeave={(e) => {
+          e.currentTarget.style.backgroundColor = 'rgba(255,255,255,0.2)';
+          e.currentTarget.style.transform = 'scale(1)';
+        }}
         aria-label="Next image"
       >
         ›
@@ -352,11 +340,8 @@ const LightboxModal = memo(({ selectedImage, onClose, onPrev, onNext }) => {
       >
         <picture>
           <source 
-            srcSet={supportsWebP 
-              ? `/images/optimized/gallery/${selectedImage.filename}.webp`
-              : `/images/optimized/gallery/${selectedImage.filename}.jpg`
-            }
-            type={supportsWebP ? 'image/webp' : 'image/jpeg'}
+            srcSet={`/images/optimized/gallery/${selectedImage.filename}.webp`}
+            type="image/webp"
           />
           <img
             src={`/images/optimized/gallery/${selectedImage.filename}.jpg`}
@@ -494,7 +479,6 @@ function Gallery() {
 
   const handleLoadMore = useCallback(() => {
     setLoading(true);
-    // Use requestAnimationFrame for smooth loading
     requestAnimationFrame(() => {
       setTimeout(() => {
         setVisibleImages(prev => prev + 8);
@@ -507,7 +491,6 @@ function Gallery() {
     setActiveCategory(categoryId);
   }, []);
 
-  // Get current category images and limit visible ones
   const currentImages = useMemo(() => 
     galleryData[activeCategory] || galleryData.all,
     [activeCategory, galleryData]
@@ -528,41 +511,24 @@ function Gallery() {
           name="description" 
           content="Explore our school gallery featuring academic activities, sports events, cultural celebrations, and modern facilities at Kitale Progressive School." 
         />
+        <link rel="preconnect" href="https://fonts.googleapis.com" />
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
       </Helmet>
 
-      {/* Page Title */}
-      <section 
-        style={{
-          background: 'linear-gradient(135deg, #132f66 0%, #0a1f4d 100%)',
-          color: 'white',
-          paddingTop: '120px',
-          paddingBottom: '40px',
-          textAlign: 'center'
-        }}
-        aria-labelledby="page-title"
-      >
+      {/* Page Title - Using theme page-title-section */}
+      <section className="page-title-section" aria-labelledby="page-title">
         <Container>
-          <h1 id="page-title" style={{
-            fontSize: 'clamp(2rem, 5vw, 2.5rem)',
-            fontWeight: 'bold',
-            marginBottom: '1rem',
-            color: 'white'
-          }}>
+          <h1 id="page-title" className="display-5 fw-bold">
             Our Gallery
           </h1>
-          <p style={{
-            fontSize: 'clamp(1rem, 4vw, 1.1rem)',
-            maxWidth: '700px',
-            margin: '0 auto',
-            color: 'rgba(255,255,255,0.95)'
-          }}>
+          <p className="lead">
             Capturing moments of learning, growth, and achievement
           </p>
         </Container>
       </section>
 
       {/* Gallery Section */}
-      <section className="py-5" aria-labelledby="gallery-heading">
+      <section className="section-padding" aria-labelledby="gallery-heading">
         <Container>
           <h2 id="gallery-heading" className="visually-hidden">Photo Gallery</h2>
           
@@ -573,12 +539,11 @@ function Gallery() {
             role="status" 
             aria-live="polite"
             aria-atomic="true"
-          ></div>
+          />
 
           {/* Category Filter */}
           <div 
-            className="d-flex justify-content-center gap-2 mb-5" 
-            style={{ flexWrap: 'wrap' }}
+            className="d-flex justify-content-center gap-2 mb-5 flex-wrap" 
             role="tablist"
             aria-label="Photo categories"
           >
@@ -595,6 +560,7 @@ function Gallery() {
 
           {/* Photo Grid */}
           <div
+            className="gallery-grid"
             style={{
               display: 'grid',
               gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))',
@@ -608,7 +574,7 @@ function Gallery() {
                 <GalleryImage
                   image={image}
                   onClick={openLightbox}
-                  priority={index < 4 && activeCategory === 'all'} // Prioritize first 4 images in all category
+                  priority={index < 4 && activeCategory === 'all'}
                 />
               </div>
             ))}
@@ -620,19 +586,10 @@ function Gallery() {
               <button
                 onClick={handleLoadMore}
                 disabled={loading}
+                className="btn-navy"
                 style={{
-                  backgroundColor: '#132f66',
-                  color: 'white',
-                  border: 'none',
-                  padding: '0.75rem 2rem',
-                  borderRadius: '40px',
-                  fontWeight: '600',
-                  fontSize: '1rem',
-                  cursor: 'pointer',
-                  transition: 'all 0.3s ease',
-                  opacity: loading ? 0.8 : 1,
                   minHeight: '44px',
-                  minWidth: '44px'
+                  minWidth: '160px'
                 }}
                 aria-label="Load more photos"
               >
@@ -654,42 +611,39 @@ function Gallery() {
       </section>
 
       {/* Featured Video Section */}
-      <section className="py-5" style={{ background: '#f8fafc' }} aria-labelledby="video-heading">
+      <section className="section-padding bg-light-custom" aria-labelledby="video-heading">
         <Container>
-          <Row className="align-items-center g-4">
+          <Row className="align-items-center g-5">
             <Col lg={6}>
-              <h2 id="video-heading" style={{
-                fontSize: 'clamp(1.5rem, 4vw, 2rem)',
-                fontWeight: 'bold',
-                color: '#132f66',
-                marginBottom: '1rem'
-              }}>School Life at a Glance</h2>
-              <p style={{ color: '#4a5568', marginBottom: '2rem' }}>
+              <h2 id="video-heading" className="section-heading-left">
+                School Life at a Glance
+              </h2>
+              <p className="text-dark mb-4">
                 Watch our school video to see the vibrant life at Kitale Progressive School. 
                 From classroom activities to sports events and cultural celebrations.
               </p>
-              <div style={{ display: 'flex', gap: '2rem', flexWrap: 'wrap' }}>
+              <div className="d-flex gap-4 flex-wrap">
                 <div>
-                  <span style={{ fontSize: '1.8rem', fontWeight: 'bold', color: '#cebd04' }}>20+</span>
-                  <span style={{ display: 'block', fontSize: '0.9rem', color: '#718096' }}>Years of Excellence</span>
+                  <span className="display-6 fw-bold text-gold">20+</span>
+                  <span className="d-block small text-muted">Years of Excellence</span>
                 </div>
                 <div>
-                  <span style={{ fontSize: '1.8rem', fontWeight: 'bold', color: '#cebd04' }}>500+</span>
-                  <span style={{ display: 'block', fontSize: '0.9rem', color: '#718096' }}>Happy Students</span>
+                  <span className="display-6 fw-bold text-gold">500+</span>
+                  <span className="d-block small text-muted">Happy Students</span>
                 </div>
                 <div>
-                  <span style={{ fontSize: '1.8rem', fontWeight: 'bold', color: '#cebd04' }}>50+</span>
-                  <span style={{ display: 'block', fontSize: '0.9rem', color: '#718096' }}>Expert Teachers</span>
+                  <span className="display-6 fw-bold text-gold">50+</span>
+                  <span className="d-block small text-muted">Expert Teachers</span>
                 </div>
               </div>
             </Col>
             <Col lg={6}>
-              <div style={{
+              <div className="video-wrapper" style={{
                 position: 'relative',
                 paddingBottom: '56.25%',
                 height: 0,
                 overflow: 'hidden',
-                borderRadius: '12px',
+                borderRadius: '16px',
                 boxShadow: '0 10px 30px rgba(0,0,0,0.1)'
               }}>
                 <iframe 
@@ -727,9 +681,121 @@ function Gallery() {
         <GetInTouch />
       </Suspense>
 
-      {/* Critical CSS - Minified */}
+      {/* Optimized Critical CSS for Core Web Vitals */}
       <style dangerouslySetInnerHTML={{ __html: `
-        @keyframes shimmer{0%{background-position:-200% 0}100%{background-position:200% 0}}.visually-hidden{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);border:0}.gallery-item{transition:transform .3s ease,box-shadow .3s ease;border-radius:12px;overflow:hidden;aspect-ratio:4/3;cursor:pointer}.gallery-item:focus-visible,.gallery-item:hover{transform:scale(1.03);outline:3px solid #cebd04;outline-offset:2px}button:focus-visible{outline:3px solid #cebd04;outline-offset:2px}.cursor-pointer{cursor:pointer}@media (prefers-reduced-motion:reduce){.gallery-item,.gallery-item:focus-visible,.gallery-item:hover,button{transition:none!important;animation:none!important;transform:none!important}}
+        .visually-hidden {
+          position: absolute;
+          width: 1px;
+          height: 1px;
+          padding: 0;
+          margin: -1px;
+          overflow: hidden;
+          clip: rect(0, 0, 0, 0);
+          border: 0;
+        }
+        .gallery-item {
+          transition: transform 0.3s ease, box-shadow 0.3s ease;
+          border-radius: 12px;
+          overflow: hidden;
+          aspect-ratio: 4/3;
+          cursor: pointer;
+          will-change: transform;
+        }
+        .gallery-item:focus-visible,
+        .gallery-item:hover {
+          transform: scale(1.02);
+          outline: 3px solid var(--gold);
+          outline-offset: 2px;
+          box-shadow: 0 10px 25px rgba(13,101,251,0.15);
+        }
+        .filter-button {
+          transition: all 0.2s ease;
+        }
+        .filter-button:hover {
+          transform: translateY(-2px);
+        }
+        .filter-button.active {
+          box-shadow: 0 4px 12px rgba(13,101,251,0.3);
+        }
+        button:focus-visible,
+        a:focus-visible,
+        [role="button"]:focus-visible {
+          outline: 3px solid var(--gold);
+          outline-offset: 2px;
+        }
+        .modal-overlay {
+          backdrop-filter: blur(5px);
+        }
+        .lightbox-nav {
+          transition: background-color 0.2s ease, transform 0.2s ease;
+        }
+        .btn-navy {
+          background: var(--gradient-primary);
+          color: white;
+          border: none;
+          font-weight: 600;
+          border-radius: 40px;
+          padding: 0.75rem 2rem;
+          transition: all 0.3s ease;
+        }
+        .btn-navy:hover:not(:disabled) {
+          background: var(--gradient-hover);
+          transform: translateY(-2px);
+          box-shadow: 0 4px 12px rgba(13,101,251,0.3);
+        }
+        .btn-navy:disabled {
+          opacity: 0.7;
+          cursor: not-allowed;
+        }
+        @media (max-width: 768px) {
+          .gallery-grid {
+            gap: 1rem !important;
+          }
+          .section-heading-left {
+            font-size: 1.5rem;
+          }
+          .lightbox-nav {
+            width: 40px !important;
+            height: 40px !important;
+            font-size: 1.2rem !important;
+          }
+          .lightbox-nav.prev {
+            left: 10px;
+          }
+          .lightbox-nav.next {
+            right: 10px;
+          }
+          .modal-close-btn {
+            top: 10px !important;
+            right: 10px !important;
+            width: 40px !important;
+            height: 40px !important;
+          }
+        }
+        @media (prefers-reduced-motion: reduce) {
+          .gallery-item,
+          .gallery-item:focus-visible,
+          .gallery-item:hover,
+          .filter-button,
+          .lightbox-nav,
+          .modal-close-btn,
+          .btn-navy {
+            transition: none !important;
+            animation: none !important;
+            transform: none !important;
+          }
+          .gallery-item {
+            will-change: auto;
+          }
+        }
+        /* Performance optimizations */
+        .gallery-item {
+          contain: layout paint;
+        }
+        .curriculum-image {
+          backface-visibility: hidden;
+          -webkit-backface-visibility: hidden;
+        }
       `}} />
     </>
   );

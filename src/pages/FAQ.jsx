@@ -1,3 +1,4 @@
+// pages/FAQ.jsx - Fully Updated with Theme CSS Integration
 import { Helmet } from "react-helmet-async";
 import { Container, Row, Col, Accordion, Card, Button } from "react-bootstrap";
 import { Link } from "react-router-dom";
@@ -11,13 +12,20 @@ function FAQ() {
     const el = document.getElementById("contact-section");
     if (el) {
       el.scrollIntoView({ behavior: "smooth" });
-      // Set focus for keyboard users
       el.setAttribute('tabindex', '-1');
       el.focus({ preventScroll: true });
     }
   }, []);
 
-  // FAQ DATA
+  // Trust Bar Data
+  const trustItems = [
+    { icon: "✓", label: "CBC Curriculum" },
+    { icon: "✓", label: "ECD to Junior Secondary" },
+    { icon: "✓", label: "Boarding Available" },
+    { icon: "✓", label: "Located in Kitale" }
+  ];
+
+  // FAQ DATA - Updated per document guidelines
   const faqCategories = [
     {
       category: "Admissions",
@@ -27,58 +35,42 @@ function FAQ() {
         {
           question: "How can I apply for admission at Kitale Progressive School in Kitale, Kenya?",
           answer: `
-            Parents can apply for admission at Kitale Progressive School through a simple, structured process:
-            <br/><br/>
-            <strong>1. Interview</strong> – All new learners (PP1–Grade 9) attend a brief competency interview (KES 700).<br/>
-            <strong>2. Requirements</strong> – A checklist of class items, boarding needs, uniforms, and transport is provided.<br/>
-            <strong>3. Purchase & Preparation</strong> – Buy the necessary items and prepare for school.<br/>
-            <strong>4. Submit Forms & Documents</strong> – Completed admission form and copy of birth certificate.<br/>
-            <strong>5. Fee Payment</strong> – Via official school Paybill or bank account.<br/>
-            <strong>6. Meet the Headteacher</strong> – Welcome session and Assessment Number issuance.<br/>
-            <strong>7. Meet the Class Teacher</strong> – Class orientation.<br/>
-            <strong>8. Boarding Introduction</strong> – Tour and introduction to boarding teachers (if applicable).<br/>
-            <strong>9. Transport Orientation</strong> – Day scholars meet drivers and confirm routes.
+            You can apply through our <a href="/admissions/apply" class="text-navy fw-bold" aria-label="Online admissions form">online admissions form</a> or visit the school in person. Our admissions team will guide you through the process, including placement, requirements, and next steps to secure your child's position.
             <br/><br/>
             <a href="/admissions/apply" class="text-navy fw-bold" aria-label="Begin your application process">Begin your application here →</a>
           `
         },
         {
-          question: "When does the admission process start at Kitale Progressive School?",
+          question: "Is there an admission interview or assessment?",
           answer: `
-            Admissions run throughout the year, but the main intake is in January. Mid-term admissions are available depending on space. Parents are encouraged to 
-            <a href="/admissions/apply" class="text-navy fw-bold" aria-label="Apply early to secure a spot">apply early</a> to secure a spot.
-          `
-        },
-        {
-          question: "What are the age requirements for Playgroup at Kitale Progressive School?",
-          answer: `
-            Our Playgroup is for children aged 2½ to 3½ years. Children learn through play-based activities, early language, music, movement, and social interaction. Classes run Monday–Friday with half-day or full-day options.
-            <br/><br/>
-            <a href="/academics/curriculum" class="text-navy fw-bold" aria-label="Learn more about our early years curriculum">Learn more about our early years curriculum →</a>
-          `
-        },
-        {
-          question: "What documents are needed for admission at Kitale Progressive School?",
-          answer: `
-            <strong>Required documents:</strong>
-            <br/>
-            • Child's birth certificate<br/>
-            • Previous school report cards<br/>
-            • Immunization record<br/>
-            • 4 Passport photos<br/>
-            • Parents' ID/Passport copies<br/>
-            • Transfer letter (if applicable)
-            <br/><br/>
-            <a href="/admissions/apply" class="text-navy fw-bold" aria-label="Download admission forms">Download admission forms</a> and view the 
-            <a href="/admissions/fee-structure" class="text-navy fw-bold" aria-label="View fee structure"> fee structure</a>.
-          `
-        },
-        {
-          question: "Is there an admission interview or assessment at Kitale Progressive School?",
-          answer: `
-            Yes, a friendly assessment for all new students (PP1–Grade 9) is conducted at KES 700. This is a diagnostic tool, not a pass/fail test.
+            Yes. Depending on the grade level, learners may undergo a simple assessment to help us understand their current level and place them appropriately for success.
             <br/><br/>
             <a href="/contact" class="text-navy fw-bold" aria-label="Contact admissions to schedule an assessment">Contact admissions</a> to schedule an assessment.
+          `
+        },
+        {
+          question: "How do I know this is the right school for my child?",
+          answer: `
+            The best way is to visit the school, meet our teachers, and experience the environment firsthand.
+            <br/><br/>
+            We are confident that once you see how we combine structured learning, discipline, and a supportive environment, you will feel assured in your decision.
+            <br/><br/>
+            <a href="/contact" class="text-navy fw-bold" aria-label="Book a school visit">Book a school visit →</a>
+          `
+        },
+        {
+          question: "What are the school's hair and grooming guidelines for learners?",
+          answer: `
+            At Kitale Progressive School, we maintain simple and neat grooming standards that support discipline, cleanliness, and a focused learning environment.
+            <br/><br/>
+            <strong>For girls:</strong><br/>
+            • Allowed styles include push-back styles, ponytails, half-lines, twists, three-strand braids, and creative line patterns (without extensions).<br/>
+            • Hair should always be kept <strong>away from the face</strong> to support concentration during learning.
+            <br/><br/>
+            <strong>For boys:</strong><br/>
+            • Hair should be <strong>neatly shaved or kept short, clean, and well-combed</strong> at all times.
+            <br/><br/>
+            These guidelines help maintain a uniform, respectful, and distraction-free school environment for all learners.
           `
         }
       ]
@@ -91,43 +83,28 @@ function FAQ() {
         {
           question: "Which curriculum does Kitale Progressive School follow in Kenya?",
           answer: `
-            We follow the Competency-Based Curriculum (CBC) approved by KICD. CBC develops learners' skills, values, and competencies for the 21st century.
+            We follow the <strong>Competency-Based Curriculum (CBC)</strong>, which focuses on developing practical skills, creativity, critical thinking, and real-world problem-solving.
+            <br/><br/>
+            Our approach ensures learners are not only academically strong but also confident and capable.
             <br/><br/>
             <a href="/academics/curriculum" class="text-navy fw-bold" aria-label="View full curriculum">View full curriculum →</a>
           `
         },
         {
-          question: "What sports and clubs are available at Kitale Progressive School?",
+          question: "What is the average class size?",
           answer: `
-            Sports & clubs include Football, Volleyball, Netball, Handball, Taekwondo, Swimming, Chess, Skating, Music, Debate, Computer Club, and Chinese Language. We focus on skills development, creativity, and global readiness.
-            <br/><br/>
-            <a href="/academics/clubs-societies" class="text-navy fw-bold" aria-label="View clubs and societies">Clubs & societies</a> | 
-            <a href="/school-life/gallery" class="text-navy fw-bold" aria-label="View gallery"> Gallery</a>
-          `
-        },
-        {
-          question: "What is the average class size at Kitale Progressive School?",
-          answer: `
-            Average class size is 25–30 learners. Small classes allow for personalized attention and effective learning.
+            We maintain manageable class sizes to ensure each learner receives adequate attention, support, and engagement during lessons.
             <br/><br/>
             <a href="/academics/curriculum" class="text-navy fw-bold" aria-label="Learn about our teaching approach">Learn about our teaching approach →</a>
           `
         },
         {
-          question: "How does Kitale Progressive School support learners with special needs?",
+          question: "What sports and clubs are available?",
           answer: `
-            We have a learning support department offering remedial classes, one-on-one tutoring, and parental support to ensure every child succeeds.
+            Sports & clubs include Football, Volleyball, Netball, Handball, Taekwondo, Swimming, Chess, Skating, Music, Debate, Computer Club, and Chinese Language. We focus on skills development, creativity, and global readiness.
             <br/><br/>
-            <a href="/contact" class="text-navy fw-bold" aria-label="Contact learning support">Contact learning support →</a>
-          `
-        },
-        {
-          question: "Are there ICT/computer facilities at Kitale Progressive School?",
-          answer: `
-            Yes. We have a fully equipped computer lab and integrate ICT into all subjects. Students learn coding, digital literacy, and responsible tech use.
-            <br/><br/>
-            <a href="/school-life/facilities" class="text-navy fw-bold" aria-label="View ICT facilities">View ICT facilities</a> | 
-            <a href="/academics/clubs-societies" class="text-navy fw-bold" aria-label="View Computer Club"> Computer Club</a>
+            <a href="/academics/clubs-societies" class="text-navy fw-bold" aria-label="View clubs and societies">Clubs & societies</a> | 
+            <a href="/school-life/gallery" class="text-navy fw-bold" aria-label="View gallery"> Gallery</a>
           `
         }
       ]
@@ -138,36 +115,29 @@ function FAQ() {
       color: "#9f7aea",
       questions: [
         {
-          question: "What are the boarding facilities at Kitale Progressive School?",
+          question: "What are the boarding facilities like?",
           answer: `
-            Our boarding facilities provide a home away from home. Dorms are separate for boys and girls with comfortable beds, lighting, and 24/7 supervision.
+            Our boarding facilities provide a safe, structured, and supportive environment where learners follow a consistent daily routine that balances study, rest, and personal development.
             <br/><br/>
-            <a href="/school-life/facilities" class="text-navy fw-bold" aria-label="View boarding facilities">View boarding facilities</a> | 
-            <a href="/school-life/gallery" class="text-navy fw-bold" aria-label="View gallery"> Gallery</a>
-          `
-        },
-        {
-          question: "What is the daily routine for boarders at Kitale Progressive School?",
-          answer: `
-            Boarders follow a structured schedule: Wake up at 5:30 AM, morning prep, classes 8:00 AM–5:00 PM, activities, evening prep, supper, lights out 9:00–10:00 PM.
+            Boarders are supervised by trained staff to ensure discipline, wellbeing, and proper care.
             <br/><br/>
-            <a href="/school-life/events" class="text-navy fw-bold" aria-label="View events calendar">View events calendar →</a>
-          `
-        },
-        {
-          question: "What meals are provided for boarders at Kitale Progressive School?",
-          answer: `
-            Boarders receive breakfast, lunch, supper, morning and evening tea. Meals are nutritious and approved by a nutritionist.
-            <br/><br/>
-            <a href="/school-life/facilities" class="text-navy fw-bold" aria-label="View dining facilities">View dining facilities →</a>
+            <a href="/school-life/facilities" class="text-navy fw-bold" aria-label="View boarding facilities">View boarding facilities →</a>
           `
         },
         {
           question: "How is security ensured for boarders?",
           answer: `
-            We provide 24/7 security, secure fencing, and strict visitor protocols. House parents live within dormitories for constant supervision.
+            We prioritize student safety through controlled access, supervision, and structured routines. Learners are always under the care of responsible staff within a secure school environment.
             <br/><br/>
             <a href="/school-life/facilities" class="text-navy fw-bold" aria-label="View safety measures">View safety measures →</a>
+          `
+        },
+        {
+          question: "What is the daily routine for boarders?",
+          answer: `
+            Boarders follow a structured schedule: Wake up at 5:30 AM, morning prep, classes 8:00 AM–5:00 PM, activities, evening prep, supper, lights out 9:00–10:00 PM.
+            <br/><br/>
+            <a href="/school-life/events" class="text-navy fw-bold" aria-label="View events calendar">View events calendar →</a>
           `
         }
       ]
@@ -178,25 +148,22 @@ function FAQ() {
       color: "#f56565",
       questions: [
         {
-          question: "How much are the school fees at Kitale Progressive School?",
-          answer: `
-            Fees vary by grade level and student type (day or boarder). View the detailed fees here:
-            <br/><br/>
-            <a href="/admissions/fee-structure" class="text-navy fw-bold" aria-label="View complete fee structure">View complete fee structure →</a>
-          `
-        },
-        {
           question: "How can parents pay school fees?",
           answer: `
-            Payment methods: Official school Paybill, bank transfer, or direct bank deposit. Flexible installment plans are available through prior arrangement.
+            Parents can choose between:
             <br/><br/>
-            <a href="/contact" class="text-navy fw-bold" aria-label="Contact finance office">Contact finance office →</a>
+            • <strong>Full payment</strong> before the term begins<br/>
+            • A <strong>structured installment plan</strong> within the term
+            <br/><br/>
+            Our goal is to provide flexibility while maintaining a smooth learning experience for every child.
+            <br/><br/>
+            <a href="/admissions/fee-structure" class="text-navy fw-bold" aria-label="View fee structure">View fee structure →</a>
           `
         },
         {
           question: "Are there any additional costs besides fees?",
           answer: `
-            Additional costs may include uniforms, stationery, co-curricular activities, and special events.
+            All school fees are clearly outlined. Any additional costs, such as optional activities or trips, are communicated in advance to ensure full transparency.
             <br/><br/>
             <a href="/admissions/fee-structure" class="text-navy fw-bold" aria-label="View complete fee breakdown">View complete fee breakdown →</a>
           `
@@ -217,114 +184,19 @@ function FAQ() {
       color: "#ed8936",
       questions: [
         {
-          question: "Does Kitale Progressive School provide school transport services in Kitale?",
+          question: "Does the school provide transport in Kitale?",
           answer: `
-            Yes, Kitale Progressive School provides safe and reliable school transport. Our school vans run Monday to Friday, with options for: Two-way (pick-up & drop-off) or One-way (pick-up only). Day scholars meet drivers during orientation and confirm van routes.
+            Yes. We provide reliable school transport services covering key areas within Kitale and surrounding regions, ensuring safe and timely travel for learners.
             <br/><br/>
-            <a href="/school-life/facilities" class="text-navy fw-bold" aria-label="View transport facilities">View transport facilities</a> | 
+            <a href="/admissions/fee-structure#transport-section" class="text-navy fw-bold" aria-label="View transport facilities">View transport facilities</a> | 
             <a href="/contact" class="text-navy fw-bold" aria-label="Contact transport office"> Contact transport office</a>
           `
         },
         {
-          question: "Why do parents in Kitale prefer our school transport services?",
-          answer: `
-            <strong>Parents love our transport services because:</strong>
-            <br/>
-            ✔️ Child safety is our priority<br/>
-            ✔️ Weatherproof – no walking in rain or dust<br/>
-            ✔️ Guaranteed that your child gets home safely<br/>
-            ✔️ Friendly drivers who know every child<br/>
-            ✔️ Saves time and daily hassle
-            <br/><br/>
-            <a href="/contact" class="text-navy fw-bold" aria-label="Contact our transport office">Contact our transport office →</a>
-          `
-        },
-        {
-          question: "How much does school transport cost at Kitale Progressive School and which areas do you cover?",
-          answer: `
-            Transport fees vary depending on the distance from the school. To confirm if your area is covered and get the exact fee, please 
-            <a href="/contact" class="text-navy fw-bold" aria-label="Contact our transport office">contact our transport office</a> or share your location. Transport Fees are paid per term along with school fees.
-            <br/><br/>
-            <a href="/admissions/fee-structure" class="text-navy fw-bold" aria-label="View full fee structure">View full fee structure →</a>
-          `
-        },
-        {
-          question: "What are the school start and end times for Kitale Progressive School?",
+          question: "What are the school start and end times?",
           answer: `
             School starts at 8:00 AM and ends at 5:00 PM from Monday to Friday. Check our full 
             <a href="/school-life/events" class="text-navy fw-bold" aria-label="View school calendar">school calendar</a> for term dates, holidays, and special events.
-          `
-        }
-      ]
-    },
-    {
-      category: "Parent Involvement & Communication",
-      icon: "👪",
-      color: "#38b2ac",
-      questions: [
-        {
-          question: "How can parents get involved in school activities?",
-          answer: `
-            We encourage parent participation through: Parent-Teacher Association (PTA), volunteering for school events, career day presentations, fundraising activities, and attending parent-teacher conferences. We maintain a close parent-teacher partnership with regular academic clinics to keep you informed.
-            <br/><br/>
-            <a href="/contact" class="text-navy fw-bold" aria-label="Join our PTA">Join our PTA</a> and check our 
-            <a href="/school-life/events" class="text-navy fw-bold" aria-label="View events calendar">events calendar</a> for upcoming opportunities.
-          `
-        },
-        {
-          question: "How often are parent-teacher meetings held?",
-          answer: `
-            We hold formal parent-teacher conferences at the end of each term. However, parents can request meetings with teachers at any time by scheduling through the school office.
-            <br/><br/>
-            <a href="/contact" class="text-navy fw-bold" aria-label="Contact the school office">Contact the school office</a> to schedule a meeting.
-          `
-        },
-        {
-          question: "How will I receive updates about my child's progress?",
-          answer: `
-            We provide regular updates through: termly report cards, WhatsApp communication groups, newsletters, and text message alerts for urgent information. We also have regular academic clinics to keep you informed about your child's progress.
-            <br/><br/>
-            <a href="/contact" class="text-navy fw-bold" aria-label="Update your contact information">Update your contact information</a> to ensure you don't miss any communications.
-          `
-        }
-      ]
-    },
-    {
-      category: "School Policies & Health",
-      icon: "📜",
-      color: "#667eea",
-      questions: [
-        {
-          question: "What is the school uniform policy?",
-          answer: `
-            All students are required to wear the complete school uniform as outlined in the parent handbook. Uniforms are available at the school. Sports wear is required on designated days. A requirements checklist is issued for class items, boarding needs, and uniforms during admission.
-            <br/><br/>
-            Read our full <a href="/privacy-policy" class="text-navy fw-bold" aria-label="Read uniform policy">uniform policy</a> and 
-            <a href="/terms-of-service" class="text-navy fw-bold" aria-label="Read terms of service">terms of service</a> for more details.
-          `
-        },
-        {
-          question: "What is the discipline policy?",
-          answer: `
-            We follow a positive discipline approach that focuses on character development and restorative justice. We have chapel services for spiritual growth and strong focus on guidance, counselling, and holistic development. Our code of conduct outlines expected behaviors and consequences. Corporal punishment is strictly prohibited.
-            <br/><br/>
-            Review our <a href="/terms-of-service" class="text-navy fw-bold" aria-label="Review code of conduct">code of conduct</a> for complete details.
-          `
-        },
-        {
-          question: "How do you handle medical emergencies?",
-          answer: `
-            In case of emergency, we immediately contact parents and transport the child to the nearest hospital. We have established relationships with Kitale County Hospital and other local medical facilities for quick response.
-            <br/><br/>
-            <a href="/contact" class="text-navy fw-bold" aria-label="Contact our health office">Contact our health office</a> for more information.
-          `
-        },
-        {
-          question: "What should I do if my child is sick?",
-          answer: `
-            For day scholars, please keep your child at home and inform the school. For boarders, our school matron provides initial care, and parents are contacted immediately for serious cases. We have a partnership with nearby hospitals for emergencies.
-            <br/><br/>
-            <a href="/contact" class="text-navy fw-bold" aria-label="Report an absence">Report an absence here</a> or contact the school office directly.
           `
         }
       ]
@@ -337,8 +209,10 @@ function FAQ() {
         <title>Frequently Asked Questions | Kitale Progressive School</title>
         <meta
           name="description"
-          content="Find answers about admissions, CBC curriculum, school fees, boarding, and transport at Kitale Progressive School in Kitale, Trans Nzoia County, Kenya."
+          content="Find clear answers about admissions, CBC curriculum, boarding, fees, and student life at Kitale Progressive School in Kitale, Trans Nzoia County, Kenya."
         />
+        <link rel="preconnect" href="https://fonts.googleapis.com" />
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
         <script type="application/ld+json">
           {`
             {
@@ -347,34 +221,34 @@ function FAQ() {
               "mainEntity": [
                 {
                   "@type": "Question",
-                  "name": "How do I apply for admission at Kitale Progressive School?",
+                  "name": "How can I apply for admission at Kitale Progressive School in Kitale, Kenya?",
                   "acceptedAnswer": {
                     "@type": "Answer",
-                    "text": "Parents can apply by completing the admission form, submitting required documents, paying the admission fee, and attending a short learner interview."
+                    "text": "You can apply through our online admissions form or visit the school in person. Our admissions team will guide you through the process, including placement, requirements, and next steps to secure your child's position."
                   }
                 },
                 {
                   "@type": "Question",
-                  "name": "Which curriculum does Kitale Progressive School follow?",
+                  "name": "Which curriculum does Kitale Progressive School follow in Kenya?",
                   "acceptedAnswer": {
                     "@type": "Answer",
-                    "text": "Kitale Progressive School follows the Competency Based Curriculum (CBC) approved by the Kenya Institute of Curriculum Development."
+                    "text": "We follow the Competency-Based Curriculum (CBC), which focuses on developing practical skills, creativity, critical thinking, and real-world problem-solving."
                   }
                 },
                 {
                   "@type": "Question",
-                  "name": "Does Kitale Progressive School offer boarding?",
+                  "name": "What are the boarding facilities like?",
                   "acceptedAnswer": {
                     "@type": "Answer",
-                    "text": "Yes. Kitale Progressive School offers boarding facilities with supervised dormitories and dedicated boarding staff."
+                    "text": "Our boarding facilities provide a safe, structured, and supportive environment where learners follow a consistent daily routine that balances study, rest, and personal development."
                   }
                 },
                 {
                   "@type": "Question",
-                  "name": "How much are the school fees at Kitale Progressive School?",
+                  "name": "How can parents pay school fees?",
                   "acceptedAnswer": {
                     "@type": "Answer",
-                    "text": "School fees depend on the grade level and whether the learner is a day scholar or boarder. Parents can view the full fee structure on the school website."
+                    "text": "Parents can choose between full payment before the term begins or a structured installment plan within the term."
                   }
                 }
               ]
@@ -383,222 +257,64 @@ function FAQ() {
         </script>
       </Helmet>
 
-      {/* HERO SECTION - with proper heading hierarchy */}
-      <section 
-        style={{
-          background: 'linear-gradient(135deg, #132f66 0%, #0a1f4d 100%)',
-          color: 'white',
-          paddingTop: '120px',
-          paddingBottom: '60px',
-          textAlign: 'center',
-          position: 'relative',
-          overflow: 'hidden'
-        }}
-        aria-labelledby="page-title"
-      >
+      {/* HERO SECTION - Using theme page-title-section */}
+      <section className="page-title-section" aria-labelledby="page-title">
         <Container>
-          <Row>
-            <Col lg={8} className="mx-auto text-center">
-              <h1 id="page-title" style={{
-                fontSize: 'clamp(2rem, 5vw, 3rem)',
-                fontWeight: 'bold',
-                marginBottom: '1.5rem',
-                color: 'white'
-              }}>
-                Frequently Asked Questions
-              </h1>
+          <h1 id="page-title" className="display-5 fw-bold">
+            Frequently Asked Questions
+          </h1>
+          <p className="lead">
+            Find clear answers about admissions, CBC curriculum, boarding, fees, and student life at Kitale Progressive School.
+          </p>
+        </Container>
+      </section>
 
-              <p style={{
-                fontSize: 'clamp(1rem, 4vw, 1.2rem)',
-                marginBottom: '2rem',
-                color: 'rgba(255,255,255,0.95)',
-                maxWidth: '700px',
-                margin: '0 auto 2rem auto'
-              }}>
-                Everything parents need to know about admissions, academics,
-                boarding, transport, and school life at Kitale Progressive School.
-              </p>
-
-              <div 
-                className="hero-buttons" 
-                style={{ display: 'flex', gap: '1rem', justifyContent: 'center', flexWrap: 'wrap' }}
-                role="group"
-                aria-label="Quick actions"
-              >
-                <Link
-                  to="/admissions/apply"
-                  className="btn-hover-effect"
-                  style={{
-                    backgroundColor: '#cebd04',
-                    color: '#132f66',
-                    padding: '0.75rem 2rem',
-                    borderRadius: '40px',
-                    fontWeight: '600',
-                    textDecoration: 'none',
-                    transition: 'all 0.3s ease',
-                    minHeight: '44px',
-                    minWidth: '44px',
-                    display: 'inline-flex',
-                    alignItems: 'center',
-                    justifyContent: 'center'
-                  }}
-                  onMouseEnter={(e) => {
-                    e.target.style.backgroundColor = '#b09e03';
-                    e.target.style.transform = 'translateY(-2px)';
-                    e.target.style.boxShadow = '0 4px 12px rgba(0,0,0,0.2)';
-                  }}
-                  onMouseLeave={(e) => {
-                    e.target.style.backgroundColor = '#cebd04';
-                    e.target.style.transform = 'translateY(0)';
-                    e.target.style.boxShadow = 'none';
-                  }}
-                  aria-label="Apply for admission now"
-                >
-                  Apply Now
-                </Link>
-
-                <Link
-                  to="/admissions/fee-structure"
-                  className="btn-hover-effect"
-                  style={{
-                    backgroundColor: 'transparent',
-                    color: 'white',
-                    padding: '0.75rem 2rem',
-                    borderRadius: '40px',
-                    fontWeight: '600',
-                    textDecoration: 'none',
-                    border: '2px solid white',
-                    transition: 'all 0.3s ease',
-                    minHeight: '44px',
-                    minWidth: '44px',
-                    display: 'inline-flex',
-                    alignItems: 'center',
-                    justifyContent: 'center'
-                  }}
-                  onMouseEnter={(e) => {
-                    e.target.style.backgroundColor = 'white';
-                    e.target.style.color = '#132f66';
-                    e.target.style.transform = 'translateY(-2px)';
-                  }}
-                  onMouseLeave={(e) => {
-                    e.target.style.backgroundColor = 'transparent';
-                    e.target.style.color = 'white';
-                    e.target.style.transform = 'translateY(0)';
-                  }}
-                  aria-label="View fee structure"
-                >
-                  Fee Structure
-                </Link>
-
-                <Link
-                  to="/contact"
-                  className="btn-hover-effect"
-                  style={{
-                    backgroundColor: 'transparent',
-                    color: 'white',
-                    padding: '0.75rem 2rem',
-                    borderRadius: '40px',
-                    fontWeight: '600',
-                    textDecoration: 'none',
-                    border: '2px solid white',
-                    transition: 'all 0.3s ease',
-                    minHeight: '44px',
-                    minWidth: '44px',
-                    display: 'inline-flex',
-                    alignItems: 'center',
-                    justifyContent: 'center'
-                  }}
-                  onMouseEnter={(e) => {
-                    e.target.style.backgroundColor = 'white';
-                    e.target.style.color = '#132f66';
-                    e.target.style.transform = 'translateY(-2px)';
-                  }}
-                  onMouseLeave={(e) => {
-                    e.target.style.backgroundColor = 'transparent';
-                    e.target.style.color = 'white';
-                    e.target.style.transform = 'translateY(0)';
-                  }}
-                  aria-label="Contact us"
-                >
-                  Contact
-                </Link>
-              </div>
-            </Col>
+      {/* TRUST BAR - Below hero with theme styling */}
+      <section className="py-2" style={{ background: 'var(--white)', borderBottom: '1px solid #eef2f6' }} aria-label="Key school features">
+        <Container>
+          <Row className="g-2 justify-content-center">
+            {trustItems.map((item, idx) => (
+              <Col key={idx} xs={6} md={3} className="text-center">
+                <div className="d-flex align-items-center justify-content-center gap-2">
+                  <span className="text-navy fw-bold" style={{ fontSize: '1rem' }} aria-hidden="true">{item.icon}</span>
+                  <span className="text-navy small fw-medium">{item.label}</span>
+                </div>
+              </Col>
+            ))}
           </Row>
         </Container>
       </section>
 
       {/* FAQ CONTENT */}
-      <section className="py-5 bg-light-custom" aria-labelledby="faq-heading">
+      <section className="section-padding" style={{ background: 'var(--gray-light)' }} aria-labelledby="faq-heading">
         <Container>
           <h2 id="faq-heading" className="visually-hidden">Frequently Asked Questions by Category</h2>
-          
-          <Row className="mb-4">
-            <Col lg={8} className="mx-auto text-center">
-              <div 
-                style={{
-                  backgroundColor: 'white',
-                  padding: '1rem',
-                  borderRadius: '50px',
-                  boxShadow: '0 2px 8px rgba(0,0,0,0.05)',
-                  fontSize: '1rem'
-                }}
-                role="status"
-                aria-live="polite"
-              >
-                Can't find what you're looking for?{" "}
-                <button
-                  onClick={scrollToContact}
-                  onKeyDown={(e) => {
-                    if (e.key === 'Enter' || e.key === ' ') {
-                      e.preventDefault();
-                      scrollToContact();
-                    }
-                  }}
-                  style={{
-                    background: 'none',
-                    border: 'none',
-                    color: '#132f66',
-                    fontWeight: '600',
-                    textDecoration: 'underline',
-                    cursor: 'pointer',
-                    minHeight: '44px',
-                    minWidth: '44px'
-                  }}
-                  aria-label="Contact our team for more questions"
-                >
-                  Contact our team
-                </button>{" "}
-                and we'll respond within 24 hours.
-              </div>
-            </Col>
-          </Row>
 
           {faqCategories.map((cat, catIndex) => (
             <Row key={catIndex} className="mb-4">
               <Col lg={10} className="mx-auto">
-                <Card className="border-0 shadow-sm overflow-hidden">
+                <Card className="card-custom border-0 shadow-sm overflow-hidden">
                   <Card.Body className="p-0">
-                    {/* Category Header with color */}
+                    {/* Category Header with theme styling */}
                     <div 
                       style={{
-                        backgroundColor: cat.color || '#132f66',
-                        padding: '1.5rem 2rem',
+                        backgroundColor: cat.color || 'var(--navy)',
+                        padding: '1rem 1.5rem',
                         color: 'white'
                       }}
                       id={`category-${catIndex}`}
                     >
-                      <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
-                        <span style={{ fontSize: '2.5rem' }} aria-hidden="true">{cat.icon}</span>
-                        <h2 style={{ fontSize: '1.5rem', fontWeight: 'bold', margin: 0 }}>
+                      <div className="d-flex align-items-center gap-2">
+                        <span style={{ fontSize: '1.5rem' }} aria-hidden="true">{cat.icon}</span>
+                        <h2 className="h5 fw-bold mb-0 text-white">
                           {cat.category}
                           <span className="visually-hidden"> FAQs</span>
                         </h2>
                       </div>
                     </div>
 
-                    {/* Accordion */}
-                    <div style={{ padding: '1rem' }}>
+                    {/* Accordion with theme styling */}
+                    <div style={{ padding: '0.5rem' }}>
                       <Accordion flush>
                         {cat.questions.map((item, qIndex) => {
                           const eventKey = `${catIndex}-${qIndex}`;
@@ -612,14 +328,15 @@ function FAQ() {
                               }}
                             >
                               <Accordion.Header>
-                                <h3 style={{ fontSize: '1rem', fontWeight: '500', color: '#2c3e50', margin: 0 }}>
+                                <h3 className="h6 fw-medium text-dark mb-0" style={{ fontSize: '0.95rem' }}>
                                   {item.question}
                                 </h3>
                               </Accordion.Header>
                               <Accordion.Body>
                                 <div 
+                                  className="text-dark"
                                   dangerouslySetInnerHTML={{ __html: item.answer }}
-                                  style={{ lineHeight: '1.7', color: '#4a5568' }}
+                                  style={{ lineHeight: 1.6, fontSize: '0.9rem' }}
                                 />
                               </Accordion.Body>
                             </Accordion.Item>
@@ -633,87 +350,49 @@ function FAQ() {
             </Row>
           ))}
 
-          {/* CTA */}
+          {/* CTA SECTION - Using theme styling */}
           <Row className="mt-5">
             <Col lg={8} className="mx-auto">
-              <Card className="border-0 shadow-lg" style={{
-                background: 'linear-gradient(135deg, #132f66 0%, #1e3a7a 100%)',
+              <Card className="card-custom border-0 shadow-lg" style={{
+                background: 'var(--gradient-primary)',
                 color: 'white'
               }}>
-                <Card.Body className="p-5 text-center">
-                  <h3 style={{ fontSize: '1.8rem', fontWeight: 'bold', marginBottom: '1rem' }}>
-                    Still Have Questions?
+                <Card.Body className="p-4 p-lg-5 text-center">
+                  <h3 className="h4 fw-bold mb-2 text-white">
+                    Still Have Questions or Ready to Take the Next Step?
                   </h3>
-                  <p style={{ fontSize: '1.1rem', marginBottom: '2rem', opacity: 0.95 }}>
-                    Our admissions team is happy to assist you with anything you need.
+                  <p className="mb-3 text-white opacity-90" style={{ fontSize: '0.95rem' }}>
+                    Our admissions team is ready to guide you. Speak with us or begin your application today.
                   </p>
                   <div 
-                    style={{ display: 'flex', gap: '1rem', justifyContent: 'center', flexWrap: 'wrap' }}
+                    className="d-flex gap-3 justify-content-center flex-wrap"
                     role="group"
                     aria-label="Contact options"
                   >
-                    <button
-                      onClick={scrollToContact}
-                      onKeyDown={(e) => {
-                        if (e.key === 'Enter' || e.key === ' ') {
-                          e.preventDefault();
-                          scrollToContact();
-                        }
-                      }}
-                      className="btn-hover-effect"
+                    <Link
+                      to="/contact"
+                      className="btn-navy"
                       style={{
-                        backgroundColor: '#cebd04',
-                        color: '#132f66',
-                        padding: '0.75rem 2rem',
-                        borderRadius: '40px',
-                        fontWeight: '600',
-                        border: 'none',
-                        cursor: 'pointer',
-                        transition: 'all 0.3s ease',
                         minHeight: '44px',
-                        minWidth: '44px'
+                        display: 'inline-flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        textDecoration: 'none',
                       }}
-                      onMouseEnter={(e) => {
-                        e.target.style.backgroundColor = '#b09e03';
-                        e.target.style.transform = 'translateY(-2px)';
-                        e.target.style.boxShadow = '0 4px 12px rgba(0,0,0,0.2)';
-                      }}
-                      onMouseLeave={(e) => {
-                        e.target.style.backgroundColor = '#cebd04';
-                        e.target.style.transform = 'translateY(0)';
-                        e.target.style.boxShadow = 'none';
-                      }}
-                      aria-label="Contact us for more questions"
+                      aria-label="Contact our admissions team"
                     >
-                      Contact Us
-                    </button>
+                      Contact Admissions
+                    </Link>
 
                     <Link
                       to="/admissions/apply"
-                      className="btn-hover-effect"
+                      className="btn-navy"
                       style={{
-                        backgroundColor: 'white',
-                        color: '#132f66',
-                        padding: '0.75rem 2rem',
-                        borderRadius: '40px',
-                        fontWeight: '600',
-                        textDecoration: 'none',
-                        transition: 'all 0.3s ease',
                         minHeight: '44px',
-                        minWidth: '44px',
                         display: 'inline-flex',
                         alignItems: 'center',
-                        justifyContent: 'center'
-                      }}
-                      onMouseEnter={(e) => {
-                        e.target.style.backgroundColor = '#f8f9fa';
-                        e.target.style.transform = 'translateY(-2px)';
-                        e.target.style.boxShadow = '0 4px 12px rgba(0,0,0,0.2)';
-                      }}
-                      onMouseLeave={(e) => {
-                        e.target.style.backgroundColor = 'white';
-                        e.target.style.transform = 'translateY(0)';
-                        e.target.style.boxShadow = 'none';
+                        justifyContent: 'center',
+                        textDecoration: 'none',
                       }}
                       aria-label="Apply for admission now"
                     >
@@ -727,11 +406,8 @@ function FAQ() {
         </Container>
       </section>
 
-      <Suspense fallback={null}>
-        <GetInTouch />
-      </Suspense>
 
-      {/* Critical CSS inline with accessibility improvements */}
+      {/* Critical CSS for Core Web Vitals */}
       <style dangerouslySetInnerHTML={{ __html: `
         .visually-hidden {
           position: absolute;
@@ -743,64 +419,89 @@ function FAQ() {
           clip: rect(0, 0, 0, 0);
           border: 0;
         }
+        
+        /* Accordion Styling with theme */
         .accordion-button {
-          background-color: white !important;
-          color: #2c3e50 !important;
-          padding: 1.25rem !important;
+          background-color: var(--white) !important;
+          color: var(--text-dark) !important;
+          padding: 1rem 1.25rem !important;
           font-weight: 500 !important;
           min-height: 44px;
-          min-width: 44px;
+          transition: all 0.2s ease;
         }
+        
         .accordion-button:not(.collapsed) {
-          background-color: #f8fafc !important;
-          color: #132f66 !important;
+          background-color: var(--gray-light) !important;
+          color: var(--navy) !important;
           box-shadow: none !important;
         }
+        
         .accordion-button:focus {
-          box-shadow: 0 0 0 3px #cebd04 !important;
+          box-shadow: 0 0 0 3px var(--gold) !important;
           border-color: #e9ecef !important;
           outline: none !important;
         }
+        
         .accordion-button::after {
-          background-size: 1rem !important;
+          background-size: 0.9rem !important;
         }
+        
         .accordion-body {
-          padding: 1.5rem !important;
-          background-color: #f8fafc !important;
+          padding: 1rem 1.25rem !important;
+          background-color: var(--gray-light) !important;
         }
-        .btn-hover-effect {
-          transition: all 0.3s ease;
+        
+        /* Link styling within answers */
+        .text-navy {
+          color: var(--navy) !important;
+          text-decoration: underline;
+          transition: color 0.2s ease;
         }
-        .btn-hover-effect:hover {
-          transform: translateY(-2px);
-          box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+        
+        .text-navy:hover {
+          color: var(--gold) !important;
         }
-        .btn-hover-effect:focus-visible {
-          outline: 3px solid #cebd04;
-          outline-offset: 2px;
-        }
+        
+        /* Focus states for accessibility */
         a:focus-visible,
-        button:focus-visible {
-          outline: 3px solid #cebd04;
+        button:focus-visible,
+        .accordion-button:focus-visible {
+          outline: 3px solid var(--gold);
           outline-offset: 2px;
         }
+        
+        /* Responsive adjustments */
         @media (max-width: 768px) {
-          .hero-buttons {
-            flex-direction: column;
-            gap: 0.5rem;
+          .accordion-button {
+            padding: 0.75rem 1rem !important;
+            font-size: 0.85rem;
           }
-          .hero-buttons a {
-            width: 100%;
-            text-align: center;
+          .accordion-body {
+            padding: 0.75rem 1rem !important;
+            font-size: 0.85rem;
+          }
+          .section-heading {
+            font-size: 1.6rem;
           }
         }
-        @media (prefers-reduced-motion: reduce) {
-          .btn-hover-effect,
-          a,
-          button {
-            transition: none !important;
+        
+        @media (max-width: 576px) {
+          .section-padding {
+            padding: 40px 0;
           }
-          .btn-hover-effect:hover {
+        }
+        
+        /* Reduced motion support */
+        @media (prefers-reduced-motion: reduce) {
+          *,
+          .accordion-button,
+          .btn-light-navy,
+          .btn-outline-light {
+            transition: none !important;
+            animation: none !important;
+          }
+          .btn-light-navy:hover,
+          .btn-outline-light:hover {
             transform: none !important;
           }
         }

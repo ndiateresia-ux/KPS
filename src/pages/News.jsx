@@ -1,6 +1,6 @@
-// pages/News.jsx - Fixed BlogCard image loading
+// pages/News.jsx - Fully Updated with Theme CSS Integration
 import { Helmet } from "react-helmet-async";
-import { Container, Row, Col } from "react-bootstrap";
+import { Container, Row, Col, Button } from "react-bootstrap";
 import { useState, useCallback, lazy, Suspense, memo, useMemo, useRef, useEffect } from "react";
 import { Link } from "react-router-dom";
 
@@ -34,19 +34,16 @@ const OptimizedImage = memo(({ src, alt, className = '', width, height, priority
     if (!error) {
       // Try different format
       if (currentSrc.endsWith('.webp')) {
-        // If .webp failed, try .jpg
         const jpgSrc = currentSrc.replace('.webp', '.jpg');
         console.log(`Trying JPG fallback: ${jpgSrc}`);
         setCurrentSrc(jpgSrc);
         setError(false);
       } else if (currentSrc.endsWith('.jpg')) {
-        // If .jpg failed, try .png
         const pngSrc = currentSrc.replace('.jpg', '.png');
         console.log(`Trying PNG fallback: ${pngSrc}`);
         setCurrentSrc(pngSrc);
         setError(false);
       } else {
-        // All formats failed, use Unsplash fallback
         console.log('All formats failed, using Unsplash fallback');
         setError(true);
         setCurrentSrc(FALLBACK_IMAGES[fallbackCategory]);
@@ -74,14 +71,12 @@ const OptimizedImage = memo(({ src, alt, className = '', width, height, priority
       height={height}
       onLoad={handleLoad}
       onError={handleError}
+      className={`curriculum-image ${loaded ? 'loaded' : ''} ${className}`}
       style={{
         width: '100%',
         height: '100%',
-        objectFit: 'cover',
-        opacity: loaded ? 1 : 0,
-        transition: 'opacity 0.3s ease'
+        objectFit: 'cover'
       }}
-      className={className}
     />
   );
 });
@@ -121,35 +116,28 @@ const NewsletterCard = memo(({ newsletter, onClick, onDownload }) => {
       role="article"
       tabIndex={0}
       aria-label={`Newsletter: ${newsletter.title}`}
-      className="newsletter-card"
+      className="card-custom newsletter-card"
       style={{
-        backgroundColor: 'white',
-        borderRadius: '12px',
         overflow: 'hidden',
-        boxShadow: '0 4px 12px rgba(0,0,0,0.05)',
         cursor: 'pointer',
-        transition: 'transform 0.3s ease, box-shadow 0.3s ease',
         height: '100%',
         display: 'flex',
         flexDirection: 'column'
       }}
     >
-      <div style={{
+      <div className="curriculum-image-wrapper" style={{
         position: 'relative',
         aspectRatio: '16/9',
         overflow: 'hidden',
-        backgroundColor: '#f0f0f0'
+        backgroundColor: 'var(--gray-light)'
       }}>
         {!loaded && (
-          <div style={{
+          <div className="image-skeleton" style={{
             position: 'absolute',
             top: 0,
             left: 0,
             right: 0,
             bottom: 0,
-            background: 'linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%)',
-            backgroundSize: '200% 100%',
-            animation: 'shimmer 1.5s infinite',
             zIndex: 1
           }} aria-hidden="true" />
         )}
@@ -162,11 +150,11 @@ const NewsletterCard = memo(({ newsletter, onClick, onDownload }) => {
           onLoad={handleImageLoad}
         />
         
-        <div style={{
+        <div className="term-badge" style={{
           position: 'absolute',
           top: '1rem',
           right: '1rem',
-          backgroundColor: '#132f66',
+          backgroundColor: 'var(--navy)',
           color: 'white',
           padding: '0.25rem 1rem',
           borderRadius: '40px',
@@ -180,11 +168,9 @@ const NewsletterCard = memo(({ newsletter, onClick, onDownload }) => {
       </div>
       
       <div style={{ padding: '1.5rem', flex: 1, display: 'flex', flexDirection: 'column' }}>
-        <h3 style={{
+        <h3 className="card-title-navy" style={{
           fontSize: '1.2rem',
-          fontWeight: 'bold',
           marginBottom: '0.5rem',
-          color: '#132f66',
           lineHeight: 1.3
         }}>
           {newsletter.title}
@@ -197,9 +183,8 @@ const NewsletterCard = memo(({ newsletter, onClick, onDownload }) => {
           <i className="far fa-calendar-alt me-2" aria-hidden="true"></i>
           {newsletter.date}
         </p>
-        <p style={{
+        <p className="text-muted" style={{
           fontSize: '0.9rem',
-          color: '#4a5568',
           marginBottom: '1rem',
           lineHeight: 1.5,
           flex: 1
@@ -215,28 +200,10 @@ const NewsletterCard = memo(({ newsletter, onClick, onDownload }) => {
               handleDownloadClick(e);
             }
           }}
-          className="btn-outline-navy"
+          className="btn-navy"
           style={{
-            backgroundColor: 'transparent',
-            border: '2px solid #132f66',
-            color: '#132f66',
-            padding: '0.5rem 1rem',
-            borderRadius: '40px',
-            fontSize: '0.85rem',
-            fontWeight: '600',
-            cursor: 'pointer',
-            transition: 'all 0.3s ease',
             width: '100%',
-            minHeight: '44px',
-            minWidth: '44px'
-          }}
-          onMouseEnter={(e) => {
-            e.currentTarget.style.backgroundColor = '#132f66';
-            e.currentTarget.style.color = 'white';
-          }}
-          onMouseLeave={(e) => {
-            e.currentTarget.style.backgroundColor = 'transparent';
-            e.currentTarget.style.color = '#132f66';
+            minHeight: '44px'
           }}
           aria-label={`Download ${newsletter.title} PDF`}
         >
@@ -250,7 +217,7 @@ const NewsletterCard = memo(({ newsletter, onClick, onDownload }) => {
 
 NewsletterCard.displayName = 'NewsletterCard';
 
-// Memoized blog card component with distinct gold/navy styling
+// Memoized blog card component with author trust label
 const BlogCard = memo(({ post, onClick }) => {
   const [loaded, setLoaded] = useState(false);
   const cardRef = useRef(null);
@@ -278,36 +245,29 @@ const BlogCard = memo(({ post, onClick }) => {
       role="article"
       tabIndex={0}
       aria-label={`Blog post: ${post.title}`}
-      className="blog-card"
+      className="card-custom blog-card"
       style={{
-        backgroundColor: 'white',
-        borderRadius: '16px',
         overflow: 'hidden',
-        boxShadow: '0 8px 24px rgba(206, 189, 4, 0.15)',
         cursor: 'pointer',
-        transition: 'transform 0.3s ease, box-shadow 0.3s ease',
         height: '100%',
         display: 'flex',
         flexDirection: 'column',
-        border: '1px solid rgba(206, 189, 4, 0.2)'
+        border: `1px solid rgba(255, 0, 128, 0.2)`
       }}
     >
-      <div style={{
+      <div className="curriculum-image-wrapper" style={{
         position: 'relative',
         aspectRatio: '16/9',
         overflow: 'hidden',
-        backgroundColor: '#f0f0f0'
+        backgroundColor: 'var(--gray-light)'
       }}>
         {!loaded && (
-          <div style={{
+          <div className="image-skeleton" style={{
             position: 'absolute',
             top: 0,
             left: 0,
             right: 0,
             bottom: 0,
-            background: 'linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%)',
-            backgroundSize: '200% 100%',
-            animation: 'shimmer 1.5s infinite',
             zIndex: 1
           }} aria-hidden="true" />
         )}
@@ -319,12 +279,12 @@ const BlogCard = memo(({ post, onClick }) => {
           onLoad={handleImageLoad}
         />
         
-        <div style={{
+        <div className="category-badge" style={{
           position: 'absolute',
           top: '1rem',
           left: '1rem',
-          backgroundColor: '#cebd04',
-          color: '#132f66',
+          backgroundColor: 'var(--primary)',
+          color: 'white',
           padding: '0.35rem 1.2rem',
           borderRadius: '40px',
           fontSize: '0.8rem',
@@ -337,107 +297,111 @@ const BlogCard = memo(({ post, onClick }) => {
         </div>
       </div>
       
-      <div style={{ padding: '1.8rem 1.5rem', flex: 1, display: 'flex', flexDirection: 'column' }}>
+      <div style={{ padding: '1.5rem', flex: 1, display: 'flex', flexDirection: 'column' }}>
         <div style={{
           display: 'flex',
           alignItems: 'center',
           gap: '1.5rem',
-          marginBottom: '1rem',
+          marginBottom: '0.75rem',
           fontSize: '0.8rem',
           color: '#718096',
           flexWrap: 'wrap'
         }}>
           <span>
-            <i className="far fa-calendar-alt me-2" style={{ color: '#cebd04' }} aria-hidden="true"></i> 
+            <i className="far fa-calendar-alt me-2 text-gold" aria-hidden="true"></i> 
             <span className="visually-hidden">Published: </span>{post.date}
           </span>
           <span>
-            <i className="far fa-clock me-2" style={{ color: '#cebd04' }} aria-hidden="true"></i> 
+            <i className="far fa-clock me-2 text-gold" aria-hidden="true"></i> 
             <span className="visually-hidden">Read time: </span>{post.readTime}
           </span>
         </div>
 
-        <h3 style={{
-          fontSize: '1.3rem',
-          fontWeight: 'bold',
-          marginBottom: '1rem',
-          color: '#132f66',
+        <h3 className="card-title-navy" style={{
+          fontSize: '1.2rem',
+          marginBottom: '0.75rem',
           lineHeight: 1.3
         }}>
           {post.title}
         </h3>
 
-        <p style={{
-          fontSize: '0.95rem',
-          color: '#4a5568',
-          marginBottom: '1.5rem',
-          lineHeight: 1.6,
+        <p className="text-muted" style={{
+          fontSize: '0.9rem',
+          marginBottom: '1rem',
+          lineHeight: 1.5,
           flex: 1
         }}>
           {post.excerpt}
         </p>
 
-        <div style={{
+        {/* Author Trust Label - Written by Our School Team */}
+        <div className="author-badge" style={{
           display: 'flex',
           alignItems: 'center',
           gap: '0.75rem',
-          marginBottom: '1.5rem',
-          padding: '0.75rem',
+          marginBottom: '1rem',
+          padding: '0.6rem',
           backgroundColor: '#fff9e6',
           borderRadius: '40px',
-          border: '1px solid rgba(206, 189, 4, 0.3)'
+          border: '1px solid rgba(255, 0, 128, 0.3)'
         }}>
-          <div style={{
-            width: '40px',
-            height: '40px',
+          <div className="author-avatar" style={{
+            width: '36px',
+            height: '36px',
             borderRadius: '50%',
-            background: 'linear-gradient(135deg, #132f66 0%, #1e3a7a 100%)',
+            background: 'var(--gradient-primary)',
             color: 'white',
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center',
-            fontSize: '1rem',
+            fontSize: '0.9rem',
             fontWeight: 'bold',
-            boxShadow: '0 2px 8px rgba(19,47,102,0.2)'
+            boxShadow: '0 2px 8px rgba(13,101,251,0.2)',
+            flexShrink: 0
           }} aria-hidden="true">
             {post.author.charAt(0)}
           </div>
           <div>
-            <div style={{ fontSize: '0.9rem', fontWeight: '700', color: '#132f66' }}>
+            <div className="author-name" style={{
+              fontWeight: '700',
+              color: 'var(--navy)',
+              fontSize: '0.85rem'
+            }}>
               {post.author}
             </div>
-            <div style={{ fontSize: '0.75rem', color: '#718096' }}>
-              {post.authorTitle}
+            <div className="author-title" style={{
+              fontSize: '0.65rem',
+              color: '#718096',
+              letterSpacing: '0.3px'
+            }}>
+              Written by Our School Team
             </div>
           </div>
         </div>
 
         <button
-          className="btn-gold"
+          className="btn-navy"
           style={{
-            backgroundColor: '#cebd04',
+            backgroundColor: 'var(--gold)',
             border: 'none',
-            color: '#132f66',
-            padding: '0.75rem 1rem',
+            color: 'white',
+            padding: '0.6rem 1rem',
             borderRadius: '40px',
-            fontSize: '0.9rem',
-            fontWeight: '700',
+            fontSize: '0.85rem',
+            fontWeight: '600',
             cursor: 'pointer',
             transition: 'all 0.3s ease',
             width: '100%',
             minHeight: '44px',
-            minWidth: '44px',
-            boxShadow: '0 4px 12px rgba(206, 189, 4, 0.3)'
+            boxShadow: '0 4px 12px rgba(255, 0, 128, 0.3)'
           }}
           onMouseEnter={(e) => {
-            e.currentTarget.style.backgroundColor = '#b09e03';
+            e.currentTarget.style.backgroundColor = 'var(--gold-dark)';
             e.currentTarget.style.transform = 'translateY(-2px)';
-            e.currentTarget.style.boxShadow = '0 6px 16px rgba(206, 189, 4, 0.4)';
           }}
           onMouseLeave={(e) => {
-            e.currentTarget.style.backgroundColor = '#cebd04';
+            e.currentTarget.style.backgroundColor = 'var(--gold)';
             e.currentTarget.style.transform = 'translateY(0)';
-            e.currentTarget.style.boxShadow = '0 4px 12px rgba(206, 189, 4, 0.3)';
           }}
           aria-label={`Read full article: ${post.title}`}
         >
@@ -477,19 +441,20 @@ const Modal = memo(({ show, onClose, children, title }) => {
   return (
     <div
       ref={modalRef}
+      className="modal-overlay"
       style={{
         position: 'fixed',
         top: 0,
         left: 0,
         right: 0,
         bottom: 0,
-        backgroundColor: 'rgba(0,0,0,0.8)',
+        backgroundColor: 'rgba(0,0,0,0.95)',
         zIndex: 100000,
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'center',
         padding: '1rem',
-        overflowY: 'auto'
+        backdropFilter: 'blur(5px)'
       }}
       onClick={onClose}
       onKeyDown={handleKeyDown}
@@ -499,8 +464,9 @@ const Modal = memo(({ show, onClose, children, title }) => {
       tabIndex={-1}
     >
       <div
+        className="modal-container"
         style={{
-          backgroundColor: 'white',
+          backgroundColor: 'var(--white)',
           borderRadius: '24px',
           maxWidth: '800px',
           width: '100%',
@@ -520,11 +486,12 @@ const Modal = memo(({ show, onClose, children, title }) => {
               onClose();
             }
           }}
+          className="modal-close-btn"
           style={{
             position: 'absolute',
             top: '1rem',
             right: '1rem',
-            background: '#132f66',
+            background: 'var(--navy)',
             border: 'none',
             borderRadius: '50%',
             width: '44px',
@@ -534,17 +501,16 @@ const Modal = memo(({ show, onClose, children, title }) => {
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center',
-            boxShadow: '0 2px 8px rgba(0,0,0,0.2)',
-            zIndex: 10,
             color: 'white',
-            transition: 'all 0.2s ease'
+            transition: 'all 0.2s ease',
+            zIndex: 10
           }}
           onMouseEnter={(e) => {
-            e.currentTarget.style.backgroundColor = '#0a1f4d';
+            e.currentTarget.style.backgroundColor = 'var(--navy-dark)';
             e.currentTarget.style.transform = 'scale(1.1)';
           }}
           onMouseLeave={(e) => {
-            e.currentTarget.style.backgroundColor = '#132f66';
+            e.currentTarget.style.backgroundColor = 'var(--navy)';
             e.currentTarget.style.transform = 'scale(1)';
           }}
           aria-label="Close modal"
@@ -566,27 +532,27 @@ function News() {
   const [selectedBlog, setSelectedBlog] = useState(null);
   const [showBlogModal, setShowBlogModal] = useState(false);
 
-  // Newsletter data - memoized with correct image paths
+  // Newsletter data - includes academic updates, events, and student achievements
   const newsletters = useMemo(() => [
     {
       id: 1,
       term: "Term 1",
-      year: "2025",
+      year: "2026",
       title: "Term 1 Newsletter 2025",
       image: "/images/term1-2025.jpg",
       pdf: "/pdfs/newsletters/term1-2025.pdf",
       date: "April 2025",
-      description: "Welcome back to school, new academic year highlights, and parent information."
+      description: "Welcome back to school, new academic year highlights, parent information, and student achievements from Term 1."
     },
     {
       id: 2,
       term: "Term 2",
-      year: "2024",
+      year: "2026",
       title: "Term 2 Newsletter 2024",
       image: "/images/term2-2024.jpg",
       pdf: "/pdfs/newsletters/term2-2024.pdf",
       date: "August 2024",
-      description: "Recap of Term 2 activities, examination results, and upcoming events."
+      description: "Recap of Term 2 activities, examination results, school events, and upcoming academic milestones."
     },
     {
       id: 3,
@@ -596,11 +562,11 @@ function News() {
       image: "/images/term3-2024.jpg",
       pdf: "/pdfs/newsletters/term3-2024.pdf",
       date: "December 2024",
-      description: "End of year summary, graduation ceremony, and holiday programs."
+      description: "End of year summary, graduation ceremony, holiday programs, and celebrating student achievements."
     }
   ], []);
 
-  // Blog data - memoized with correct image paths
+  // Blog data - with author trust labels
   const blogPosts = useMemo(() => [
     {
       id: 1,
@@ -710,143 +676,135 @@ function News() {
   return (
     <>
       <Helmet>
-        <title>News & Blog | Kitale Progressive School</title>
+        <title>Stories, Updates & School Life in Action | Kitale Progressive School</title>
         <meta 
           name="description" 
-          content="Stay updated with the latest news, events, blog posts, and termly newsletters at Kitale Progressive School." 
+          content="See how learners grow, participate, and experience life at Kitale Progressive School. Read our blog for parenting insights, download termly newsletters, and stay connected with school life." 
         />
         <link rel="preconnect" href="https://images.unsplash.com" />
         <link rel="dns-prefetch" href="https://images.unsplash.com" />
       </Helmet>
 
-      {/* Page Header */}
-      <section 
-        style={{
-          background: 'linear-gradient(135deg, #132f66 0%, #0a1f4d 100%)',
-          color: 'white',
-          paddingTop: '120px',
-          paddingBottom: '60px',
-          textAlign: 'center'
-        }}
-        aria-labelledby="page-title"
-      >
+      {/* Hero Section - Using theme page-title-section */}
+      <section className="page-title-section" aria-labelledby="page-title">
         <Container>
-          <h1 id="page-title" style={{
-            fontSize: 'clamp(2rem, 5vw, 2.5rem)',
-            fontWeight: 'bold',
-            marginBottom: '1rem',
-            color: 'white'
-          }}>
-            News & Blog
+          <h1 id="page-title" className="display-5 fw-bold">
+            Stories, Updates & School Life in Action
           </h1>
-          <p style={{
-            fontSize: 'clamp(1rem, 4vw, 1.1rem)',
-            maxWidth: '700px',
-            margin: '0 auto',
-            color: 'rgba(255,255,255,0.95)'
-          }}>
-            Stay updated with the latest happenings at Kitale Progressive School
+          <p className="lead">
+            See how learners grow, participate, and experience life at Kitale Progressive School throughout the year.
           </p>
         </Container>
       </section>
 
-      {/* Termly Newsletters Section */}
-      <section className="py-5 bg-light-custom" aria-labelledby="newsletters-heading">
+      {/* Blog Section with Parent Hook and Updated Intro */}
+      <section className="py-4" aria-labelledby="blog-heading">
         <Container>
-          <div className="text-center mb-5">
-            <h2 id="newsletters-heading" style={{
-              fontSize: 'clamp(1.5rem, 4vw, 2rem)',
-              fontWeight: 'bold',
-              color: '#132f66',
-              marginBottom: '1rem'
+          {/* Parent Hook */}
+          <div className="text-center mb-1">
+            <span className="parent-hook-badge" style={{
+              backgroundColor: '#fff9e6',
+              color: 'var(--navy)',
+              padding: '0.4rem 1.2rem',
+              borderRadius: '40px',
+              fontSize: '0.8rem',
+              fontWeight: '600',
+              display: 'inline-block',
+              border: '1px solid rgba(255, 0, 128, 0.3)'
             }}>
-              Termly Newsletters
+              <i className="fas fa-lightbulb me-2 text-gold" aria-hidden="true"></i>
+              For Parents
+            </span>
+          </div>
+          
+          <h2 id="blog-heading" className="section-heading mb-3">
+            Insights for Parents & Real School Experiences
+          </h2>
+          
+          <p className="lead text-center mb-1" style={{
+            maxWidth: '700px',
+            margin: '0 auto',
+            fontSize: '1.1rem'
+          }}>
+            Are you looking for guidance, insights, and a closer look into your child's school experience?
+          </p>
+          
+          <p className="text-center mb-4 text-muted" style={{
+            maxWidth: '650px',
+            margin: '0.5rem auto 0',
+            fontSize: '0.9rem'
+          }}>
+            Explore articles that help you understand your child's learning journey, school life, and how to support their growth.
+          </p>
+
+          {/* Blog Cards Grid */}
+          <Row className="g-4" role="list" aria-label="Blog posts">
+            {blogPosts.map((post) => (
+              <Col key={post.id} md={6} lg={4} role="listitem">
+                <BlogCard
+                  post={post}
+                  onClick={handleBlogClick}
+                />
+              </Col>
+            ))}
+          </Row>
+        </Container>
+      </section>
+
+      {/* Termly Newsletters Section - Updated */}
+      <section className="py-4 bg-light-custom" aria-labelledby="newsletters-heading">
+        <Container>
+          <div className="text-center mb-4">
+            <h2 id="newsletters-heading" className="section-heading mb-3">
+              Follow Your Child's School Journey
             </h2>
-            <p style={{
-              fontSize: '1rem',
-              color: '#4a5568',
+            <p className="lead text-muted" style={{
               maxWidth: '700px',
-              margin: '0 auto'
+              margin: '0 auto',
+              fontSize: '1rem'
             }}>
-              Download our termly newsletters to stay informed about school activities, achievements, and updates
+              Stay informed with termly updates on academic progress, school activities, events, and key milestones in your child's learning journey.
+            </p>
+            <p className="text-muted" style={{
+              fontSize: '0.85rem',
+              maxWidth: '600px',
+              margin: '0.5rem auto 0'
+            }}>
+              Includes academic updates, events, and student achievements.
             </p>
           </div>
 
-          <div 
-            style={{
-              display: 'grid',
-              gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))',
-              gap: '2rem'
-            }}
-            role="list"
-            aria-label="Newsletters"
-          >
+          <Row className="g-4" role="list" aria-label="Newsletters">
             {newsletters.map((newsletter) => (
-              <div key={newsletter.id} role="listitem">
+              <Col key={newsletter.id} md={6} lg={4} role="listitem">
                 <NewsletterCard
                   newsletter={newsletter}
                   onClick={handleNewsletterClick}
                   onDownload={handleDownload}
                 />
-              </div>
+              </Col>
             ))}
-          </div>
-        </Container>
-      </section>
+          </Row>
 
-      {/* Blog Section - Distinct with Gold Theme */}
-      <section id="blog-section" className="py-5" style={{ 
-        background: 'linear-gradient(135deg, #fff9e6 0%, #fff 100%)',
-        borderTop: '4px solid #cebd04',
-        borderBottom: '4px solid #cebd04'
-      }} aria-labelledby="blog-heading">
-        <Container>
-          <div className="text-center mb-5">
-            <div style={{
-              display: 'inline-block',
-              backgroundColor: '#cebd04',
-              padding: '0.5rem 2rem',
-              borderRadius: '40px',
-              marginBottom: '1.5rem'
-            }}>
-              <span style={{ fontSize: '2rem', marginRight: '0.5rem' }}>📝</span>
-              <span style={{ fontWeight: '700', color: '#132f66', fontSize: '1.1rem' }}>Latest from Our Blog</span>
+          {/* CTA Buttons after newsletters */}
+          <div className="text-center mt-4">
+            <div className="d-flex flex-wrap justify-content-center gap-3">
+              <Link to="/contact">
+                <Button className="btn-navy" style={{ minWidth: '160px' }}>
+                  <i className="fas fa-calendar-check me-2" aria-hidden="true"></i>
+                  Book a School Visit
+                </Button>
+              </Link>
+              <Link to="/admissions/apply">
+                <Button className="btn-navy" style={{ 
+                  background: 'var(--gradient-primary)',
+                  minWidth: '160px'
+                }}>
+                  <i className="fas fa-paper-plane me-2" aria-hidden="true"></i>
+                  Apply Now
+                </Button>
+              </Link>
             </div>
-            <h2 id="blog-heading" style={{
-              fontSize: 'clamp(1.5rem, 4vw, 2rem)',
-              fontWeight: 'bold',
-              color: '#132f66',
-              marginBottom: '1rem'
-            }}>
-              Insights & Stories
-            </h2>
-            <p style={{
-              fontSize: '1rem',
-              color: '#4a5568',
-              maxWidth: '700px',
-              margin: '0 auto'
-            }}>
-              Discover insights, stories, and updates from our school community
-            </p>
-          </div>
-
-          <div 
-            style={{
-              display: 'grid',
-              gridTemplateColumns: 'repeat(auto-fit, minmax(350px, 1fr))',
-              gap: '2rem'
-            }}
-            role="list"
-            aria-label="Blog posts"
-          >
-            {blogPosts.map((post) => (
-              <div key={post.id} role="listitem">
-                <BlogCard
-                  post={post}
-                  onClick={handleBlogClick}
-                />
-              </div>
-            ))}
           </div>
         </Container>
       </section>
@@ -855,38 +813,39 @@ function News() {
       <Modal show={showNewsletterModal} onClose={handleCloseModal} title={selectedNewsletter?.title}>
         {selectedNewsletter && (
           <div style={{ padding: '2rem' }}>
-            <h2 style={{
+            <h2 className="card-title-navy" style={{
               fontSize: '1.5rem',
-              fontWeight: 'bold',
-              color: '#132f66',
               marginBottom: '1.5rem'
             }}>
               {selectedNewsletter.title}
             </h2>
             
-            <OptimizedImage
-              src={selectedNewsletter.image}
-              alt={`Cover image for ${selectedNewsletter.title}`}
-              fallbackCategory="newsletter"
-              priority={true}
-              onLoad={() => console.log('Modal image loaded')}
-            />
+            <div className="curriculum-image-wrapper mb-4" style={{
+              position: 'relative',
+              borderRadius: '12px',
+              overflow: 'hidden'
+            }}>
+              <OptimizedImage
+                src={selectedNewsletter.image}
+                alt={`Cover image for ${selectedNewsletter.title}`}
+                fallbackCategory="newsletter"
+                priority={true}
+              />
+            </div>
             
-            <p style={{
+            <p className="text-dark" style={{
               fontSize: '1rem',
-              color: '#4a5568',
               marginBottom: '1rem',
               lineHeight: 1.6
             }}>
               {selectedNewsletter.description}
             </p>
             
-            <p style={{
+            <p className="text-muted" style={{
               fontSize: '0.9rem',
-              color: '#718096',
               marginBottom: '1.5rem'
             }}>
-              <i className="far fa-calendar-alt me-2" style={{ color: '#cebd04' }} aria-hidden="true"></i>
+              <i className="far fa-calendar-alt me-2 text-gold" aria-hidden="true"></i>
               Published: {selectedNewsletter.date}
             </p>
             
@@ -898,30 +857,8 @@ function News() {
                   handleDownload(selectedNewsletter.pdf, selectedNewsletter.title);
                 }
               }}
-              style={{
-                backgroundColor: '#132f66',
-                border: 'none',
-                color: 'white',
-                padding: '0.75rem 2rem',
-                borderRadius: '40px',
-                fontSize: '1rem',
-                fontWeight: '600',
-                cursor: 'pointer',
-                transition: 'all 0.3s ease',
-                width: '100%',
-                minHeight: '44px',
-                minWidth: '44px'
-              }}
-              onMouseEnter={(e) => {
-                e.currentTarget.style.backgroundColor = '#0a1f4d';
-                e.currentTarget.style.transform = 'translateY(-2px)';
-                e.currentTarget.style.boxShadow = '0 4px 12px rgba(19,47,102,0.3)';
-              }}
-              onMouseLeave={(e) => {
-                e.currentTarget.style.backgroundColor = '#132f66';
-                e.currentTarget.style.transform = 'translateY(0)';
-                e.currentTarget.style.boxShadow = 'none';
-              }}
+              className="btn-navy w-100"
+              style={{ minHeight: '44px' }}
               aria-label={`Download ${selectedNewsletter.title} PDF`}
             >
               <i className="fas fa-download me-2" aria-hidden="true"></i>
@@ -935,10 +872,8 @@ function News() {
       <Modal show={showBlogModal} onClose={handleCloseModal} title={selectedBlog?.title}>
         {selectedBlog && (
           <div style={{ padding: '2rem' }}>
-            <h2 style={{
+            <h2 className="card-title-navy" style={{
               fontSize: '1.5rem',
-              fontWeight: 'bold',
-              color: '#132f66',
               marginBottom: '1rem'
             }}>
               {selectedBlog.title}
@@ -953,9 +888,9 @@ function News() {
               color: '#718096',
               flexWrap: 'wrap'
             }}>
-              <span style={{
-                backgroundColor: '#cebd04',
-                color: '#132f66',
+              <span className="category-badge-static" style={{
+                backgroundColor: 'var(--gold)',
+                color: 'white',
                 padding: '0.25rem 1rem',
                 borderRadius: '40px',
                 fontWeight: '700',
@@ -964,23 +899,29 @@ function News() {
                 {selectedBlog.category}
               </span>
               <span>
-                <i className="far fa-clock me-2" style={{ color: '#cebd04' }} aria-hidden="true"></i> 
+                <i className="far fa-clock me-2 text-gold" aria-hidden="true"></i> 
                 <span className="visually-hidden">Read time: </span>{selectedBlog.readTime}
               </span>
               <span>
-                <i className="far fa-calendar-alt me-2" style={{ color: '#cebd04' }} aria-hidden="true"></i> 
+                <i className="far fa-calendar-alt me-2 text-gold" aria-hidden="true"></i> 
                 <span className="visually-hidden">Published: </span>{selectedBlog.date}
               </span>
             </div>
 
-            <OptimizedImage
-              src={selectedBlog.image}
-              alt={`Featured image for ${selectedBlog.title}`}
-              fallbackCategory="blog"
-              priority={true}
-            />
+            <div className="curriculum-image-wrapper mb-4" style={{
+              position: 'relative',
+              borderRadius: '12px',
+              overflow: 'hidden'
+            }}>
+              <OptimizedImage
+                src={selectedBlog.image}
+                alt={`Featured image for ${selectedBlog.title}`}
+                fallbackCategory="blog"
+                priority={true}
+              />
+            </div>
 
-            <div style={{
+            <div className="author-badge" style={{
               display: 'flex',
               alignItems: 'center',
               gap: '1rem',
@@ -988,29 +929,37 @@ function News() {
               padding: '1rem',
               background: 'linear-gradient(135deg, #fff9e6 0%, #fff 100%)',
               borderRadius: '40px',
-              border: '1px solid rgba(206, 189, 4, 0.3)'
+              border: '1px solid rgba(255, 0, 128, 0.3)'
             }}>
-              <div style={{
+              <div className="author-avatar" style={{
                 width: '48px',
                 height: '48px',
                 borderRadius: '50%',
-                background: 'linear-gradient(135deg, #132f66 0%, #1e3a7a 100%)',
+                background: 'var(--gradient-primary)',
                 color: 'white',
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'center',
                 fontSize: '1.2rem',
                 fontWeight: 'bold',
-                boxShadow: '0 2px 8px rgba(19,47,102,0.2)'
+                boxShadow: '0 2px 8px rgba(13,101,251,0.2)',
+                flexShrink: 0
               }} aria-hidden="true">
                 {selectedBlog.author.charAt(0)}
               </div>
               <div>
-                <div style={{ fontSize: '1rem', fontWeight: '700', color: '#132f66' }}>
+                <div className="author-name" style={{
+                  fontWeight: '700',
+                  color: 'var(--navy)',
+                  fontSize: '1rem'
+                }}>
                   {selectedBlog.author}
                 </div>
-                <div style={{ fontSize: '0.85rem', color: '#718096' }}>
-                  {selectedBlog.authorTitle}
+                <div className="author-title" style={{
+                  fontSize: '0.85rem',
+                  color: '#718096'
+                }}>
+                  Written by Our School Team
                 </div>
               </div>
             </div>
@@ -1019,7 +968,7 @@ function News() {
               className="blog-content"
               style={{
                 fontSize: '1rem',
-                color: '#4a5568',
+                color: 'var(--text-dark)',
                 lineHeight: 1.7
               }}
               dangerouslySetInnerHTML={{ __html: selectedBlog.content }}
@@ -1034,29 +983,12 @@ function News() {
                     handleCloseModal();
                   }
                 }}
+                className="btn-navy"
                 style={{
-                  backgroundColor: '#cebd04',
-                  border: 'none',
-                  color: '#132f66',
                   padding: '0.75rem 2.5rem',
-                  borderRadius: '40px',
-                  fontSize: '0.9rem',
-                  fontWeight: '700',
-                  cursor: 'pointer',
-                  transition: 'all 0.3s ease',
                   minHeight: '44px',
                   minWidth: '44px',
-                  boxShadow: '0 4px 12px rgba(206, 189, 4, 0.3)'
-                }}
-                onMouseEnter={(e) => {
-                  e.currentTarget.style.backgroundColor = '#b09e03';
-                  e.currentTarget.style.transform = 'translateY(-2px)';
-                  e.currentTarget.style.boxShadow = '0 6px 16px rgba(206, 189, 4, 0.4)';
-                }}
-                onMouseLeave={(e) => {
-                  e.currentTarget.style.backgroundColor = '#cebd04';
-                  e.currentTarget.style.transform = 'translateY(0)';
-                  e.currentTarget.style.boxShadow = '0 4px 12px rgba(206, 189, 4, 0.3)';
+                  background: 'var(--gradient-primary)'
                 }}
                 aria-label="Close blog post"
               >
@@ -1071,9 +1003,106 @@ function News() {
         <GetInTouch />
       </Suspense>
 
-      {/* Critical CSS - Minified */}
+      {/* Critical CSS - Minified with theme variables */}
       <style dangerouslySetInnerHTML={{ __html: `
-        @keyframes shimmer{0%{background-position:-200% 0}100%{background-position:200% 0}}.visually-hidden{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);border:0}.newsletter-card,.blog-card{transition:transform .3s ease,box-shadow .3s ease!important}.newsletter-card:focus-visible,.newsletter-card:hover{transform:translateY(-6px)!important;box-shadow:0 12px 30px rgba(19,47,102,0.15)!important;outline:3px solid #cebd04;outline-offset:2px}.blog-card:focus-visible,.blog-card:hover{transform:translateY(-6px)!important;box-shadow:0 15px 40px rgba(206,189,4,0.25)!important;outline:3px solid #132f66;outline-offset:2px}button:focus-visible,[role=article]:focus-visible{outline:3px solid #cebd04;outline-offset:2px}.blog-content h2{font-size:1.5rem;font-weight:700;color:#132f66;margin:2rem 0 1rem;border-left:4px solid #cebd04;padding-left:1rem}.blog-content h3{font-size:1.2rem;font-weight:600;color:#2c3e50;margin:1.5rem 0 .75rem}.blog-content p{margin-bottom:1rem;line-height:1.7}.blog-content ul,.blog-content ol{margin:1rem 0;padding-left:2rem}.blog-content li{margin-bottom:.5rem}@media (max-width:768px){.blog-content h2{font-size:1.3rem}.blog-content h3{font-size:1.1rem}}@media (prefers-reduced-motion:reduce){.newsletter-card,.blog-card,.newsletter-card:focus-visible,.newsletter-card:hover,.blog-card:focus-visible,.blog-card:hover,button{transition:none!important;animation:none!important;transform:none!important}}
+        .visually-hidden {
+          position: absolute;
+          width: 1px;
+          height: 1px;
+          padding: 0;
+          margin: -1px;
+          overflow: hidden;
+          clip: rect(0, 0, 0, 0);
+          border: 0;
+        }
+        .newsletter-card,
+        .blog-card {
+          transition: transform 0.3s ease, box-shadow 0.3s ease !important;
+        }
+        .newsletter-card:focus-visible,
+        .newsletter-card:hover {
+          transform: translateY(-6px) !important;
+          box-shadow: 0 12px 30px rgba(13,101,251,0.15) !important;
+          outline: 3px solid var(--gold);
+          outline-offset: 2px;
+        }
+        .blog-card:focus-visible,
+        .blog-card:hover {
+          transform: translateY(-6px) !important;
+          box-shadow: 0 15px 40px rgba(255,0,128,0.25) !important;
+          outline: 3px solid var(--navy);
+          outline-offset: 2px;
+        }
+        button:focus-visible,
+        [role="article"]:focus-visible {
+          outline: 3px solid var(--gold);
+          outline-offset: 2px;
+        }
+        .blog-content h2 {
+          font-size: 1.5rem;
+          font-weight: 700;
+          color: var(--navy);
+          margin: 2rem 0 1rem;
+          border-left: 4px solid var(--gold);
+          padding-left: 1rem;
+        }
+        .blog-content h3 {
+          font-size: 1.2rem;
+          font-weight: 600;
+          color: var(--text-dark);
+          margin: 1.5rem 0 0.75rem;
+        }
+        .blog-content p {
+          margin-bottom: 1rem;
+          line-height: 1.7;
+          color: var(--text-dark);
+        }
+        .blog-content ul,
+        .blog-content ol {
+          margin: 1rem 0;
+          padding-left: 2rem;
+          color: var(--text-dark);
+        }
+        .blog-content li {
+          margin-bottom: 0.5rem;
+        }
+        .image-skeleton {
+          background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%);
+          background-size: 200% 100%;
+          animation: shimmer 1.5s infinite;
+        }
+        @keyframes shimmer {
+          0% { background-position: -200% 0; }
+          100% { background-position: 200% 0; }
+        }
+        .bg-light-custom {
+          background-color: var(--gray-light);
+        }
+        @media (max-width: 768px) {
+          .blog-content h2 {
+            font-size: 1.3rem;
+          }
+          .blog-content h3 {
+            font-size: 1.1rem;
+          }
+          .section-heading {
+            font-size: 1.6rem;
+          }
+        }
+        @media (prefers-reduced-motion: reduce) {
+          .newsletter-card,
+          .blog-card,
+          .newsletter-card:focus-visible,
+          .newsletter-card:hover,
+          .blog-card:focus-visible,
+          .blog-card:hover,
+          button,
+          .image-skeleton {
+            transition: none !important;
+            animation: none !important;
+            transform: none !important;
+          }
+        }
       `}} />
     </>
   );

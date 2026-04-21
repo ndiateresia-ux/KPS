@@ -1,5 +1,5 @@
 import { Container, Row, Col } from "react-bootstrap";
-import { Link, useNavigate } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 import { memo, useCallback } from "react";
 import "./Footer.css";
 
@@ -16,160 +16,130 @@ function Footer() {
 
   // Social media links data
   const socialLinks = [
-    { icon: "bi-facebook", url: "https://www.facebook.com/kitaleprogressive/", label: "Facebook" },
-    { icon: "bi-instagram", url: "https://www.instagram.com/kitaleprogrsv1338/", label: "Instagram" },
-    { icon: "bi-youtube", url: "https://www.youtube.com/@kitaleprogressive.social", label: "YouTube" },
-    { icon: "bi-tiktok", url: "https://www.tiktok.com/@the.kitale.progre?_r=1&_t=ZS-94dShSZXsql", label: "TikTok" },
-    { icon: "bi-whatsapp", url: "https://wa.me/254780841116", label: "WhatsApp" }
-  ];
-
-  // Footer sections data
-  const footerSections = [
-    {
-      title: "Contact",
-      type: "contact",
-      content: {
-        address: "📍 Kitale-Kapenguria RD",
-        phone: "📞 +254 722 631 433",
-        email: "📧 progressivesch@gmail.com"
-      }
-    },
-    {
-      title: "Academics",
-      links: [
-        { label: "Curriculum", path: "/academics/curriculum" },
-        { label: "Clubs", path: "/academics/clubs-societies" },
-        { label: "FAQs", path: "/faq" }
-      ]
-    },
-    {
-      title: "School Life",
-      links: [
-        { label: "News", path: "/school-life/news" },
-        { label: "Events", path: "/school-life/events" },
-        { label: "Gallery", path: "/school-life/gallery" },
-        { label: "Facilities", path: "/school-life/facilities" }
-      ]
-    },
-    {
-      title: "Admissions",
-      links: [
-        { label: "Apply Now", path: "/admissions/apply" },
-        { label: "Fee Structure", path: "/admissions/fee-structure" },
-        { label: "Sponsor", path: "/sponsor" },
-        { label: "Contact", path: "/contact" }
-      ]
-    },
-    {
-      title: "Quick Links",
-      links: [
-        { label: "Home", path: "/" },
-        { label: "Blog", path: "/school-life/news#blog-section" },
-        { label: "FAQ", path: "/faq" }
-      ]
-    }
+    { icon: "bi-facebook", url: "https://www.facebook.com/kitaleprogressive/", label: "Facebook", color: "#1877F2" },
+    { icon: "bi-instagram", url: "https://www.instagram.com/kitaleprogrsv1338/", label: "Instagram", color: "#E4405F" },
+    { icon: "bi-youtube", url: "https://www.youtube.com/@kitaleprogressive.social", label: "YouTube", color: "#FF0000" },
+    { icon: "bi-tiktok", url: "https://www.tiktok.com/@the.kitale.progre?_r=1&_t=ZS-94dShSZXsql", label: "TikTok", color: "#000000" },
+    { icon: "bi-whatsapp", url: "https://wa.me/254780841116", label: "WhatsApp", color: "#25D366" }
   ];
 
   return (
     <footer className="footer" role="contentinfo" aria-label="Site footer">
-      {/* MAP SECTION - Optimized with loading="lazy" and accessibility */}
-      <div className="footer-map">
-        <iframe
-          src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3989.1549118880284!2d34.99523537349029!3d1.0448587624833563!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x178226623113cbbd%3A0x9bc6b39a5f193f4a!2sKitale%20Progressive%20School%3A%20Top%20Private%20Christian%20School%20in%20Trans%20Nzoia%3A!5e0!3m2!1sen!2ske!4v1772450585243!5m2!1sen!2ske"
-          title="Kitale Progressive School location on Google Maps"
-          loading="lazy"
-          referrerPolicy="no-referrer-when-downgrade"
-          importance="low"
-          aria-label="Google Maps showing Kitale Progressive School location"
-        />
-      </div>
-
+      {/* MAP SECTION */}
+     <div className="footer-map" style={{ 
+    marginTop: '2rem',
+    width: '100%',
+    overflow: 'hidden'
+  }}>
+    <iframe 
+      src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3989.1549118880284!2d34.995235373490296!3d1.0448587624833654!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x178226623113cbbd%3A0x9bc6b39a5f193f4a!2sKitale%20Progressive%20School%3A%20Top%20Private%20Christian%20School%20in%20Trans%20Nzoia%3A!5e0!3m2!1sen!2ske!4v1774888347036!5m2!1sen!2ske" 
+      title="Kitale Progressive School Location"
+      style={{ 
+        width: '100%', 
+        height: '200px', 
+        border: 'none',
+        display: 'block'
+      }}
+      allowFullScreen
+      loading="lazy"
+      aria-label="Map showing Kitale Progressive School location"
+    />
+  </div>
       {/* MAIN FOOTER CONTENT */}
-      <Container className="footer-content py-4">
-        <Row>
-          {/* Dynamic Sections */}
-          {footerSections.map((section, index) => (
-            <Col key={index} lg={2} md={6} className="mb-4">
-              <h5 className="footer-title" id={`footer-section-${index}-title`}>
-                {section.title}
-                <span className="visually-hidden"> section</span>
-              </h5>
-              
-              {section.type === 'contact' ? (
-                <div className="footer-contact" aria-labelledby={`footer-section-${index}-title`}>
-                  <p className="mb-1 small">
-                    <span aria-hidden="true">📍</span>
-                    <span className="visually-hidden">Address: </span>
-                    {section.content.address}
-                  </p>
-                  <p className="mb-1 small">
-                    <span aria-hidden="true">📞</span>
-                    <span className="visually-hidden">Phone: </span>
-                    <a href="tel:+254722631433" className="footer-contact-link">
-                      {section.content.phone.replace("📞 ", "")}
-                    </a>
-                  </p>
-                  <p className="mb-1 small">
-                    <span aria-hidden="true">📧</span>
-                    <span className="visually-hidden">Email: </span>
-                    <a href="mailto:progressivesch@gmail.com" className="footer-contact-link">
-                      {section.content.email.replace("📧 ", "")}
-                    </a>
-                  </p>
-                </div>
-              ) : (
-                <ul className="list-unstyled" aria-labelledby={`footer-section-${index}-title`}>
-                  {section.links.map((link, linkIndex) => (
-                    <li key={linkIndex}>
-                      <button 
-                        onClick={() => handleLinkClick(link.path)} 
-                        className="footer-link-btn"
-                        aria-label={`Go to ${link.label} page`}
-                        onKeyDown={(e) => {
-                          if (e.key === 'Enter' || e.key === ' ') {
-                            e.preventDefault();
-                            handleLinkClick(link.path);
-                          }
-                        }}
-                      >
-                        {link.label}
-                      </button>
-                    </li>
-                  ))}
-                </ul>
-              )}
-            </Col>
-          ))}
-
-          {/* HOURS & SOCIAL MEDIA - Static section */}
-          <Col lg={2} md={6} className="mb-4">
-            <h5 className="footer-title" id="footer-hours-title">
-              Hours
-              <span className="visually-hidden"> of operation</span>
-            </h5>
-            <div className="footer-hours" aria-labelledby="footer-hours-title">
-              <p className="mb-1 small">
-                <span aria-hidden="true">🕒</span>
-                <span className="visually-hidden">Monday to Friday: </span>
-                Mon-Fri: 8AM - 5PM
-              </p>
-              <p className="mb-1 small">
-                <span aria-hidden="true">🕒</span>
-                <span className="visually-hidden">Saturday: </span>
-                Sat: 9AM - 12PM
-              </p>
-              <p className="mb-3 small">
-                <span aria-hidden="true">🚫</span>
-                <span className="visually-hidden">Sunday: </span>
-                Sun: Closed
+      <Container fluid className="footer-content py-4">
+        <Row className="g-4">
+          {/* Combined Description & Contact Column */}
+          <Col lg={3} md={6} className="mb-4">
+            {/* Description on top */}
+            <div className="mb-3">
+              <h5 className="footer-title">Kitale Progressive School</h5>
+              <p className="small" style={{ 
+                lineHeight: 1.5,
+                color: 'rgba(255,255,255,0.9)',
+                fontSize: '0.85rem',
+                marginBottom: '1rem',
+                textAlign: 'left',
+                wordWrap: 'break-word',
+                overflowWrap: 'break-word',
+                whiteSpace: 'normal',
+                maxWidth: '100%',
+                paddingRight: '10px'
+              }}>
+                Kitale Progressive School nurtures learners through strong academics, character development, and a supportive learning environment.
               </p>
             </div>
             
-            <h5 className="footer-title mt-3" id="footer-social-title">
-              Connect
-              <span className="visually-hidden"> with us on social media</span>
-            </h5>
-            <div className="social-icons" aria-labelledby="footer-social-title">
+            {/* Contact below */}
+            <div>
+              <h5 className="footer-title">Contact</h5>
+              <p className="mb-2 small" style={{ 
+                wordWrap: 'break-word', 
+                overflowWrap: 'break-word',
+                whiteSpace: 'normal'
+              }}>
+                <span style={{ display: 'inline-block', width: '24px' }}>📍</span> Kitale-Kapenguria RD
+              </p>
+              <p className="mb-2 small">
+                <span style={{ display: 'inline-block', width: '24px' }}>📞</span>
+                <a href="tel:+254 736 756 595" className="footer-contact-link"> +254 736 756 595</a>
+              </p>
+              <p className="mb-2 small" style={{ 
+                wordWrap: 'break-word', 
+                overflowWrap: 'break-word',
+                whiteSpace: 'normal'
+              }}>
+                <span style={{ display: 'inline-block', width: '24px' }}>📧</span>
+                <a href="mailto:kitaleprogressivesocial@gmail.com" className="footer-contact-link"> kitaleprogressivesocial@gmail.com</a>
+              </p>
+            </div>
+          </Col>
+
+          {/* Academics */}
+          <Col lg={2} md={6} className="mb-4">
+            <h5 className="footer-title">Academics</h5>
+            <ul className="list-unstyled">
+              <li className="mb-2"><button onClick={() => handleLinkClick('/academics/curriculum')} className="footer-link-btn">Curriculum</button></li>
+              <li className="mb-2"><button onClick={() => handleLinkClick('/academics/clubs-societies')} className="footer-link-btn">Clubs & Societies</button></li>
+              <li className="mb-2"><button onClick={() => handleLinkClick('/faq')} className="footer-link-btn">FAQs</button></li>
+            </ul>
+          </Col>
+
+          {/* School Life */}
+          <Col lg={2} md={6} className="mb-4">
+            <h5 className="footer-title">School Life</h5>
+            <ul className="list-unstyled">
+              <li className="mb-2"><button onClick={() => handleLinkClick('/school-life/news')} className="footer-link-btn">News</button></li>
+              <li className="mb-2"><button onClick={() => handleLinkClick('/school-life/events')} className="footer-link-btn">Events</button></li>
+              <li className="mb-2"><button onClick={() => handleLinkClick('/school-life/gallery')} className="footer-link-btn">Gallery</button></li>
+              <li className="mb-2"><button onClick={() => handleLinkClick('/school-life/boarding')} className="footer-link-btn">Facilities</button></li>
+            </ul>
+          </Col>
+
+          {/* Admissions */}
+          <Col lg={2} md={6} className="mb-4">
+            <h5 className="footer-title">Admissions</h5>
+            <ul className="list-unstyled">
+              <li className="mb-2"><button onClick={() => handleLinkClick('/admissions/apply')} className="footer-link-btn">Apply Now</button></li>
+              <li className="mb-2"><button onClick={() => handleLinkClick('/admissions/fee-structure')} className="footer-link-btn">Fee Structure</button></li>
+              <li className="mb-2"><button onClick={() => handleLinkClick('/sponsor')} className="footer-link-btn">Sponsor a Child</button></li>
+            </ul>
+          </Col>
+
+          {/* Hours & Social */}
+          <Col lg={3} md={6} className="mb-4">
+            <h5 className="footer-title">Hours</h5>
+            <p className="mb-2 small">
+              <span style={{ display: 'inline-block', width: '24px' }}>🕒</span> Mon-Fri: 8:00 AM - 5:00 PM
+            </p>
+            <p className="mb-2 small">
+              <span style={{ display: 'inline-block', width: '24px' }}>🕒</span> Saturday: 9:00 AM - 12:00 PM
+            </p>
+            <p className="mb-3 small">
+              <span style={{ display: 'inline-block', width: '24px' }}>🚫</span> Sunday: Closed
+            </p>
+            
+            <h5 className="footer-title mt-3">Connect With Us</h5>
+            <div className="social-icons">
               {socialLinks.map((social, index) => (
                 <a 
                   key={index}
@@ -177,15 +147,9 @@ function Footer() {
                   target="_blank" 
                   rel="noopener noreferrer" 
                   className="social-icon"
-                  aria-label={`Visit our ${social.label} page (opens in new tab)`}
-                  onKeyDown={(e) => {
-                    if (e.key === 'Enter' || e.key === ' ') {
-                      e.preventDefault();
-                      window.open(social.url, '_blank', 'noopener noreferrer');
-                    }
-                  }}
+                  aria-label={`Visit our ${social.label} page`}
                 >
-                  <i className={`bi ${social.icon}`} aria-hidden="true"></i>
+                  <i className={`bi ${social.icon}`} style={{ fontSize: '1.1rem' }}></i>
                 </a>
               ))}
             </div>
@@ -194,41 +158,17 @@ function Footer() {
       </Container>
 
       {/* RIGHTS SECTION */}
-      <div className="footer-rights py-2" role="contentinfo" aria-label="Legal information">
-        <Container className="text-center">
-          <p className="small mb-0 footer-legal-text">
-            <span>
-              © {new Date().getFullYear()} Kitale Progressive School. All Rights Reserved.
-            </span>
-            <span className="separator mx-2" aria-hidden="true">|</span>
-            <button 
-              onClick={() => handleLinkClick('/privacy-policy')} 
-              className="footer-legal-link"
-              aria-label="Read our Privacy Policy"
-              onKeyDown={(e) => {
-                if (e.key === 'Enter' || e.key === ' ') {
-                  e.preventDefault();
-                  handleLinkClick('/privacy-policy');
-                }
-              }}
-            >
-              Privacy Policy
-            </button>
-            <span className="separator mx-2" aria-hidden="true">|</span>
-            <button 
-              onClick={() => handleLinkClick('/terms-of-service')} 
-              className="footer-legal-link"
-              aria-label="Read our Terms of Service"
-              onKeyDown={(e) => {
-                if (e.key === 'Enter' || e.key === ' ') {
-                  e.preventDefault();
-                  handleLinkClick('/terms-of-service');
-                }
-              }}
-            >
-              Terms of Service
-            </button>
-          </p>
+      <div className="footer-rights py-3">
+        <Container fluid>
+          <Row>
+            <Col className="text-center">
+              <p className="small mb-0" style={{ color: 'rgba(255,255,255,0.7)' }}>
+                © {new Date().getFullYear()} Kitale Progressive School. All Rights Reserved. | 
+                <button onClick={() => handleLinkClick('/privacy-policy')} className="footer-legal-link mx-2">Privacy Policy</button> | 
+                <button onClick={() => handleLinkClick('/terms-of-service')} className="footer-legal-link mx-2">Terms of Service</button>
+              </p>
+            </Col>
+          </Row>
         </Container>
       </div>
     </footer>

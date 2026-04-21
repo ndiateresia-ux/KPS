@@ -10,7 +10,8 @@ const ClubsSocieties = lazy(() => import("./pages/ClubsSocieties"));
 const News = lazy(() => import("./pages/News"));
 const Events = lazy(() => import("./pages/Events"));
 const Gallery = lazy(() => import("./pages/Gallery"));
-const Facilities = lazy(() => import("./pages/Facilities"));
+const Boarding = lazy(() => import("./pages/Boarding"));
+const Dining = lazy(() => import("./pages/Dining"));
 const Apply = lazy(() => import("./pages/Apply"));
 const FeeStructure = lazy(() => import("./pages/FeeStructure"));
 const FAQ = lazy(() => import("./pages/FAQ"));
@@ -24,7 +25,7 @@ const Header = lazy(() => import("./components/Header"));
 const Footer = lazy(() => import("./components/Footer"));
 const WhatsAppFloat = lazy(() => import("./components/WhatsAppFloat"));
 
-// Loading fallback component with accessibility improvements
+// Loading fallback component with theme colors and accessibility
 const PageLoader = () => (
   <div 
     role="status"
@@ -34,13 +35,13 @@ const PageLoader = () => (
       justifyContent: 'center',
       alignItems: 'center',
       minHeight: '100vh',
-      backgroundColor: '#f8fafc'
+      backgroundColor: 'var(--gray-light)'
     }}
   >
     <div style={{
       width: '50px',
       height: '50px',
-      border: '3px solid var(--navy)',
+      border: `3px solid var(--navy)`,
       borderTopColor: 'var(--gold)',
       borderRadius: '50%',
       animation: 'spin 1s linear infinite'
@@ -64,14 +65,14 @@ const PageLoader = () => (
   </div>
 );
 
-// Header loader with proper height to prevent layout shift
+// Header loader with proper height to prevent layout shift - using theme colors
 const HeaderLoader = () => (
   <div 
     aria-hidden="true"
     style={{ 
       height: '76px', 
-      backgroundColor: 'white',
-      boxShadow: '0 2px 10px rgba(0,0,0,0.1)',
+      backgroundColor: 'var(--white)',
+      boxShadow: '0 2px 10px rgba(13,101,251,0.1)',
       position: 'fixed',
       top: 0,
       left: 0,
@@ -100,7 +101,7 @@ function App() {
     }
   }, []);
 
-  // Add skip to content link for keyboard users
+  // Add skip to content link for keyboard users with theme styling
   useEffect(() => {
     // Create skip link if it doesn't exist
     if (!document.getElementById('skip-to-content')) {
@@ -148,7 +149,8 @@ function App() {
               <Route path="/school-life/news" element={<News />} />
               <Route path="/school-life/events" element={<Events />} />
               <Route path="/school-life/gallery" element={<Gallery />} />
-              <Route path="/school-life/facilities" element={<Facilities />} />
+              <Route path="/school-life/boarding" element={<Boarding />} />
+              <Route path="/school-life/dining" element={<Dining />} />
 
               {/* Admissions Routes */}
               <Route path="/admissions/apply" element={<Apply />} />
@@ -171,24 +173,26 @@ function App() {
         </Suspense>
       </Router>
 
-      {/* Add styles for skip link */}
+      {/* Add styles for skip link with theme variables */}
       <style>{`
         .skip-to-content-link {
           position: absolute;
           top: -40px;
           left: 0;
-          background: var(--navy, #132f66);
-          color: white;
+          background: var(--navy);
+          color: var(--white);
           padding: 8px 16px;
           z-index: 10000;
           text-decoration: none;
           border-radius: 0 0 4px 0;
           transition: top 0.2s ease;
+          font-family: 'Montserrat', system-ui, sans-serif;
+          font-weight: 500;
         }
         
         .skip-to-content-link:focus {
           top: 0;
-          outline: 2px solid var(--gold, #cebd04);
+          outline: 3px solid var(--gold);
           outline-offset: 2px;
         }
         
@@ -196,9 +200,48 @@ function App() {
           outline: none;
         }
         
+        /* Ensure Montserrat font throughout the app */
+        body, 
+        html, 
+        #root,
+        main,
+        div,
+        section,
+        article,
+        header,
+        footer,
+        nav,
+        h1, h2, h3, h4, h5, h6,
+        p, span, a, button, input, textarea, select, label,
+        li, ul, ol {
+          font-family: 'Montserrat', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif !important;
+        }
+        
+        /* Smooth scrolling for better UX */
+        html {
+          scroll-behavior: smooth;
+        }
+        
+        /* Reduced motion support */
         @media (prefers-reduced-motion: reduce) {
           .skip-to-content-link {
             transition: none;
+          }
+          html {
+            scroll-behavior: auto;
+          }
+        }
+        
+        /* Print styles */
+        @media print {
+          .skip-to-content-link,
+          .whatsapp-float-container,
+          .cta-section {
+            display: none !important;
+          }
+          body {
+            background: white;
+            color: black;
           }
         }
       `}</style>

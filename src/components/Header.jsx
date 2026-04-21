@@ -150,6 +150,14 @@ const Header = () => {
 
   return (
     <>
+      {/* Skip to content link for accessibility */}
+      <a href="#main-content" className="skip-to-content-link">
+        Skip to main content
+      </a>
+      
+      {/* Screen reader announcer for menu state */}
+      <div id="menu-announcer" className="visually-hidden" aria-live="polite"></div>
+      
       <header className={`main-header ${scrolled ? 'header-scrolled' : 'header-transparent'}`} role="banner">
         <Navbar expanded={expanded} expand="lg" className="p-0">
           <Container fluid>
@@ -253,22 +261,10 @@ const Header = () => {
                       }
                     }}
                   >
-                    News
+                    News & Blogs
                   </NavDropdown.Item>
                   
-                  <NavDropdown.Item 
-                    onClick={() => handleNavigation('/school-life/news', false, true)}
-                    onKeyDown={(e) => {
-                      if (e.key === 'Enter' || e.key === ' ') {
-                        e.preventDefault();
-                        handleNavigation('/school-life/news', false, true);
-                      }
-                    }}
-                    className={isActive('/school-life/news', '#blog-section') ? 'active' : ''}
-                    aria-current={isActive('/school-life/news', '#blog-section') ? 'page' : undefined}
-                  >
-                    Blog
-                  </NavDropdown.Item>
+                 
                   
                   <NavDropdown.Item 
                     onClick={() => handleNavigation('/school-life/events')}
@@ -293,18 +289,29 @@ const Header = () => {
                     Gallery
                   </NavDropdown.Item>
                   <NavDropdown.Item 
-                    onClick={() => handleNavigation('/school-life/facilities')}
+                    onClick={() => handleNavigation('/school-life/dining')}
                     onKeyDown={(e) => {
                       if (e.key === 'Enter' || e.key === ' ') {
                         e.preventDefault();
-                        handleNavigation('/school-life/facilities');
+                        handleNavigation('/school-life/dining');
                       }
                     }}
                   >
-                    Facilities
+                    Dining
+                  </NavDropdown.Item>
+                  <NavDropdown.Item 
+                    onClick={() => handleNavigation('/school-life/boarding')}
+                    onKeyDown={(e) => {
+                      if (e.key === 'Enter' || e.key === ' ') {
+                        e.preventDefault();
+                        handleNavigation('/school-life/boarding');
+                      }
+                    }}
+                  >
+                    Boarding Life
                   </NavDropdown.Item>
                 </NavDropdown>
-
+                
                 <NavDropdown 
                   title="Admissions" 
                   id="admissions-dropdown"
@@ -364,19 +371,19 @@ const Header = () => {
                 </Nav.Link>
 
                 {/* Contact link with special handling */}
-                <Nav.Link 
-                  onClick={() => handleNavigation('/contact', true)}
-                  onKeyDown={(e) => {
-                    if (e.key === 'Enter' || e.key === ' ') {
-                      e.preventDefault();
-                      handleNavigation('/contact', true);
-                    }
-                  }}
-                  className={isActive('/contact') || isActive('/', '#contact-section') ? 'active' : ''}
-                  aria-current={isActive('/contact') || isActive('/', '#contact-section') ? 'page' : undefined}
-                >
-                  Contact
-                </Nav.Link>
+              <Nav.Link 
+                onClick={() => handleNavigation('/contact')}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter' || e.key === ' ') {
+                    e.preventDefault();
+                    handleNavigation('/contact');
+                  }
+                }}
+                className={isActive('/contact') ? 'active' : ''}
+                aria-current={isActive('/contact') ? 'page' : undefined}
+              >
+                Contact
+              </Nav.Link>
 
                 <Nav.Link 
                   onClick={() => handleNavigation('/admissions/apply')}

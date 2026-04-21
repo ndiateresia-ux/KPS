@@ -16,72 +16,73 @@
   <title>Kitale Progressive School - Excellence in Education</title>
   <meta name="description" content="Kitale Progressive School offers excellence in education with holistic development and safe boarding environment since 2004.">
   
-  <!-- ===== OPTIMIZATION: Preconnect to critical origins (limited to 3) ===== -->
+  <!-- ===== PRECONNECT ===== -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link rel="preconnect" href="https://cdnjs.cloudflare.com">
+  <link rel="preconnect" href="https://cdn.jsdelivr.net">
   
-  <!-- ===== OPTIMIZATION: Inline critical CSS (minified) ===== -->
+  <!-- ===== PRELOAD LCP IMAGE ===== -->
+  <link rel="preload" as="image" href="/images/gate3.jpg" fetchpriority="high" media="(min-width: 768px)">
+  <link rel="preload" as="image" href="/images/gate3-mobile.jpg" fetchpriority="high" media="(max-width: 767px)">
+  
+  <!-- ===== FONT AWESOME 6 (Critical - Load immediately) ===== -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
+  
+  <!-- ===== BOOTSTRAP ICONS ===== -->
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+  
+  <!-- ===== BOOTSTRAP CSS ===== -->
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css">
+  
+  <!-- ===== GOOGLE FONTS ===== -->
+  <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+  
+  <!-- ===== THEME CSS ===== -->
+  <link rel="stylesheet" href="/src/theme.css">
+  
+  <!-- ===== INLINE CRITICAL CSS ===== -->
   <style>
-    /* Critical CSS - Minified */
-    :root{--navy:#132f66;--navy-dark:#0a1f4d;--navy-light:#1f3a6b;--gold:#cebd04;--gold-dark:#b09e7b;--white:#f8fafd;--gray-light:#f8f9fa;--gray:#475569;--gray-dark:#2c3e50}*{margin:0;padding:0;box-sizing:border-box}body{font-family:Montserrat,system-ui,-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;line-height:1.5;color:var(--gray-dark);background-color:var(--white);opacity:1}.fonts-loading body{opacity:0}.fonts-loaded body,.fonts-failed body{opacity:1;transition:opacity .2s ease}.main-header{width:100%;padding:0;transition:all .3s ease;z-index:9999;position:fixed;top:0;left:0;right:0;background-color:#fff;box-shadow:0 2px 10px rgba(0,0,0,.1)}.brand-container{display:flex;align-items:center;text-decoration:none;padding:0;margin-left:0;cursor:pointer}.logo-wrapper{width:60px;height:60px;margin-right:8px;border-radius:50%;overflow:hidden;flex-shrink:0}.logo-wrapper img{width:100%;height:100%;object-fit:cover;display:block}.brand-text{font-weight:700;font-size:1.1rem;line-height:1.2;display:flex;flex-direction:column;white-space:nowrap;color:#132f66!important}.brand-text small{font-size:.8rem;font-weight:400;opacity:.8;color:#cebd04!important}.nav-link{font-weight:500;margin:0 2px!important;padding:5px 8px!important;border-radius:6px;font-size:.9rem;white-space:nowrap;color:#132f66!important;text-decoration:none;cursor:pointer}.nav-link:hover{color:#0a1f4d!important;background-color:rgba(19,47,102,.05)}.apply-btn{font-weight:600;padding:6px 18px!important;border-radius:40px!important;margin-left:8px;transition:all .3s ease!important;display:inline-block;white-space:nowrap;min-width:110px;text-align:center;border:2px solid #132f66!important;background-color:#132f66!important;color:#fff!important;font-size:.85rem;text-decoration:none;cursor:pointer}.hero-carousel-section{position:relative;width:100%;margin-top:0;padding-top:76px;background-color:#000;min-height:500px}.hero-carousel{height:700px;width:100%}.hero-carousel .carousel-item{height:700px;width:100%;background-color:#000;position:relative}.hero-carousel .carousel-item img{object-fit:cover;object-position:center;width:100%;height:100%;display:block}.carousel-overlay-table{position:absolute!important;top:50%!important;left:5%!important;transform:translateY(-50%)!important;width:420px!important;background:rgba(0,0,0,.75)!important;backdrop-filter:blur(10px)!important;-webkit-backdrop-filter:blur(10px)!important;border-radius:24px!important;padding:2rem 1.8rem!important;border:2px solid var(--gold)!important;z-index:100!important}.welcome-header{margin-bottom:1.5rem!important;text-align:left!important;border-bottom:2px solid rgba(206,189,4,.6)!important;padding-bottom:1rem!important}.welcome-title-overlay{color:#fff!important;font-size:2rem!important;font-weight:800!important;margin-bottom:.3rem!important;line-height:1.2!important}.welcome-subtitle-overlay{color:var(--gold)!important;font-size:1rem!important;font-weight:600!important}.pathways-table-overlay{display:flex!important;flex-direction:column!important;gap:.8rem!important}.table-row-overlay{display:flex!important;justify-content:space-between!important;align-items:center!important;padding:1rem 1.2rem!important;border-radius:12px!important;background:rgba(19,47,102,.9)!important;backdrop-filter:blur(4px)!important;border:1px solid rgba(206,189,4,.4)!important}.highlight-row-overlay{background:rgba(206,189,4,.25)!important;border-left:4px solid var(--gold)!important}.pathway-info-overlay{display:flex!important;flex-direction:column!important}.pathway-name-overlay{font-weight:700!important;color:#fff!important;font-size:1.1rem!important}.pathway-age-overlay{font-size:.8rem!important;color:rgba(255,255,255,.9)!important;margin-top:.2rem!important}.pathway-link-overlay{color:#fff!important;text-decoration:none!important;font-weight:600!important;font-size:.9rem!important;white-space:nowrap!important;padding:.4rem 1rem!important;border-radius:30px!important;background:rgba(206,189,4,.4)!important;border:1px solid rgba(206,189,4,.6)!important;cursor:pointer!important;transition:all .3s ease!important}.table-footer-overlay{margin-top:1.5rem!important;display:flex!important;gap:1rem!important;justify-content:space-between!important}.apply-button-overlay,.contact-button-overlay{flex:1!important;padding:.8rem 1rem!important;font-weight:700!important;text-transform:uppercase!important;letter-spacing:.5px!important;font-size:.9rem!important;border-radius:50px!important;border:2px solid transparent!important;text-align:center!important;cursor:pointer!important;transition:all .3s ease!important}.apply-button-overlay{background-color:var(--navy)!important;border-color:var(--navy)!important;color:#fff!important}.contact-button-overlay{background-color:var(--gold)!important;border-color:var(--gold)!important;color:var(--navy)!important}img,video,iframe{max-width:100%;height:auto;display:block}@media (max-width:1200px){.hero-carousel,.hero-carousel .carousel-item{height:600px}.carousel-overlay-table{width:380px!important;padding:1.8rem 1.5rem!important}}@media (max-width:992px){.hero-carousel,.hero-carousel .carousel-item{height:550px}.carousel-overlay-table{width:340px!important;padding:1.5rem 1.2rem!important}}@media (max-width:768px){.hero-carousel-section{background-color:var(--navy);padding-bottom:2rem}.hero-carousel,.hero-carousel .carousel-item{height:450px}.carousel-overlay-table{position:relative!important;top:auto!important;left:auto!important;transform:none!important;width:100%!important;max-width:100%!important;background:var(--navy)!important;backdrop-filter:none!important;border-radius:0!important;padding:2rem 1.5rem!important;border:none!important;border-top:4px solid var(--gold)!important;margin-top:-1px!important}.welcome-header{text-align:center!important}.brand-text{font-size:.9rem}.brand-text small{font-size:.7rem}.logo-wrapper{width:45px;height:45px}}@media (max-width:576px){.hero-carousel,.hero-carousel .carousel-item{height:400px}.carousel-overlay-table{padding:1.5rem 1rem!important}.welcome-title-overlay{font-size:1.6rem!important}.brand-text{font-size:.8rem}.brand-text small{font-size:.6rem}.logo-wrapper{width:40px;height:40px}.table-row-overlay{flex-direction:column!important;align-items:flex-start!important;gap:.8rem!important}.table-footer-overlay{flex-direction:column!important}.apply-button-overlay,.contact-button-overlay{width:100%!important}}
+    :root {
+      --navy: #0d65fb;
+      --navy-dark: #0a55d6;
+      --navy-light: #2675ff;
+      --gold: #ff0080;
+      --gold-dark: #e60073;
+      --white: #fefefe;
+      --gray-light: #f8f9fa;
+      --text-dark: #000000;
+      --gradient-primary: linear-gradient(135deg, #031739, #2675ff);
+      --gradient-hover: linear-gradient(135deg, #031c45, #1a6bff);
+      --gradient-dark: linear-gradient(135deg, #021331, #0d65fb);
+    }
+    
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+    
+    body {
+      font-family: 'Montserrat', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      -webkit-font-smoothing: antialiased;
+      -moz-osx-font-smoothing: grayscale;
+    }
+    
+    /* Ensure icons display properly */
+    .fas, .far, .fab, .fa, .bi {
+      display: inline-block;
+      font-style: normal;
+      font-variant: normal;
+      text-rendering: auto;
+      line-height: 1;
+    }
+    
+    /* Test if Font Awesome loaded */
+    .fa-smile-wink::before {
+      content: "\f4e8";
+    }
   </style>
-  
-  <!-- ===== OPTIMIZATION: Font loading script ===== -->
-  <script>
-    (function() {
-      // Add font loading classes
-      document.documentElement.classList.add('fonts-loading');
-      
-      if ('fonts' in document) {
-        Promise.all([
-          document.fonts.load('1em Montserrat'),
-          document.fonts.load('500 1em Montserrat'),
-          document.fonts.load('600 1em Montserrat'),
-          document.fonts.load('700 1em Montserrat')
-        ]).then(() => {
-          document.documentElement.classList.remove('fonts-loading');
-          document.documentElement.classList.add('fonts-loaded');
-        }).catch(() => {
-          document.documentElement.classList.remove('fonts-loading');
-          document.documentElement.classList.add('fonts-failed');
-        });
-      } else {
-        document.documentElement.classList.remove('fonts-loading');
-        document.documentElement.classList.add('fonts-failed');
-      }
-      
-      // WebP detection
-      var WebP = new Image();
-      WebP.onload = WebP.onerror = function() {
-        document.documentElement.classList.add(
-          WebP.height === 2 ? 'webp' : 'no-webp'
-        );
-      };
-      WebP.src = 'data:image/webp;base64,UklGRjoAAABXRUJQVlA4IC4AAACyAgCdASoCAAIALmk0mk0iIiIiIgBoSygABc6WWgAA/veff/0PP8bA//LwYAAA';
-    })();
-  </script>
-  
-  <!-- ===== OPTIMIZATION: Load non-critical CSS asynchronously ===== -->
-  <link rel="preload" href="/src/theme.css" as="style" onload="this.onload=null;this.rel='stylesheet'">
-  <noscript><link rel="stylesheet" href="/src/theme.css"></noscript>
-  
-  <link rel="preload" href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700&display=swap" as="style" onload="this.onload=null;this.rel='stylesheet'">
-  <noscript><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700&display=swap"></noscript>
-  
-  <link rel="preload" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css" as="style" onload="this.onload=null;this.rel='stylesheet'">
-  <noscript><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css"></noscript>
-  
-  <link rel="preload" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" as="style" onload="this.onload=null;this.rel='stylesheet'">
-  <noscript><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css"></noscript>
-  
-  <link rel="preload" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css" as="style" onload="this.onload=null;this.rel='stylesheet'">
-  <noscript><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css"></noscript>
-  
-  <!-- ===== OPTIMIZATION: Add dns-prefetch as fallback ===== -->
-  <link rel="dns-prefetch" href="https://fonts.googleapis.com">
-  <link rel="dns-prefetch" href="https://fonts.gstatic.com">
-  <link rel="dns-prefetch" href="https://cdnjs.cloudflare.com">
   
   <!-- ===== VITE ENTRY ===== -->
   <script type="module" src="/src/main.jsx" defer></script>

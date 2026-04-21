@@ -1,5 +1,5 @@
 import { Helmet } from "react-helmet-async";
-import { Container, Row, Col, Form, Button, Card, Alert } from "react-bootstrap";
+import { Container, Row, Col, Form, Button, Card, Alert, Badge } from "react-bootstrap";
 import { useState, useEffect, useCallback, memo, lazy, Suspense } from "react";
 import { Link } from "react-router-dom";
 import { useGoogleLogin } from '@react-oauth/google';
@@ -20,14 +20,11 @@ const loadAutoTable = async () => {
 
 // Helper function for Unicode-safe base64 encoding
 const utf8ToBase64 = (str) => {
-  // First convert the string to UTF-8 bytes
   const utf8Bytes = new TextEncoder().encode(str);
-  // Convert the byte array to a binary string
   let binaryString = '';
   for (let i = 0; i < utf8Bytes.length; i++) {
     binaryString += String.fromCharCode(utf8Bytes[i]);
   }
-  // Use btoa on the binary string
   return btoa(binaryString);
 };
 
@@ -50,7 +47,7 @@ const getImageBase64 = (imagePath) => {
   });
 };
 
-// Memoized form input component with enhanced accessibility
+// Memoized form input component using theme classes
 const FormInput = memo(({ 
   label, 
   type = "text", 
@@ -64,7 +61,9 @@ const FormInput = memo(({
   options,
   className = "form-control-custom",
   describedBy,
-  autoComplete
+  autoComplete,
+  max,
+  min
 }) => {
   const id = `input-${name}`;
   const errorId = `${id}-error`;
@@ -72,8 +71,8 @@ const FormInput = memo(({
   
   return (
     <Form.Group controlId={id} className="mb-3">
-      <Form.Label className="fw-bold small">
-        {label} {required && <span className="text-danger" aria-hidden="true">*</span>}
+      <Form.Label className="fw-bold small text-navy">
+        {label} {required && <span className="text-gold" aria-hidden="true">*</span>}
         {required && <span className="visually-hidden"> (required)</span>}
       </Form.Label>
       {as === 'select' ? (
@@ -106,6 +105,8 @@ const FormInput = memo(({
           aria-invalid={required && !value ? "true" : "false"}
           aria-describedby={descriptionId}
           autoComplete={autoComplete}
+          max={max}
+          min={min}
         />
       )}
       {required && (
@@ -119,7 +120,7 @@ const FormInput = memo(({
 
 FormInput.displayName = 'FormInput';
 
-// Enhanced phone input component
+// Phone input component with theme styling
 const PhoneInputField = memo(({ phone, onChange, error, validated }) => {
   const id = "phone";
   const errorId = `${id}-error`;
@@ -127,8 +128,8 @@ const PhoneInputField = memo(({ phone, onChange, error, validated }) => {
   
   return (
     <Form.Group controlId={id} className="mb-3">
-      <Form.Label className="fw-bold small">
-        Phone Number <span className="text-danger" aria-hidden="true">*</span>
+      <Form.Label className="fw-bold small text-navy">
+        Phone Number <span className="text-gold" aria-hidden="true">*</span>
         <span className="visually-hidden"> (required)</span>
       </Form.Label>
       <PhoneInput
@@ -137,7 +138,7 @@ const PhoneInputField = memo(({ phone, onChange, error, validated }) => {
         value={phone}
         onChange={onChange}
         placeholder="712345678"
-        className={`form-control-custom-phone ${validated && (!phone || error) ? 'is-invalid' : ''}`}
+        className={`form-control-custom ${validated && (!phone || error) ? 'is-invalid' : ''}`}
         limitMaxLength={true}
         aria-invalid={validated && (!phone || error) ? "true" : "false"}
         aria-describedby={`${errorId} ${helpId}`}
@@ -162,7 +163,7 @@ const PhoneInputField = memo(({ phone, onChange, error, validated }) => {
 
 PhoneInputField.displayName = 'PhoneInputField';
 
-// Enhanced status alert
+// Status alert component
 const StatusAlert = memo(({ show, success, message, onClose }) => {
   if (!show) return null;
   
@@ -184,6 +185,93 @@ const StatusAlert = memo(({ show, success, message, onClose }) => {
 });
 
 StatusAlert.displayName = 'StatusAlert';
+
+// Progress indicator component
+const ProgressIndicator = memo(({ currentStep, totalSteps = 4 }) => {
+  const steps = [
+    { number: 1, label: "Parent Info" },
+    { number: 2, label: "Child Info" },
+    { number: 3, label: "Medical Info" },
+    { number: 4, label: "Review" }
+  ];
+  
+  return (
+    <div className="progress-indicator mb-4" role="region" aria-label="Application progress">
+      <div className="d-flex justify-content-between align-items-center">
+        {steps.map((step, idx) => (
+          <div key={step.number} className="text-center" style={{ flex: 1 }}>
+            <div 
+              className={`step-circle mx-auto mb-2 d-flex align-items-center justify-content-center ${currentStep >= step.number ? 'completed' : ''}`}
+              style={{
+                width: '40px',
+                height: '40px',
+                borderRadius: '50%',
+                backgroundColor: currentStep >= step.number ? 'var(--navy)' : '#e9ecef',
+                color: currentStep >= step.number ? 'white' : '#6c757d',
+                fontWeight: 'bold',
+                fontSize: '1rem'
+              }}
+              aria-current={currentStep === step.number ? "step" : undefined}
+            >
+              {step.number}
+            </div>
+            <div className="small text-muted d-none d-md-block">{step.label}</div>
+          </div>
+        ))}
+      </div>
+      <div className="progress mt-2" style={{ height: '4px' }}>
+        <div 
+          className="progress-bar" 
+          role="progressbar"
+          style={{ 
+            width: `${(currentStep / totalSteps) * 100}%`, 
+            backgroundColor: 'var(--gold)',
+            transition: 'width 0.3s ease'
+          }}
+          aria-valuenow={(currentStep / totalSteps) * 100}
+          aria-valuemin={0}
+          aria-valuemax={100}
+        />
+      </div>
+    </div>
+  );
+});
+
+ProgressIndicator.displayName = 'ProgressIndicator';
+
+// Small checkbox component
+const SmallCheckbox = memo(({ label, name, checked, onChange, required = false, id }) => {
+  const checkboxId = id || `checkbox-${name}`;
+  
+  return (
+    <Form.Group controlId={checkboxId} className="mb-3">
+      <div className="d-flex align-items-center">
+        <Form.Check 
+          type="checkbox"
+          id={checkboxId}
+          name={name}
+          checked={checked}
+          onChange={onChange}
+          required={required}
+          className="small-checkbox"
+          style={{
+            '--checkbox-size': '18px'
+          }}
+        />
+        <Form.Label 
+          htmlFor={checkboxId} 
+          className="mb-0 ms-2 small"
+          style={{ cursor: 'pointer', color: 'var(--text-dark)' }}
+        >
+          {label}
+          {required && <span className="text-gold ms-1" aria-hidden="true">*</span>}
+        </Form.Label>
+      </div>
+    </Form.Group>
+  );
+});
+
+SmallCheckbox.displayName = 'SmallCheckbox';
 
 // Initial form state
 const INITIAL_FORM_STATE = {
@@ -218,13 +306,59 @@ function Apply() {
     message: ""
   });
   const [logoBase64, setLogoBase64] = useState(null);
+  const [formSubmitted, setFormSubmitted] = useState(false);
+  const [currentStep, setCurrentStep] = useState(1);
+  const [dateError, setDateError] = useState("");
 
   // Get environment variables
   const GOOGLE_CLIENT_ID = import.meta.env.VITE_GOOGLE_GMAIL_CLIENT_ID;
-  const GOOGLE_API_KEY = import.meta.env.VITE_GOOGLE_GMAIL_API_KEY;
   const ADMISSIONS_EMAIL = import.meta.env.VITE_ADMISSIONS_EMAIL || 'ndiateresia@gmail.com';
   const GMAIL_SCOPES = import.meta.env.VITE_GMAIL_SCOPES || 'https://www.googleapis.com/auth/gmail.send';
   const SITE_URL = import.meta.env.VITE_SITE_URL || 'http://localhost:5173';
+
+  // Get today's date in YYYY-MM-DD format for max date attribute
+  const getTodayDate = () => {
+    const today = new Date();
+    const year = today.getFullYear();
+    const month = String(today.getMonth() + 1).padStart(2, '0');
+    const day = String(today.getDate()).padStart(2, '0');
+    return `${year}-${month}-${day}`;
+  };
+
+  // Get min date (100 years ago)
+  const getMinDate = () => {
+    const hundredYearsAgo = new Date();
+    hundredYearsAgo.setFullYear(hundredYearsAgo.getFullYear() - 100);
+    const year = hundredYearsAgo.getFullYear();
+    const month = String(hundredYearsAgo.getMonth() + 1).padStart(2, '0');
+    const day = String(hundredYearsAgo.getDate()).padStart(2, '0');
+    return `${year}-${month}-${day}`;
+  };
+
+  // Validate date of birth
+  const validateDateOfBirth = useCallback((dateString) => {
+    if (!dateString) return true;
+    
+    const selectedDate = new Date(dateString);
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    
+    if (selectedDate > today) {
+      setDateError("Date of birth cannot be in the future");
+      return false;
+    }
+    
+    // Check if child is at least 2 years old (for ECD) - optional warning
+    const minAgeDate = new Date();
+    minAgeDate.setFullYear(minAgeDate.getFullYear() - 2);
+    if (selectedDate > minAgeDate && formData.gradeApplying === "Playgroup") {
+      setDateError("Note: Child should be at least 2 years old for Playgroup");
+      return true; // Warning only, not blocking
+    }
+    
+    setDateError("");
+    return true;
+  }, [formData.gradeApplying]);
 
   // Load logo on component mount
   useEffect(() => {
@@ -240,7 +374,7 @@ function Apply() {
     loadLogo();
   }, []);
 
-  // Load the last used application number from localStorage on component mount
+  // Load the last used application number from localStorage
   useEffect(() => {
     try {
       const lastNumber = localStorage.getItem('lastApplicationNumber');
@@ -254,11 +388,16 @@ function Apply() {
   // Memoized handlers
   const handleChange = useCallback((e) => {
     const { name, value, type, checked } = e.target;
+    
+    if (name === 'dateOfBirth') {
+      validateDateOfBirth(value);
+    }
+    
     setFormData(prev => ({
       ...prev,
       [name]: type === "checkbox" ? checked : value
     }));
-  }, []);
+  }, [validateDateOfBirth]);
 
   const handlePhoneChange = useCallback((value) => {
     setPhone(value);
@@ -304,7 +443,48 @@ function Apply() {
     return [];
   }, [formData.gradeApplying]);
 
-  // Optimized PDF generation with lazy loading and logo
+  // Validate current step
+  const validateStep = useCallback((step) => {
+    if (step === 1) {
+      return formData.parentName && formData.email && formData.phone && formData.relationship;
+    }
+    if (step === 2) {
+      const isDateValid = formData.dateOfBirth && !dateError && new Date(formData.dateOfBirth) <= new Date();
+      return formData.childName && isDateValid && formData.gender && formData.gradeApplying;
+    }
+    if (step === 3) {
+      return true; // Medical info is optional
+    }
+    return true;
+  }, [formData, dateError]);
+
+  // Next step handler
+  const handleNextStep = useCallback((e) => {
+    e.preventDefault();
+    if (validateStep(currentStep)) {
+      setCurrentStep(prev => Math.min(prev + 1, 4));
+    } else {
+      setValidated(true);
+      let errorMessage = "Please complete all required fields before proceeding.";
+      if (dateError) {
+        errorMessage = dateError;
+      }
+      setSubmitStatus({
+        show: true,
+        success: false,
+        message: errorMessage
+      });
+      setTimeout(() => setSubmitStatus(prev => ({ ...prev, show: false })), 3000);
+    }
+  }, [currentStep, validateStep, dateError]);
+
+  // Previous step handler
+  const handlePrevStep = useCallback((e) => {
+    e.preventDefault();
+    setCurrentStep(prev => Math.max(prev - 1, 1));
+  }, []);
+
+  // PDF generation
   const generatePDF = useCallback(async () => {
     const jsPDF = await loadAutoTable();
     const doc = new jsPDF();
@@ -313,7 +493,6 @@ function Apply() {
     let logoAdded = false;
     if (logoBase64) {
       try {
-        // Remove the data:image/jpeg;base64, prefix
         const base64Data = logoBase64.replace(/^data:image\/\w+;base64,/, '');
         doc.addImage(base64Data, 'JPEG', 15, 10, 30, 30);
         logoAdded = true;
@@ -322,13 +501,11 @@ function Apply() {
       }
     }
     
-    // Adjust header position based on whether logo was added
     const titleY = logoAdded ? 25 : 20;
     const mottoY = logoAdded ? 33 : 28;
     const formY = logoAdded ? 45 : 40;
     const dateY = logoAdded ? 60 : 55;
     
-    // School header
     doc.setFontSize(20);
     doc.setTextColor(19, 47, 102);
     doc.text("KITALE PROGRESSIVE SCHOOL", 105, titleY, { align: "center" });
@@ -341,7 +518,6 @@ function Apply() {
     doc.setTextColor(19, 47, 102);
     doc.text("ADMISSION APPLICATION FORM", 105, formY, { align: "center" });
     
-    // Format application number
     const formattedNumber = applicationCounter.toString().padStart(4, '0');
     const applicationId = `APP-${formattedNumber}`;
     
@@ -352,20 +528,16 @@ function Apply() {
     
     let yPos = dateY + 15;
     
-    // Format nationality
     const displayNationality = formData.nationality === "Other" ? 
       formData.otherNationality : formData.nationality;
     
-    // Format phone
     let formattedPhone = formData.phone || "Not provided";
     try {
       if (formData.phone) {
         const phoneNumber = parsePhoneNumber(formData.phone);
         if (phoneNumber) formattedPhone = phoneNumber.formatInternational();
       }
-    } catch (error) {
-      // Use raw value if formatting fails
-    }
+    } catch (error) {}
     
     // Parent Information
     doc.setFontSize(14);
@@ -441,7 +613,6 @@ function Apply() {
     doc.text("Medical Conditions:", 25, yPos);
     doc.text(formData.medicalConditions || "None", 70, yPos);
     
-    // Add footer with school contact
     yPos = 260;
     doc.setFontSize(9);
     doc.setTextColor(100, 100, 100);
@@ -455,21 +626,17 @@ function Apply() {
     };
   }, [formData, applicationCounter, logoBase64]);
 
-  // Create email with attachment function - FIXED with Unicode-safe encoding
+  // Create email with attachment function
   const createEmailWithAttachment = useCallback(async (to, from, subject, htmlContent, pdfBlob, filename) => {
-    // Convert blob to base64
     const reader = new FileReader();
     const pdfBase64 = await new Promise((resolve) => {
       reader.onloadend = () => resolve(reader.result.split(',')[1]);
       reader.readAsDataURL(pdfBlob);
     });
 
-    // Create boundary
     const boundary = 'boundary_' + Math.random().toString(36).substring(2);
-
-    // Construct email with attachment - Remove emojis and special characters
-    const cleanSubject = subject.replace(/[^\x00-\x7F]/g, ''); // Remove non-ASCII chars from subject
-    const cleanHtmlContent = htmlContent.replace(/[^\x00-\x7F]/g, ''); // Remove non-ASCII from HTML if needed
+    const cleanSubject = subject.replace(/[^\x00-\x7F]/g, '');
+    const cleanHtmlContent = htmlContent.replace(/[^\x00-\x7F]/g, '');
     
     const emailParts = [
       `MIME-Version: 1.0`,
@@ -495,8 +662,6 @@ function Apply() {
     ];
 
     const emailContent = emailParts.join('\r\n');
-    
-    // Use our Unicode-safe base64 encoding function
     return utf8ToBase64(emailContent)
       .replace(/\+/g, '-')
       .replace(/\//g, '_')
@@ -514,10 +679,8 @@ function Apply() {
         
         console.log("Google login successful, generating PDF...");
         
-        // Generate PDF
         const { pdfBlob, applicationId, applicationDate } = await generatePDF();
         
-        // Format data for email
         const displayNationality = formData.nationality === "Other" ? 
           formData.otherNationality : formData.nationality;
         
@@ -529,98 +692,43 @@ function Apply() {
           }
         } catch (error) {}
         
-        // Format date of birth for display
         const formattedDOB = formData.dateOfBirth ? new Date(formData.dateOfBirth).toLocaleDateString('en-KE', {
           year: 'numeric',
           month: 'long',
           day: 'numeric'
         }) : 'Not provided';
         
-        // Create HTML email content for PARENT - WITHOUT EMOJIS
+        // Parent email content
         const parentHtmlContent = `
           <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; background-color: #f9f9f9;">
             <div style="text-align: center; margin-bottom: 30px; padding: 20px; background: linear-gradient(135deg, #132f66 0%, #0a1f4d 100%); border-radius: 10px;">
               <h2 style="color: white; margin: 0; font-size: 24px;">Kitale Progressive School</h2>
               <p style="color: #cebd04; margin: 5px 0 0;">In Pursuit of Excellence</p>
             </div>
-            
             <div style="background-color: white; padding: 30px; border-radius: 10px; box-shadow: 0 2px 10px rgba(0,0,0,0.1);">
               <h3 style="color: #132f66; margin-top: 0;">Application Received Successfully!</h3>
-              
               <p style="font-size: 16px; line-height: 1.6; color: #333;">Dear <strong>${formData.parentName}</strong>,</p>
-              
               <p style="font-size: 16px; line-height: 1.6; color: #333;">Thank you for submitting an application to Kitale Progressive School. We are delighted that you are considering us for your child's education.</p>
-              
               <div style="background-color: #f0f5fa; padding: 20px; border-radius: 8px; margin: 25px 0; border-left: 4px solid #132f66;">
                 <p style="margin: 0 0 10px 0; font-weight: bold; color: #132f66;">Application Details:</p>
                 <p style="margin: 5px 0;"><strong>Application ID:</strong> ${applicationId}</p>
                 <p style="margin: 5px 0;"><strong>Date Submitted:</strong> ${applicationDate}</p>
                 <p style="margin: 5px 0;"><strong>Student Name:</strong> ${formData.childName}</p>
                 <p style="margin: 5px 0;"><strong>Grade Applied For:</strong> ${formData.gradeApplying}</p>
-                <p style="margin: 5px 0;"><strong>Stay Status:</strong> ${formData.stayStatus?.replace('-', ' ') || 'Not specified'}</p>
               </div>
-              
-              <h4 style="color: #132f66; margin: 25px 0 15px 0;">Next Steps in Your Journey:</h4>
-              
-              <table style="width: 100%; border-collapse: collapse;">
-                <tr>
-                  <td style="padding: 10px; border-bottom: 1px solid #eee; width: 40px; vertical-align: top;">
-                    <span style="background-color: #132f66; color: white; width: 24px; height: 24px; display: inline-block; border-radius: 50%; text-align: center; line-height: 24px; font-weight: bold;">1</span>
-                  </td>
-                  <td style="padding: 10px; border-bottom: 1px solid #eee;">
-                    <strong style="color: #333;">Application Review</strong><br/>
-                    <span style="color: #666;">Our admissions team will review your application within 2-3 business days.</span>
-                  </td>
-                </tr>
-                <tr>
-                  <td style="padding: 10px; border-bottom: 1px solid #eee;">
-                    <span style="background-color: #132f66; color: white; width: 24px; height: 24px; display: inline-block; border-radius: 50%; text-align: center; line-height: 24px; font-weight: bold;">2</span>
-                  </td>
-                  <td style="padding: 10px; border-bottom: 1px solid #eee;">
-                    <strong style="color: #333;">Admissions Interview</strong><br/>
-                    <span style="color: #666;">We'll contact you to schedule an interview with you and your child.</span>
-                  </td>
-                </tr>
-                <tr>
-                  <td style="padding: 10px; border-bottom: 1px solid #eee;">
-                    <span style="background-color: #132f66; color: white; width: 24px; height: 24px; display: inline-block; border-radius: 50%; text-align: center; line-height: 24px; font-weight: bold;">3</span>
-                  </td>
-                  <td style="padding: 10px; border-bottom: 1px solid #eee;">
-                    <strong style="color: #333;">Acceptance Decision</strong><br/>
-                    <span style="color: #666;">You'll receive our decision within one week after the interview.</span>
-                  </td>
-                </tr>
-              </table>
-              
               <div style="margin: 30px 0 20px 0; padding: 20px; background-color: #fff8e7; border-radius: 8px; border: 1px solid #cebd04;">
                 <p style="margin: 0; color: #132f66;">
-                  <strong>Important:</strong> A copy of your application form is attached to this email. 
-                  Please save it for your records. You will need your Application ID (${applicationId}) for all future correspondence.
+                  <strong>Important:</strong> A copy of your application form is attached. Please save it for your records.
                 </p>
               </div>
-              
-              <p style="font-size: 16px; line-height: 1.6; color: #333;">If you have any questions before then, please don't hesitate to contact our admissions office:</p>
-              
-              <div style="margin: 20px 0; padding: 15px; background-color: #f5f5f5; border-radius: 8px;">
-                <p style="margin: 5px 0;"><strong>Phone:</strong> +254 722 631 433</p>
-                <p style="margin: 5px 0;"><strong>Email:</strong> progressicesch@gmail.com</p>
-                <p style="margin: 5px 0;"><strong>Office Hours:</strong> Monday - Friday, 8:00 AM - 4:00 PM</p>
-              </div>
-              
-              <p style="font-size: 16px; line-height: 1.6; color: #333; margin-top: 25px;">Warm regards,<br/>
+              <p style="font-size: 16px; line-height: 1.6; color: #333;">Warm regards,<br/>
               <strong style="color: #132f66;">The Admissions Team</strong><br/>
               Kitale Progressive School</p>
-            </div>
-            
-            <div style="text-align: center; margin-top: 20px; padding: 15px; color: #666; font-size: 12px;">
-              <p style="margin: 5px 0;">Kitale Progressive School | P.O. Box 1338, Kitale, Kenya</p>
-              <p style="margin: 5px 0;">© ${new Date().getFullYear()} Kitale Progressive School. All rights reserved.</p>
-              <p style="margin: 5px 0;">This email was sent to confirm your application submission.</p>
             </div>
           </div>
         `;
         
-        // Create HTML email content for ADMISSIONS OFFICE
+        // Admissions email content
         const admissionsHtmlContent = `
           <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
             <div style="text-align: center; margin-bottom: 20px; border-bottom: 2px solid #132f66;">
@@ -628,51 +736,25 @@ function Apply() {
               <p style="color: #cebd04; margin: 5px 0 0;">In Pursuit of Excellence</p>
             </div>
             <h3 style="color: #132f66;">New Admission Application Received</h3>
-            
             <table style="width: 100%; border-collapse: collapse; margin: 20px 0;">
               <tr><td style="padding: 8px; border: 1px solid #ddd;"><strong>Application ID:</strong></td><td style="padding: 8px; border: 1px solid #ddd;">${applicationId}</td></tr>
-              <tr><td style="padding: 8px; border: 1px solid #ddd;"><strong>Date:</strong></td><td style="padding: 8px; border: 1px solid #ddd;">${applicationDate}</td></tr>
               <tr><td style="padding: 8px; border: 1px solid #ddd;"><strong>Student Name:</strong></td><td style="padding: 8px; border: 1px solid #ddd;">${formData.childName}</td></tr>
-              <tr><td style="padding: 8px; border: 1px solid #ddd;"><strong>Date of Birth:</strong></td><td style="padding: 8px; border: 1px solid #ddd;">${formattedDOB}</td></tr>
-              <tr><td style="padding: 8px; border: 1px solid #ddd;"><strong>Gender:</strong></td><td style="padding: 8px; border: 1px solid #ddd;">${formData.gender || 'Not specified'}</td></tr>
-              <tr><td style="padding: 8px; border: 1px solid #ddd;"><strong>Nationality:</strong></td><td style="padding: 8px; border: 1px solid #ddd;">${displayNationality || 'Not specified'}</td></tr>
-              <tr><td style="padding: 8px; border: 1px solid #ddd;"><strong>Grade Applying:</strong></td><td style="padding: 8px; border: 1px solid #ddd;">${formData.gradeApplying}</td></tr>
-              <tr><td style="padding: 8px; border: 1px solid #ddd;"><strong>Stay Status:</strong></td><td style="padding: 8px; border: 1px solid #ddd;">${formData.stayStatus?.replace('-', ' ') || 'Not specified'}</td></tr>
-              <tr><td style="padding: 8px; border: 1px solid #ddd;"><strong>Previous School:</strong></td><td style="padding: 8px; border: 1px solid #ddd;">${formData.previousSchool || 'None'}</td></tr>
-            </table>
-            
-            <h4 style="color: #132f66;">Parent/Guardian Information</h4>
-            <table style="width: 100%; border-collapse: collapse; margin: 10px 0;">
-              <tr><td style="padding: 8px; border: 1px solid #ddd;"><strong>Name:</strong></td><td style="padding: 8px; border: 1px solid #ddd;">${formData.parentName}</td></tr>
-              <tr><td style="padding: 8px; border: 1px solid #ddd;"><strong>Email:</strong></td><td style="padding: 8px; border: 1px solid #ddd;">${formData.email}</td></tr>
+              <tr><td style="padding: 8px; border: 1px solid #ddd;"><strong>Grade:</strong></td><td style="padding: 8px; border: 1px solid #ddd;">${formData.gradeApplying}</td></tr>
+              <tr><td style="padding: 8px; border: 1px solid #ddd;"><strong>Parent:</strong></td><td style="padding: 8px; border: 1px solid #ddd;">${formData.parentName}</td></tr>
               <tr><td style="padding: 8px; border: 1px solid #ddd;"><strong>Phone:</strong></td><td style="padding: 8px; border: 1px solid #ddd;">${formattedPhone}</td></tr>
-              <tr><td style="padding: 8px; border: 1px solid #ddd;"><strong>Address:</strong></td><td style="padding: 8px; border: 1px solid #ddd;">${formData.address || 'Not provided'}</td></tr>
-              <tr><td style="padding: 8px; border: 1px solid #ddd;"><strong>Relationship:</strong></td><td style="padding: 8px; border: 1px solid #ddd;">${formData.relationship}</td></tr>
             </table>
-            
-            <h4 style="color: #132f66;">Medical Information</h4>
-            <table style="width: 100%; border-collapse: collapse; margin: 10px 0;">
-              <tr><td style="padding: 8px; border: 1px solid #ddd;"><strong>Allergies:</strong></td><td style="padding: 8px; border: 1px solid #ddd;">${formData.hasAllergies ? 'Yes' : 'No'}</td></tr>
-              <tr><td style="padding: 8px; border: 1px solid #ddd;"><strong>Medical Conditions:</strong></td><td style="padding: 8px; border: 1px solid #ddd;">${formData.medicalConditions || 'None'}</td></tr>
-            </table>
-            
             <p><strong>Complete application form is attached as PDF.</strong></p>
-            <hr/>
-            <p style="color: #666; font-size: 12px;">This application was submitted via the school website.</p>
           </div>
         `;
         
-        // Create filename for the PDF
         const sanitizedName = formData.childName.replace(/\s+/g, '_').replace(/[^a-zA-Z0-9_]/g, '');
         const filename = `Admission_${sanitizedName}_${applicationId}.pdf`;
         
-        // SEND EMAIL TO PARENT FIRST
-        console.log("Sending confirmation email to parent:", formData.email);
-        
+        // Send email to parent
         const parentEncodedEmail = await createEmailWithAttachment(
-          formData.email, // Send to parent's email
-          formData.email, // From the parent's email (they're authenticated)
-          `Application Received - ${formData.childName} (${applicationId}) - Kitale Progressive School`, // No emojis
+          formData.email,
+          formData.email,
+          `Application Received - ${formData.childName} (${applicationId}) - Kitale Progressive School`,
           parentHtmlContent,
           pdfBlob,
           filename
@@ -688,44 +770,28 @@ function Apply() {
         });
         
         if (!parentResponse.ok) {
-          const errorData = await parentResponse.json();
-          console.error("Error sending to parent:", errorData);
-          throw new Error("Failed to send confirmation email to parent");
+          throw new Error("Failed to send confirmation email");
         }
         
-        console.log("Parent email sent successfully");
-        
-        // SEND EMAIL TO ADMISSIONS OFFICE
-        console.log("Sending notification to admissions office:", ADMISSIONS_EMAIL);
-        
+        // Send email to admissions office
         const admissionsEncodedEmail = await createEmailWithAttachment(
-          ADMISSIONS_EMAIL, // Send to admissions office
-          formData.email, // From the parent's email
+          ADMISSIONS_EMAIL,
+          formData.email,
           `NEW APPLICATION: ${formData.childName} - Grade ${formData.gradeApplying} (${applicationId})`,
           admissionsHtmlContent,
           pdfBlob,
           filename
         );
         
-        const admissionsResponse = await fetch('https://gmail.googleapis.com/gmail/v1/users/me/messages/send', {
+        await fetch('https://gmail.googleapis.com/gmail/v1/users/me/messages/send', {
           method: 'POST',
           headers: {
             'Authorization': `Bearer ${tokenResponse.access_token}`,
             'Content-Type': 'application/json'
           },
           body: JSON.stringify({ raw: admissionsEncodedEmail })
-        });
+        }).catch(err => console.warn("Admissions notification error:", err));
         
-        if (!admissionsResponse.ok) {
-          const errorData = await admissionsResponse.json();
-          console.error("Error sending to admissions:", errorData);
-          // Don't throw error here - parent already got confirmation
-          console.warn("Failed to send to admissions office, but parent email was sent");
-        } else {
-          console.log("Admissions office notification sent successfully");
-        }
-        
-        // Update counter
         const newCounter = applicationCounter + 1;
         setApplicationCounter(newCounter);
         try {
@@ -735,16 +801,11 @@ function Apply() {
         setSubmitStatus({
           show: true,
           success: true,
-          message: `Application ${applicationId} submitted successfully! A confirmation email with your application form has been sent to ${formData.email}.`
+          message: `Application ${applicationId} submitted successfully! A confirmation email has been sent to ${formData.email}.`
         });
         
-        // Reset form after delay
-        setTimeout(() => {
-          setFormData(INITIAL_FORM_STATE);
-          setPhone("");
-          setPhoneError("");
-          setValidated(false);
-        }, 5000);
+        setFormSubmitted(true);
+        window.scrollTo({ top: 0, behavior: 'smooth' });
         
       } catch (error) {
         console.error("Submission error:", error);
@@ -755,38 +816,21 @@ function Apply() {
         });
       } finally {
         setSubmitting(false);
-        window.scrollTo({ top: 0, behavior: 'smooth' });
       }
     },
     onError: (errorResponse) => {
       console.error('Login Failed:', errorResponse);
-      let errorMessage = "Google sign-in failed. ";
-      
-      if (errorResponse?.error === 'popup_blocked_by_browser') {
-        errorMessage += "Please allow popups for this site.";
-      } else if (errorResponse?.error === 'access_denied') {
-        errorMessage += "You denied access to your account.";
-      } else {
-        errorMessage += "Please try again.";
-      }
-      
       setSubmitStatus({
         show: true,
         success: false,
-        message: errorMessage
+        message: "Google sign-in failed. Please allow popups and try again."
       });
+      setSubmitting(false);
     }
   });
 
   const handleSubmit = useCallback((e) => {
     e.preventDefault();
-    const form = e.currentTarget;
-    
-    if (form.checkValidity() === false) {
-      e.stopPropagation();
-      setValidated(true);
-      return;
-    }
     
     if (!formData.agreeToTerms) {
       setSubmitStatus({
@@ -805,22 +849,30 @@ function Apply() {
       });
       return;
     }
+    
+    if (dateError) {
+      setSubmitStatus({
+        show: true,
+        success: false,
+        message: dateError
+      });
+      return;
+    }
 
     if (!GOOGLE_CLIENT_ID) {
       setSubmitStatus({
         show: true,
         success: false,
-        message: "Google Client ID is missing. Please check your environment configuration."
+        message: "Configuration error. Please contact support."
       });
       return;
     }
     
     login();
-  }, [formData.agreeToTerms, phoneError, phone, login, GOOGLE_CLIENT_ID]);
+  }, [formData.agreeToTerms, phoneError, phone, login, GOOGLE_CLIENT_ID, dateError]);
 
   const stayStatusOptions = getStayStatusOptions();
 
-  // Grade options array
   const gradeOptions = [
     { value: "Playgroup", label: "Playgroup" },
     { value: "PP1", label: "PP1" },
@@ -831,28 +883,12 @@ function Apply() {
     }))
   ];
 
-  // Application journey steps data
-  const journeySteps = [
-    {
-      icon: "fa-file-text",
-      title: "1. Complete Application",
-      description: "Fill out the online form with parent/guardian and student details. Ensure all information is accurate."
-    },
-    {
-      icon: "fa-google",
-      title: "2. Verify with Google",
-      description: "Sign in with your Google account to verify your identity and securely submit the application."
-    },
-    {
-      icon: "fa-envelope",
-      title: "3. Receive Confirmation",
-      description: "Get an instant email confirmation with your application ID and PDF copy for your records."
-    },
-    {
-      icon: "fa-phone",
-      title: "4. Admissions Interview",
-      description: "Our admissions team will contact you within 3-5 business days to schedule an interview."
-    }
+  // Trust strip data - Why Parents Choose KPS
+  const trustPoints = [
+    { icon: "fa fa-graduation-cap", text: "Structured CBC learning from ECD to Junior Secondary" },
+    { icon: "fa fa-chalkboard-user", text: "Experienced and supportive teachers" },
+    { icon: "fa fa-shield-heart", text: "Safe and nurturing school environment" },
+    { icon: "fa fa-futbol", text: "Balanced academic and co-curricular development" }
   ];
 
   return (
@@ -861,99 +897,114 @@ function Apply() {
         <title>Admissions Application | Kitale Progressive School</title>
         <meta 
           name="description" 
-          content="Begin your child's journey at Kitale Progressive School. Complete our admissions application and track your progress through each step of the process." 
+          content="Begin your child's journey at Kitale Progressive School. Complete our simple admissions application in under 10 minutes." 
         />
       </Helmet>
       
-      {/* Page Title - Updated to Admissions */}
-      <section 
-        className="page-title-section" 
-        style={{ 
-          background: 'linear-gradient(135deg, #132f66 0%, #0a1f4d 100%)',
-          paddingTop: '120px',
-          paddingBottom: '60px',
-          color: 'white',
-          textAlign: 'center',
-          width: '100%',
-          minHeight: '200px',
-          display: 'flex',
-          alignItems: 'center'
-        }}
-        aria-labelledby="page-title"
-      >
+      {/* Hero Section using theme page-title-section */}
+      <section className="page-title-section" aria-labelledby="page-title">
         <Container>
-          <h1 id="page-title" className="display-5 fw-bold mb-3" style={{ color: 'white' }}>
-            Admissions Application
+          <h1 id="page-title" className="display-5 fw-bold">
+            Start Your Child's Journey at Kitale Progressive School
           </h1>
-          <p className="lead mb-0" style={{ 
-            fontSize: 'clamp(1rem, 4vw, 1.2rem)', 
-            maxWidth: '700px', 
-            margin: '0 auto',
-            color: 'rgba(255,255,255,0.95)'
-          }}>
-            Begin your child's journey with Kitale Progressive School
+          <p className="lead">
+            You're just a few steps away from giving your child a strong academic foundation and a supportive learning environment.
           </p>
-        </Container>
-      </section>
-
-      {/* Application Journey Section */}
-      <section className="journey-section py-5" aria-label="Application journey steps">
-        <Container>
-          <h2 className="section-header text-center mb-5" style={{ color: '#132f66' }}>
-            Your Admissions Journey
-          </h2>
-          <p className="text-center mb-5" style={{ maxWidth: '800px', margin: '0 auto', fontSize: '1.1rem' }}>
-            We've streamlined our admissions process to make it simple and transparent. 
-            Follow these four easy steps to secure your child's place at Kitale Progressive School.
-          </p>
-          
-          <Row className="g-4 justify-content-center">
-            {journeySteps.map((step, index) => (
-              <Col key={index} md={6} lg={3}>
-                <div className="journey-step-card text-center p-4 h-100" 
-                     style={{ 
-                       background: 'white', 
-                       borderRadius: '12px',
-                       boxShadow: '0 8px 20px rgba(0,0,0,0.02), 0 2px 6px rgba(0,20,40,0.05)',
-                       border: '1px solid #eef2f6',
-                       transition: 'transform 0.2s ease'
-                     }}>
-                  <div className="step-icon mb-3" 
-                       style={{ 
-                         width: '70px', 
-                         height: '70px', 
-                         background: '#f0f5fa', 
-                         borderRadius: '50%',
-                         display: 'flex',
-                         alignItems: 'center',
-                         justifyContent: 'center',
-                         margin: '0 auto 1.5rem',
-                         color: '#132f66',
-                         fontSize: '2rem'
-                       }}>
-                    <i className={`fas ${step.icon}`} aria-hidden="true"></i>
-                  </div>
-                  <h3 className="h5 fw-bold mb-3" style={{ color: '#132f66' }}>{step.title}</h3>
-                  <p className="text-muted mb-0" style={{ fontSize: '0.95rem' }}>{step.description}</p>
-                </div>
-              </Col>
-            ))}
-          </Row>
-          
-          {/* Timeline indicator */}
-          <div className="text-center mt-5 pt-3">
-            <p className="text-muted">
+          <div className="mt-3">
+            <Badge bg="light" text="dark" className="bg-light-custom text-navy" style={{ fontSize: '0.9rem', padding: '8px 16px', borderRadius: '40px' }}>
               <i className="fas fa-clock me-2" aria-hidden="true"></i>
-              Average completion time: 8-10 minutes
-            </p>
+              Application takes less than 10 minutes to complete.
+            </Badge>
           </div>
         </Container>
       </section>
 
-      <section 
-        className="apply-section section-padding bg-light-custom"
-        aria-label="Application form section"
-      >
+      {/* Application Journey Section */}
+      <section className="journey-section section-padding" aria-label="Application journey steps">
+        <Container>
+          <h2 className="section-heading">Your Admissions Journey</h2>
+          <p className="lead text-center mb-5" style={{ maxWidth: '800px', margin: '0 auto' }}>
+            We've streamlined our admissions process to make it simple and transparent. 
+            Follow these steps to secure your child's place at Kitale Progressive School.
+          </p>
+          
+          <Row className="g-4 justify-content-center">
+            <Col md={6} lg={3}>
+              <div className="card-custom text-center p-4 h-100 journey-step-card">
+                <div className="step-icon mb-3" style={{ width: '70px', height: '70px', background: 'var(--gray-light)', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 1.5rem', color: 'var(--navy)', fontSize: '2rem' }}>
+                  <i className="fas fa-file-text" aria-hidden="true"></i>
+                </div>
+                <h3 className="card-title-navy h5 fw-bold mb-3">1. Complete Application</h3>
+                <p className="text-muted mb-0">Fill in your child's details in a simple online form.</p>
+              </div>
+            </Col>
+            <Col md={6} lg={3}>
+              <div className="card-custom text-center p-4 h-100 journey-step-card">
+                <div className="step-icon mb-3" style={{ width: '70px', height: '70px', background: 'var(--gray-light)', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 1.5rem', color: 'var(--navy)', fontSize: '2rem' }}>
+                  <i className="fas fa-lock" aria-hidden="true"></i>
+                </div>
+                <h3 className="card-title-navy h5 fw-bold mb-3">2. Secure Submission</h3>
+                <p className="text-muted mb-0">Submit your application securely and receive confirmation.</p>
+              </div>
+            </Col>
+            <Col md={6} lg={3}>
+              <div className="card-custom text-center p-4 h-100 journey-step-card">
+                <div className="step-icon mb-3" style={{ width: '70px', height: '70px', background: 'var(--gray-light)', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 1.5rem', color: 'var(--navy)', fontSize: '2rem' }}>
+                  <i className="fas fa-envelope" aria-hidden="true"></i>
+                </div>
+                <h3 className="card-title-navy h5 fw-bold mb-3">3. School Follow-Up</h3>
+                <p className="text-muted mb-0">Our admissions team will contact you to guide you through the next steps.</p>
+              </div>
+            </Col>
+            <Col md={6} lg={3}>
+              <div className="card-custom text-center p-4 h-100 journey-step-card">
+                <div className="step-icon mb-3" style={{ width: '70px', height: '70px', background: 'var(--gray-light)', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 1.5rem', color: 'var(--navy)', fontSize: '2rem' }}>
+                  <i className="fas fa-handshake" aria-hidden="true"></i>
+                </div>
+                <h3 className="card-title-navy h5 fw-bold mb-3">4. Admission Interaction</h3>
+                <p className="text-muted mb-0">Your child may have a brief interaction or assessment depending on level.</p>
+              </div>
+            </Col>
+          </Row>
+        </Container>
+      </section>
+
+      {/* Trust Strip - Why Parents Choose KPS (Before Form) */}
+      <section className="statistics-section" style={{ background: 'var(--gray-light)' }}>
+        <Container>
+          <h3 className="text-center mb-4 text-dark" style={{ fontSize: '1.8rem', fontWeight: '600' }}>
+            Why Parents Choose Kitale Progressive School
+          </h3>
+          <Row className="g-4 justify-content-center">
+            {trustPoints.map((point, idx) => (
+              <Col key={idx} md={6} lg={3}>
+                <div className="d-flex align-items-center gap-3 p-3" style={{ 
+                  background: 'white', 
+                  borderRadius: '12px',
+                  boxShadow: '0 2px 8px rgba(0,0,0,0.05)',
+                  height: '100%'
+                }}>
+                  <div className="bg-white text-primary" style={{
+                    width: '40px',
+                    height: '40px',
+                    borderRadius: '10px',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    flexShrink: 0
+                  }}>
+                    <i className={`fas ${point.icon}`} style={{ fontSize: '2.25rem', color: 'navy' }} aria-hidden="true"></i>
+                  </div>
+                  <p className="mb-0 fw-medium text-dark" style={{ lineHeight: '1.4' }}>{point.text}</p>
+                </div>
+              </Col>
+            ))}
+          </Row>
+        </Container>
+      </section>
+
+      {/* Application Form Section */}
+      <section className="apply-section section-padding" aria-label="Application form">
         <Container>
           <Row className="justify-content-center">
             <Col lg={10}>
@@ -964,420 +1015,447 @@ function Apply() {
                 onClose={handleDismissAlert}
               />
 
-              <Card className="shadow-lg border-0">
-                <Card.Body className="p-4 p-lg-5">
-                  <h2 className="section-heading h4 mb-4">Complete Your Application</h2>
-                  
-                  <Form 
-                    noValidate 
-                    validated={validated} 
-                    onSubmit={handleSubmit}
-                    aria-label="Admission application form"
-                  >
+              {!formSubmitted ? (
+                <Card className="card-custom shadow-lg border-0">
+                  <Card.Body className="p-4 p-lg-5">
+                    <h2 className="section-heading h4 mb-4">Complete Your Application</h2>
+                    <p className="text-muted mb-4">
+                      Please fill in the details below. Our admissions team will review your application and guide you through the next steps.
+                    </p>
                     
-                    {/* Parent Info */}
-                    <h3 className="text-navy fw-bold h5 mb-3 pb-2 border-bottom">Parent/Guardian Information</h3>
+                    {/* Progress Indicator */}
+                    <ProgressIndicator currentStep={currentStep} totalSteps={4} />
                     
-                    <Row className="g-3">
-                      <Col md={6}>
-                        <FormInput
-                          label="Full Name"
-                          name="parentName"
-                          value={formData.parentName}
-                          onChange={handleChange}
-                          placeholder="James Vincent"
-                           autocomplete="off"
-                          required
-                          feedback="Please enter parent/guardian name"
-                          autoComplete="name"
-                        />
-                      </Col>
-                      <Col md={6}>
-                        <FormInput
-                          label="Email Address"
-                          type="email"
-                          name="email"
-                          autocomplete="off"
-                          value={formData.email}
-                          onChange={handleChange}
-                          placeholder="example@email.com"
-                          required
-                          feedback="Please enter a valid email"
-                          autoComplete="email"
-                        />
-                      </Col>
-                    </Row>
-
-                    <Row className="g-3">
-                      <Col md={6}>
-                        <PhoneInputField
-                          phone={phone}
-                          onChange={handlePhoneChange}
-                          error={phoneError}
-                          validated={validated}
-                        />
-                      </Col>
-                      <Col md={6}>
-                        <FormInput
-                          label="Relationship to Child"
-                          as="select"
-                          name="relationship"
-                           autocomplete="off"
-                          value={formData.relationship}
-                          onChange={handleChange}
-                          required
-                          options={[
-                            { value: "Father", label: "Father" },
-                            { value: "Mother", label: "Mother" },
-                            { value: "Brother", label: "Brother" },
-                            { value: "Sister", label: "Sister" },
-                            { value: "Guardian", label: "Guardian" },
-                            { value: "Grandparent", label: "Grandparent" },
-                            { value: "Other", label: "Other" }
-                          ]}
-                          feedback="Please select relationship"
-                          autoComplete="off"
-                        />
-                      </Col>
-                    </Row>
-
-                    <Row>
-                      <Col md={12}>
-                        <FormInput
-                          label="Address"
-                          name="address"
-                          value={formData.address}
-                          onChange={handleChange}
-                           autocomplete="off"
-                           required
-                          placeholder="123 Street, Nairobi"
-                          autoComplete="street-address"
-                        />
-                      </Col>
-                    </Row>
-
-                    {/* Child Info */}
-                    <h3 className="text-navy fw-bold h5 mb-3 mt-4 pb-2 border-bottom">Child's Information</h3>
-                    
-                    <Row className="g-3">
-                      <Col md={12}>
-                        <FormInput
-                          label="Full Name"
-                          name="childName"
-                          value={formData.childName}
-                          onChange={handleChange}
-                           autocomplete="off"
-                          placeholder="Prince Vincent"
-                          required
-                          feedback="Please enter child's name"
-                          autoComplete="off"
-                        />
-                      </Col>
-                    </Row>
-
-                    <Row className="g-3">
-                      <Col md={4}>
-                        <FormInput
-                          label="Date of Birth"
-                          type="date"
-                          name="dateOfBirth"
-                           autocomplete="off"
-                          value={formData.dateOfBirth}
-                          onChange={handleChange}
-                          required
-                          feedback="Please enter date of birth"
-                          autoComplete="bday"
-                        />
-                      </Col>
-                      <Col md={4}>
-                        <FormInput
-                          label="Gender"
-                          as="select"
-                          name="gender"
-                           autocomplete="off"
-                          value={formData.gender}
-                          onChange={handleChange}
-                          required
-                          options={[
-                            { value: "Male", label: "Male" },
-                            { value: "Female", label: "Female" }
-                          ]}
-                          feedback="Please select gender"
-                          autoComplete="off"
-                        />
-                      </Col>
-                      <Col md={4}>
-                        <FormInput
-                          label="Nationality"
-                          as="select"
-                          name="nationality"
-                           autocomplete="off"
-                          value={formData.nationality}
-                          onChange={handleChange}
-                          required
-                          options={[
-                            { value: "Kenyan", label: "Kenyan" },
-                            { value: "Ugandan", label: "Ugandan" },
-                            { value: "Tanzanian", label: "Tanzanian" },
-                            { value: "Rwandan", label: "Rwandan" },
-                            { value: "South Sudanese", label: "South Sudanese" },
-                            { value: "Other", label: "Other" }
-                          ]}
-                          autoComplete="country"
-                         
-                        />
-                      </Col>
-                    </Row>
-
-                    {formData.nationality === "Other" && (
-                      <Row>
-                        <Col md={4}>
-                          <FormInput
-                            label="Specify Nationality"
-                            name="otherNationality"
-                             autocomplete="off"
-                            value={formData.otherNationality}
-                            onChange={handleChange}
-                            placeholder="Enter nationality"
-                            required
-                            autoComplete="off"
-                          />
-                        </Col>
-                      </Row>
-                    )}
-
-                    <Row className="g-3">
-                      <Col md={6}>
-                        <FormInput
-                          label="Previous School/Nursery"
-                          name="previousSchool"
-                          value={formData.previousSchool}
-                          onChange={handleChange}
-                           autocomplete="off"
-                          placeholder="Enter previous school"
-                          autoComplete="off"
-                        />
-                      </Col>
-                      <Col md={6}>
-                        <FormInput
-                          label="Grade Applying For"
-                          as="select"
-                          name="gradeApplying"
-                           autocomplete="off"
-                          value={formData.gradeApplying}
-                          onChange={handleChange}
-                          required
-                          options={gradeOptions}
-                          feedback="Please select grade"
-                          autoComplete="off"
-                        />
-                      </Col>
-                    </Row>
-
-                    {stayStatusOptions.length > 0 && (
-                      <Row>
-                        <Col md={6}>
-                          <FormInput
-                            label={`Stay Status ${formData.gradeApplying === "Playgroup" ? "(Full Day or Half Day)" : ""}`}
-                            as="select"
-                            name="stayStatus"
-                             autocomplete="off"
-                            value={formData.stayStatus}
-                            onChange={handleChange}
-                            required
-                            options={stayStatusOptions}
-                            feedback="Please select stay status"
-                            autoComplete="off"
-                          />
-                        </Col>
-                      </Row>
-                    )}
-
-                    {/* Medical Info */}
-                    <h3 className="text-navy fw-bold h5 mb-3 mt-4 pb-2 border-bottom">Medical Information</h3>
-                    
-                    <Row className="mb-3">
-                      <Col md={12}>
-                      <div className="apply-form">
-                        <Form.Check 
-                          type="checkbox" 
-                          name="hasAllergies" 
-                          id="hasAllergies"
-                          label={
-                            <span>
-                              Does the child have any allergies?
-                              <span className="visually-hidden"> (Check if yes)</span>
-                            </span>
-                          } 
-                          checked={formData.hasAllergies} 
-                          onChange={handleChange}
-                          className="mb-2"
-                        />
+                    <Form 
+                      noValidate 
+                      validated={validated} 
+                      onSubmit={(e) => {
+                        if (currentStep === 4) {
+                          e.preventDefault();
+                          handleSubmit(e);
+                        } else {
+                          handleNextStep(e);
+                        }
+                      }}
+                      aria-label="Admission application form"
+                    >
+                      {/* Step 1: Parent Info */}
+                      {currentStep === 1 && (
+                        <div className="step-content">
+                          <h3 className="text-navy fw-bold h5 mb-3 pb-2 border-bottom">Parent/Guardian Information</h3>
+                          <Row className="g-3">
+                            <Col md={6}>
+                              <FormInput
+                                label="Full Name"
+                                name="parentName"
+                                value={formData.parentName}
+                                onChange={handleChange}
+                                placeholder="James Vincent"
+                                required
+                                feedback="Please enter parent/guardian name"
+                                autoComplete="name"
+                              />
+                            </Col>
+                            <Col md={6}>
+                              <FormInput
+                                label="Email Address"
+                                type="email"
+                                name="email"
+                                value={formData.email}
+                                onChange={handleChange}
+                                placeholder="example@email.com"
+                                required
+                                feedback="Please enter a valid email"
+                                autoComplete="email"
+                              />
+                            </Col>
+                          </Row>
+                          <Row className="g-3">
+                            <Col md={6}>
+                              <PhoneInputField
+                                phone={phone}
+                                onChange={handlePhoneChange}
+                                error={phoneError}
+                                validated={validated}
+                              />
+                            </Col>
+                            <Col md={6}>
+                              <FormInput
+                                label="Relationship to Child"
+                                as="select"
+                                name="relationship"
+                                value={formData.relationship}
+                                onChange={handleChange}
+                                required
+                                options={[
+                                  { value: "Father", label: "Father" },
+                                  { value: "Mother", label: "Mother" },
+                                  { value: "Brother", label: "Brother" },
+                                  { value: "Sister", label: "Sister" },
+                                  { value: "Guardian", label: "Guardian" },
+                                  { value: "Grandparent", label: "Grandparent" },
+                                  { value: "Other", label: "Other" }
+                                ]}
+                                feedback="Please select relationship"
+                              />
+                            </Col>
+                          </Row>
+                          <Row>
+                            <Col md={12}>
+                              <FormInput
+                                label="Address"
+                                name="address"
+                                value={formData.address}
+                                onChange={handleChange}
+                                placeholder="123 Street, Nairobi"
+                                autoComplete="street-address"
+                              />
+                            </Col>
+                          </Row>
                         </div>
-                      </Col>
-                    </Row>
+                      )}
 
-                    <Row>
-                      <Col md={12}>
-                        <FormInput
-                          label="Medical Conditions"
-                          name="medicalConditions"
-                          value={formData.medicalConditions}
-                          onChange={handleChange}
-                          placeholder="E.g., Asthma, Diabetes"
-                          autoComplete="off"
-                        />
-                      </Col>
-                    </Row>
-
-                    {/* Terms */}
-                    <Row className="mb-4">
-                      <Col md={12}>
-                      <div className="apply-form">
-                        <Form.Check 
-                          required 
-                          type="checkbox" 
-                          name="agreeToTerms" 
-                          id="agreeToTerms"
-                          checked={formData.agreeToTerms} 
-                          onChange={handleChange}
-                          label={
-                            <span className="small">
-                              I confirm that the information provided is accurate and I agree to the{' '}
-                              <Link to="/terms-of-service" target="_blank" className="text-navy">
-                                Terms
-                              </Link> and{' '}
-                              <Link to="/privacy-policy" target="_blank" className="text-navy">
-                                Privacy Policy
-                              </Link>
-                              <span className="visually-hidden"> (required)</span>
-                            </span>
-                          }
-                          feedback="You must agree to the Terms and Privacy Policy"
-                        />
+                      {/* Step 2: Child Info */}
+                      {currentStep === 2 && (
+                        <div className="step-content">
+                          <h3 className="text-navy fw-bold h5 mb-3 pb-2 border-bottom">Child's Information</h3>
+                          <Row className="g-3">
+                            <Col md={12}>
+                              <FormInput
+                                label="Full Name"
+                                name="childName"
+                                value={formData.childName}
+                                onChange={handleChange}
+                                placeholder="Prince Vincent"
+                                required
+                                feedback="Please enter child's name"
+                              />
+                            </Col>
+                          </Row>
+                          <Row className="g-3">
+                            <Col md={4}>
+                              <FormInput
+                                label="Date of Birth"
+                                type="date"
+                                name="dateOfBirth"
+                                value={formData.dateOfBirth}
+                                onChange={handleChange}
+                                required
+                                max={getTodayDate()}
+                                min={getMinDate()}
+                                feedback={dateError || "Please enter date of birth"}
+                              />
+                              {dateError && dateError.includes("Note:") && (
+                                <Form.Text className="text-warning small">
+                                  <i className="fas fa-info-circle me-1" aria-hidden="true"></i>
+                                  {dateError}
+                                </Form.Text>
+                              )}
+                            </Col>
+                            <Col md={4}>
+                              <FormInput
+                                label="Gender"
+                                as="select"
+                                name="gender"
+                                value={formData.gender}
+                                onChange={handleChange}
+                                required
+                                options={[
+                                  { value: "Male", label: "Male" },
+                                  { value: "Female", label: "Female" }
+                                ]}
+                                feedback="Please select gender"
+                              />
+                            </Col>
+                            <Col md={4}>
+                              <FormInput
+                                label="Nationality"
+                                as="select"
+                                name="nationality"
+                                value={formData.nationality}
+                                onChange={handleChange}
+                                options={[
+                                  { value: "Kenyan", label: "Kenyan" },
+                                  { value: "Ugandan", label: "Ugandan" },
+                                  { value: "Tanzanian", label: "Tanzanian" },
+                                  { value: "Rwandan", label: "Rwandan" },
+                                  { value: "South Sudanese", label: "South Sudanese" },
+                                  { value: "Other", label: "Other" }
+                                ]}
+                                autoComplete="country"
+                              />
+                            </Col>
+                          </Row>
+                          {formData.nationality === "Other" && (
+                            <Row>
+                              <Col md={4}>
+                                <FormInput
+                                  label="Specify Nationality"
+                                  name="otherNationality"
+                                  value={formData.otherNationality}
+                                  onChange={handleChange}
+                                  placeholder="Enter nationality"
+                                />
+                              </Col>
+                            </Row>
+                          )}
+                          <Row className="g-3">
+                            <Col md={6}>
+                              <FormInput
+                                label="Previous School/Nursery"
+                                name="previousSchool"
+                                value={formData.previousSchool}
+                                onChange={handleChange}
+                                placeholder="Enter previous school"
+                              />
+                            </Col>
+                            <Col md={6}>
+                              <FormInput
+                                label="Grade Applying For"
+                                as="select"
+                                name="gradeApplying"
+                                value={formData.gradeApplying}
+                                onChange={handleChange}
+                                required
+                                options={gradeOptions}
+                                feedback="Please select grade"
+                              />
+                            </Col>
+                          </Row>
+                          {stayStatusOptions.length > 0 && (
+                            <Row>
+                              <Col md={6}>
+                                <FormInput
+                                  label={`Stay Status ${formData.gradeApplying === "Playgroup" ? "(Full Day or Half Day)" : ""}`}
+                                  as="select"
+                                  name="stayStatus"
+                                  value={formData.stayStatus}
+                                  onChange={handleChange}
+                                  required
+                                  options={stayStatusOptions}
+                                  feedback="Please select stay status"
+                                />
+                              </Col>
+                            </Row>
+                          )}
                         </div>
-                      </Col>
-                    </Row>
+                      )}
 
-                    <Row>
-                      <Col md={12} className="text-center">
+                      {/* Step 3: Medical Info */}
+                      {currentStep === 3 && (
+                        <div className="step-content">
+                          <h3 className="text-navy fw-bold h5 mb-3 pb-2 border-bottom">Medical Information</h3>
+                          <Row className="mb-3">
+                            <Col md={12}>
+                              <SmallCheckbox 
+                                label="Does the child have any allergies?"
+                                name="hasAllergies"
+                                checked={formData.hasAllergies}
+                                onChange={handleChange}
+                                id="hasAllergies"
+                              />
+                            </Col>
+                          </Row>
+                          <Row>
+                            <Col md={12}>
+                              <FormInput
+                                label="Medical Conditions"
+                                name="medicalConditions"
+                                value={formData.medicalConditions}
+                                onChange={handleChange}
+                                placeholder="E.g., Asthma, Diabetes"
+                              />
+                            </Col>
+                          </Row>
+                        </div>
+                      )}
+
+                      {/* Step 4: Review & Submit */}
+                      {currentStep === 4 && (
+                        <div className="step-content">
+                          <h3 className="text-navy fw-bold h5 mb-3 pb-2 border-bottom">Review & Submit</h3>
+                          <div className="review-section bg-light-custom p-3 rounded-3 mb-3">
+                            <p className="fw-bold mb-1 text-navy">Parent: {formData.parentName || "Not provided"}</p>
+                            <p className="mb-1">Email: {formData.email || "Not provided"}</p>
+                            <p className="mb-1">Child: {formData.childName || "Not provided"}</p>
+                            <p className="mb-1">Grade: {formData.gradeApplying || "Not selected"}</p>
+                          </div>
+                          <Row className="mb-4">
+                            <Col md={12}>
+                              <SmallCheckbox 
+                                label={
+                                  <span className="small">
+                                    I confirm that the information provided is accurate and I agree to the{' '}
+                                    <Link to="/terms-of-service" target="_blank" className="text-navy">
+                                      Terms
+                                    </Link> and{' '}
+                                    <Link to="/privacy-policy" target="_blank" className="text-navy">
+                                      Privacy Policy
+                                    </Link>
+                                  </span>
+                                }
+                                name="agreeToTerms"
+                                checked={formData.agreeToTerms}
+                                onChange={handleChange}
+                                required={true}
+                                id="agreeToTerms"
+                              />
+                            </Col>
+                          </Row>
+                          <p className="text-muted small">
+                            <i className="fas fa-lock me-1" aria-hidden="true"></i>
+                            You'll sign in with Google to verify your identity and receive your confirmation email.
+                          </p>
+                        </div>
+                      )}
+
+                      {/* Navigation Buttons */}
+                      <div className="d-flex justify-content-between mt-4">
+                        {currentStep > 1 && (
+                          <Button 
+                            variant="outline-secondary" 
+                            onClick={handlePrevStep}
+                            className="btn-outline-navy"
+                            style={{ minWidth: '120px' }}
+                          >
+                            <i className="fas fa-arrow-left me-2" aria-hidden="true"></i>
+                            Back
+                          </Button>
+                        )}
                         <Button 
                           type="submit" 
-                          className="btn-navy px-4 py-2"
+                          className="btn-navy"
                           disabled={submitting}
-                          style={{ minWidth: '200px' }}
-                          aria-label={submitting ? "Submitting application" : "Submit application"}
+                          style={{ 
+                            minWidth: '160px',
+                            marginLeft: currentStep === 1 ? 'auto' : '0'
+                          }}
                         >
                           {submitting ? (
                             <>
                               <span className="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>
                               <span>Submitting...</span>
-                              <span className="visually-hidden">Please wait while we submit your application</span>
                             </>
                           ) : (
-                            'Submit Application'
+                            currentStep === 4 ? 'Submit Application' : 'Continue'
                           )}
                         </Button>
-                      </Col>
-                    </Row>
-
-                    <Row className="mt-3">
-                      <Col md={12}>
-                        <p className="text-muted small text-center mb-0">
-                          <i className="fas fa-lock me-1" aria-hidden="true"></i>
-                          You'll sign in with Google to verify your identity and receive your confirmation email
-                        </p>
-                      </Col>
-                    </Row>
-                  </Form>
-                </Card.Body>
-              </Card>
+                      </div>
+                    </Form>
+                  </Card.Body>
+                </Card>
+              ) : null}
             </Col>
           </Row>
         </Container>
       </section>
+    
+              <div className="card-custom p-4 p-lg-5">
+                  <h3 className="h4 fw-bold mb-4 text-navy">What Happens After You Apply</h3>
+                  <div className="step-list">
+                    <div className="step-item d-flex gap-3 mb-4">
+                      <div className="step-number bg-navy text-dark" style={{ width: '32px', height: '32px', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 'bold', flexShrink: 0 }}>1</div>
+                      <div>
+                        <h4 className="h6 fw-bold mb-1 text-navy">Application Review</h4>
+                        <p className="text-muted mb-0">Our admissions team will review your details within 2-3 business days.</p>
+                      </div>
+                    </div>
+                    <div className="step-item d-flex gap-3 mb-4">
+                      <div className="step-number bg-navy text-dark" style={{ width: '32px', height: '32px', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 'bold', flexShrink: 0 }}>2</div>
+                      <div>
+                        <h4 className="h6 fw-bold mb-1 text-navy">Receive Confirmation</h4>
+                        <p className="text-muted mb-0">You will receive a confirmation email with your application details.</p>
+                      </div>
+                    </div>
+                    <div className="step-item d-flex gap-3 mb-4">
+                      <div className="step-number bg-navy text-dark" style={{ width: '32px', height: '32px', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 'bold', flexShrink: 0 }}>3</div>
+                      <div>
+                        <h4 className="h6 fw-bold mb-1 text-navy">School Follow-Up</h4>
+                        <p className="text-muted mb-0">We will contact you to guide you through the next steps.</p>
+                      </div>
+                    </div>
+                    <div className="step-item d-flex gap-3">
+                      <div className="step-number bg-navy text-dark" style={{ width: '32px', height: '32px', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 'bold', flexShrink: 0 }}>4</div>
+                      <div>
+                        <h4 className="h6 fw-bold mb-1 text-navy">School Visit or Interaction</h4>
+                        <p className="text-muted mb-0">You may be invited for a school visit or interaction with your child.</p>
+                      </div>
+                    </div>
+                  </div>
+                  <div className="contact-options mt-4 pt-3 text-center">
+                    <p className="mb-0 text-muted">
+                      Have questions? Contact our admissions office at{' '}
+                      <a href="tel:+254736756595" className="text-navy text-decoration-none">+254 736 756 595</a>
+                    </p>
+                  </div>
+                </div>
 
-      <Suspense fallback={null}>
-        <GetInTouch />
-      </Suspense>
+      {/* What Happens Next Section - AFTER the form */}
+      {formSubmitted && (
+        <section className="what-happens-next section-padding" style={{ background: 'var(--gray-light)' }}>
+          <Container>
+            <Row className="justify-content-center">
+              <Col lg={8}>
+                <div className="text-center mb-4">
+                  <div className="success-icon mb-3">
+                    <i className="fas fa-check-circle" style={{ fontSize: '4rem', color: '#48bb78' }} aria-hidden="true"></i>
+                  </div>
+                  <h2 className="display-6 fw-bold mb-3 text-navy">Application Submitted Successfully!</h2>
+                  <p className="lead text-dark">
+                    Thank you for choosing Kitale Progressive School.
+                  </p>
+                </div>
+                
+              </Col>
+            </Row>
+          </Container>
+        </section>
+      )}
+  
 
-      {/* Critical CSS inline with accessibility improvements */}
+      {/* Additional CSS for small checkboxes */}
       <style dangerouslySetInnerHTML={{ __html: `
-        .bg-gradient-navy {
-          background: linear-gradient(135deg, #132f66 0%, #0a1f4d 100%);
-          padding-top: 120px;
-          padding-bottom: 60px;
+        .small-checkbox .form-check-input {
+          width: 18px !important;
+          height: 18px !important;
+          min-width: 18px !important;
+          min-height: 18px !important;
+          margin-top: 0 !important;
+          cursor: pointer;
         }
-        @media (max-width: 768px) {
-          .bg-gradient-navy { padding-top: 100px; padding-bottom: 40px; }
+        
+        .small-checkbox .form-check-input:checked {
+          background-color: var(--navy);
+          border-color: var(--navy);
         }
-        .form-control-custom, .form-control-custom-phone {
-          border: 1px solid #dee2e6;
-          border-radius: 8px;
-          padding: 0.6rem 1rem;
-          transition: all 0.15s ease;
+        
+        .small-checkbox .form-check-input:focus {
+          box-shadow: 0 0 0 3px rgba(13, 101, 251, 0.25);
+          border-color: var(--navy);
         }
-        .form-control-custom:focus, .form-control-custom-phone:focus {
-          border-color: #132f66;
-          box-shadow: 0 0 0 0.2rem rgba(19,47,102,0.25);
-          outline: 2px solid transparent;
+        
+        .small-checkbox {
+          display: flex;
+          align-items: center;
+          min-height: auto !important;
+          padding-left: 0;
         }
-        .btn-navy {
-          background-color: #132f66;
-          border-color: #132f66;
-          color: white;
-          border-radius: 40px;
-          font-weight: 600;
-          transition: all 0.3s ease;
-          min-height: 44px;
-          min-width: 44px;
-        }
-        .btn-navy:hover:not(:disabled) {
-          background-color: #0a1f4d;
-          transform: translateY(-2px);
-          box-shadow: 0 4px 12px rgba(19,47,102,0.3);
-        }
-        .btn-navy:focus-visible {
-          outline: 3px solid #cebd04;
-          outline-offset: 2px;
+        
+        .journey-step-card {
+          transition: transform 0.2s ease, box-shadow 0.2s ease;
         }
         .journey-step-card:hover {
           transform: translateY(-5px);
           box-shadow: 0 16px 24px -8px rgba(0,35,70,0.15) !important;
         }
-        .section-header {
-          font-size: 2.2rem;
-          font-weight: 600;
-          color: #132f66;
+        .step-circle.completed {
+          background-color: var(--navy);
+          color: white;
         }
         .fade-in { animation: fadeIn 0.3s ease; }
         @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
-        .spinner-border {
-          display: inline-block;
-          width: 1rem;
-          height: 1rem;
-          vertical-align: text-bottom;
-          border: 0.2em solid currentColor;
-          border-right-color: transparent;
-          border-radius: 50%;
-          animation: spinner-border .75s linear infinite;
-        }
-        @keyframes spinner-border {
-          to { transform: rotate(360deg); }
-        }
-        .visually-hidden {
-          position: absolute;
-          width: 1px;
-          height: 1px;
-          padding: 0;
-          margin: -1px;
-          overflow: hidden;
-          clip: rect(0, 0, 0, 0);
-          border: 0;
-        }
         @media (prefers-reduced-motion: reduce) {
           * { animation-duration: 0.01ms !important; transition-duration: 0.01ms !important; }
-          .spinner-border { animation: none; }
           .journey-step-card:hover { transform: none; }
         }
       `}} />

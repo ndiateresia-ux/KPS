@@ -1,12 +1,13 @@
+// pages/Events.jsx - Updated with Reduced Spacing
 import { Helmet } from "react-helmet-async";
-import { Container, Row, Col, Spinner, Alert } from "react-bootstrap";
+import { Container, Row, Col, Spinner, Alert, Badge } from "react-bootstrap";
 import { useState, useEffect, useMemo, useCallback, lazy, Suspense, memo } from "react";
 
 // Lazy load non-critical components
 const GetInTouch = lazy(() => import("../components/GetInTouch"));
 
-// Memoized event card component with accessibility
-const EventCard = memo(({ event, categories, isHovered, onHover, onLeave, index }) => {
+// Memoized event card component with accessibility and featured badge support
+const EventCard = memo(({ event, categories, isHovered, onHover, onLeave, index, isFeatured }) => {
   const eventDate = new Date(event.date);
   const day = eventDate.getDate().toString().padStart(2, '0');
   const month = eventDate.toLocaleString('default', { month: 'short' }).toUpperCase();
@@ -15,16 +16,35 @@ const EventCard = memo(({ event, categories, isHovered, onHover, onLeave, index 
   return (
     <div 
       id={eventId}
-      className={`event-item ${isHovered ? 'hovered' : ''}`}
+      className={`card-custom event-item ${isHovered ? 'hovered' : ''} ${isFeatured ? 'featured' : ''}`}
       onMouseEnter={() => onHover(event.id)}
       onMouseLeave={onLeave}
       onFocus={() => onHover(event.id)}
       onBlur={onLeave}
-      style={{ borderLeftColor: event.color }}
+      style={{ borderLeftColor: event.color, position: 'relative' }}
       role="article"
       aria-labelledby={`${eventId}-title`}
       tabIndex={0}
     >
+      {isFeatured && (
+        <div style={{ position: 'absolute', top: '12px', right: '12px', display: 'flex', gap: '8px', zIndex: 2 }}>
+          <Badge 
+            bg="warning" 
+            text="dark"
+            className="featured-badge"
+            style={{ 
+              fontSize: '0.7rem', 
+              fontWeight: '600', 
+              padding: '4px 10px',
+              borderRadius: '20px',
+              backgroundColor: '#ff0080',
+              color: 'white'
+            }}
+          >
+            ⭐ Featured Event
+          </Badge>
+        </div>
+      )}
       <div className="event-date" style={{ 
         background: `linear-gradient(135deg, ${event.color} 0%, ${event.color}dd 100%)`,
         minWidth: '60px',
@@ -40,7 +60,7 @@ const EventCard = memo(({ event, categories, isHovered, onHover, onLeave, index 
         <span className="month small" style={{ fontSize: '0.8rem', opacity: 0.9 }}>{month}</span>
       </div>
       <div className="event-info" style={{ flex: 1, minWidth: 0 }}>
-        <h3 id={`${eventId}-title`} className="h6 fw-bold mb-1" style={{ color: '#132f66' }}>{event.title}</h3>
+        <h3 id={`${eventId}-title`} className="card-title-navy h6 fw-bold mb-1">{event.title}</h3>
         <div className="event-meta small d-flex flex-wrap gap-2 mb-1">
           <span className="text-muted">
             <i className="far fa-clock me-1" aria-hidden="true"></i> 
@@ -97,7 +117,7 @@ const CalendarDay = memo(({ day, onClick, categories, selectedCategory, index, m
       borderRadius: '50%',
       fontSize: '0.9rem',
       fontWeight: day.isToday ? 'bold' : 'normal',
-      backgroundColor: day.isSelected ? '#cebd04' : 'transparent',
+      backgroundColor: day.isSelected ? '#ff0080' : 'transparent',
       color: day.isSelected ? 'white' : 'inherit',
       minHeight: '44px',
       minWidth: '44px'
@@ -115,7 +135,7 @@ const CalendarDay = memo(({ day, onClick, categories, selectedCategory, index, m
         width: '4px',
         height: '4px',
         borderRadius: '50%',
-        backgroundColor: categories.find(c => c.id === selectedCategory)?.color || '#4299e1'
+        backgroundColor: categories.find(c => c.id === selectedCategory)?.color || '#0d65fb'
       }} aria-hidden="true"></span>
     )}
   </div>
@@ -126,7 +146,7 @@ CalendarDay.displayName = 'CalendarDay';
 // Memoized category button with accessibility
 const CategoryButton = memo(({ category, isActive, onClick }) => (
   <button
-    className={isActive ? 'active' : ''}
+    className={`category-filter-btn ${isActive ? 'active' : ''}`}
     onClick={() => onClick(category.id)}
     aria-pressed={isActive}
     aria-label={`${category.name} events${isActive ? ', currently selected' : ''}`}
@@ -163,6 +183,7 @@ function Events() {
   const [selectedCategory, setSelectedCategory] = useState("all");
   const [hoveredEvent, setHoveredEvent] = useState(null);
   const [selectedDate, setSelectedDate] = useState(null);
+  const [featuredEventIds] = useState([1, 2]);
 
   // Get environment variables
   const GOOGLE_API_KEY = import.meta.env.VITE_GOOGLE_CALENDAR_API_KEY;
@@ -190,11 +211,11 @@ function Events() {
   // Categories
   const categories = useMemo(() => [
     { id: "all", name: "All", icon: "📅", color: "#718096" },
-    { id: "academic", name: "Academic", icon: "📚", color: "#4299e1" },
+    { id: "academic", name: "Academic", icon: "📚", color: "#0d65fb" },
     { id: "sports", name: "Sports", icon: "⚽", color: "#48bb78" },
     { id: "cultural", name: "Cultural", icon: "🎭", color: "#9f7aea" },
     { id: "meeting", name: "Meetings", icon: "🤝", color: "#ed8936" },
-    { id: "ceremony", name: "Ceremonies", icon: "🏆", color: "#f56565" }
+    { id: "ceremony", name: "Ceremonies", icon: "🏆", color: "#ff0080" }
   ], []);
 
   // Determine category based on event title/description
@@ -217,7 +238,7 @@ function Events() {
       category: "academic",
       time: "8:00 AM",
       location: "School Assembly Ground",
-      color: "#4299e1"
+      color: "#0d65fb"
     },
     {
       id: 2,
@@ -257,7 +278,7 @@ function Events() {
       category: "academic",
       time: "12:00 PM",
       location: "School",
-      color: "#4299e1"
+      color: "#0d65fb"
     },
     {
       id: 6,
@@ -267,7 +288,7 @@ function Events() {
       category: "academic",
       time: "9:00 AM - 2:00 PM",
       location: "Science Lab Complex",
-      color: "#4299e1"
+      color: "#0d65fb"
     },
     {
       id: 7,
@@ -287,7 +308,7 @@ function Events() {
       category: "ceremony",
       time: "9:00 AM - 1:00 PM",
       location: "School Hall",
-      color: "#f56565"
+      color: "#ff0080"
     }
   ], [selectedYear]);
 
@@ -297,7 +318,6 @@ function Events() {
     setApiError(false);
     
     try {
-      // If no API key or calendar ID, use fallback events
       if (!GOOGLE_API_KEY || !GOOGLE_CALENDAR_ID) {
         console.warn("Google Calendar API credentials missing, using fallback events");
         setEvents(fallbackEvents);
@@ -313,35 +333,27 @@ function Events() {
                   `key=${GOOGLE_API_KEY}&timeMin=${timeMin}&timeMax=${timeMax}&` +
                   `singleEvents=true&orderBy=startTime&maxResults=50`;
       
-      console.log("Fetching events from Google Calendar...");
-      
       const controller = new AbortController();
       const timeoutId = setTimeout(() => controller.abort(), 5000);
 
       const response = await fetch(url, { 
         signal: controller.signal,
-        headers: {
-          'Accept': 'application/json'
-        }
+        headers: { 'Accept': 'application/json' }
       });
       
       clearTimeout(timeoutId);
       
       if (!response.ok) {
-        console.error(`Calendar API error: ${response.status}`);
         throw new Error(`Calendar API error: ${response.status}`);
       }
       
       const data = await response.json();
-      console.log("Calendar data received:", data);
       
       if (data.items && data.items.length > 0) {
         const formattedEvents = data.items.slice(0, 50).map((event, index) => {
-          // Handle all-day events vs timed events
           const isAllDay = !!event.start?.date;
           const eventDate = isAllDay ? event.start.date : event.start?.dateTime?.split('T')[0];
           
-          // Format time
           let eventTime = "All day";
           if (!isAllDay && event.start?.dateTime) {
             eventTime = new Date(event.start.dateTime).toLocaleTimeString([], { 
@@ -352,7 +364,7 @@ function Events() {
           }
           
           const category = determineCategory(event.summary, event.description);
-          const categoryColor = categories.find(c => c.id === category)?.color || "#718096";
+          const categoryColor = categories.find(c => c.id === category)?.color || "#0d65fb";
           
           return {
             id: event.id || index,
@@ -368,7 +380,6 @@ function Events() {
         
         setEvents(formattedEvents);
       } else {
-        console.log("No events found in calendar, using fallback");
         setEvents(fallbackEvents);
       }
     } catch (error) {
@@ -380,12 +391,10 @@ function Events() {
     }
   }, [GOOGLE_API_KEY, GOOGLE_CALENDAR_ID, selectedYear, categories, fallbackEvents, determineCategory]);
 
-  // Fetch events when year changes
   useEffect(() => {
     fetchGoogleCalendarEvents();
   }, [selectedYear, fetchGoogleCalendarEvents]);
 
-  // Filter events based on selected month and category
   const filteredEvents = useMemo(() => {
     return events
       .filter(event => {
@@ -425,7 +434,6 @@ function Events() {
   const handleHover = useCallback((id) => setHoveredEvent(id), []);
   const handleLeave = useCallback(() => setHoveredEvent(null), []);
 
-  // Generate calendar days
   const calendarDays = useMemo(() => {
     const firstDay = new Date(selectedYear, selectedMonth, 1).getDay();
     const adjustedFirstDay = firstDay === 0 ? 6 : firstDay - 1;
@@ -463,40 +471,32 @@ function Events() {
       </Helmet>
 
       {/* Page Header */}
-      <section 
-        style={{ 
-          background: 'linear-gradient(135deg, #132f66 0%, #0a1f4d 100%)',
-          color: 'white',
-          paddingTop: '120px',
-          paddingBottom: '40px',
-          textAlign: 'center'
-        }}
-        aria-labelledby="page-title"
-      >
+      <section className="page-title-section" aria-labelledby="page-title">
         <Container>
-          <h1 id="page-title" style={{ 
-            fontSize: 'clamp(2rem, 5vw, 2.5rem)',
-            fontWeight: 'bold',
-            marginBottom: '0.5rem',
-            color: 'white'
-          }}>
-            Events Calendar
+          <h1 id="page-title" className="display-5 fw-bold">
+            School Events & Important Dates
           </h1>
-          <p style={{ 
-            fontSize: 'clamp(1rem, 4vw, 1.1rem)',
-            maxWidth: '600px',
-            margin: '0 auto',
-            color: 'rgba(255,255,255,0.95)'
-          }}>
-            Stay updated with upcoming activities
+          <p className="lead">
+            Stay informed about key school events, academic activities and moments that shape your child's school experience.
           </p>
         </Container>
       </section>
 
-      {/* Main Events Section */}
-      <section className="py-4 py-lg-5" aria-labelledby="events-heading">
+      {/* Events Intro Section - Reduced spacing */}
+      <section className="py-3">
         <Container>
-          <h2 id="events-heading" className="visually-hidden">Upcoming Events</h2>
+          <div className="quote-block p-3 text-center" style={{ background: 'rgba(255,255,255,0.95)', backdropFilter: 'blur(5px)', borderRadius: '16px', borderLeft: '5px solid var(--secondary)', boxShadow: '0 8px 20px rgba(0,0,0,0.05)' }}>
+            <p className="lead mb-0" style={{ fontSize: '1.1rem', color: 'var(--text-dark)', fontStyle: 'italic', fontWeight: '500', lineHeight: 1.5 }}>
+              Never miss an important school activity. From academic meetings to co-curricular events, stay updated on what your child is experiencing throughout the term.
+            </p>
+          </div>
+        </Container>
+      </section>
+
+      {/* Main Events Section - Reduced padding */}
+      <section className="py-4" aria-labelledby="events-heading">
+        <Container>
+          <h1 id="events-heading" className="section-heading mb-3">School Calendar & Events</h1>
 
           {/* API Error Alert */}
           {apiError && (
@@ -509,7 +509,17 @@ function Events() {
               </Col>
             </Row>
           )}
-
+         
+          {/* Filter description - Reduced margin */}
+          <p className="lead text-center mb-4 px-3 px-md-5" style={{ 
+            maxWidth: "900px", 
+            margin: "0 auto 2rem", 
+            color: 'var(--text-dark)',
+            fontSize: '1rem'
+          }}>
+            Filter events by category to quickly find academic, sports, and school activities relevant to your child.
+          </p> 
+          
           {/* Category Selector */}
           <div className="d-flex flex-wrap justify-content-center gap-2 mb-4" role="group" aria-label="Event categories">
             {categories.map(category => (
@@ -527,16 +537,16 @@ function Events() {
             {/* Left Column - Events List */}
             <Col lg={8}>
               <div className="upcoming-header d-flex justify-content-between align-items-center mb-3">
-                <h2 className="h5 fw-bold mb-0" style={{ color: '#132f66' }}>
+                <h2 className="card-title-navy h5 fw-bold mb-0">
                   {selectedCategory === 'all' ? 'All Events' : `${categories.find(c => c.id === selectedCategory)?.name} Events`}
                   <span className="ms-2 small text-muted">({monthAbbr[selectedMonth]} {selectedYear})</span>
                 </h2>
               </div>
 
               {loading ? (
-                <div className="text-center py-5" role="status" aria-live="polite">
-                  <Spinner animation="border" variant="primary" size="sm" />
-                  <p className="mt-2 small text-muted">Loading events...</p>
+                <div className="text-center py-4" role="status" aria-live="polite">
+                  <Spinner animation="border" variant="primary" />
+                  <p className="mt-2 text-muted">Loading events...</p>
                   <span className="visually-hidden">Loading events, please wait</span>
                 </div>
               ) : (
@@ -552,13 +562,14 @@ function Events() {
                           onHover={handleHover}
                           onLeave={handleLeave}
                           index={index}
+                          isFeatured={featuredEventIds.includes(event.id)}
                         />
                       ))}
                     </div>
                   ) : (
-                    <div className="text-center py-5 bg-light rounded-4" role="status">
+                    <div className="text-center py-4 bg-light-custom rounded-3" role="status">
                       <i className="fas fa-calendar-times fs-1 text-muted mb-2" aria-hidden="true"></i>
-                      <h3 className="h6 fw-bold">No events found</h3>
+                      <h3 className="h6 fw-bold text-navy">No events found</h3>
                       <p className="small text-muted mb-0">Try a different month or category</p>
                     </div>
                   )}
@@ -568,11 +579,11 @@ function Events() {
 
             {/* Right Column - Calendar */}
             <Col lg={4}>
-              <div className="calendar-card bg-white p-3 rounded-4 shadow-sm">
-                <div className="d-flex justify-content-between align-items-center mb-3">
-                  <h3 className="h6 fw-bold mb-0">
+              <div className="calendar-card bg-white p-3 rounded-4 shadow-sm" style={{ position: 'sticky', top: '100px' }}>
+                <div className="d-flex justify-content-between align-items-center mb-2">
+                  <h2 className="card-title-navy h6 fw-bold mb-0">
                     {months[selectedMonth]} {selectedYear}
-                  </h3>
+                  </h2>
                   <span className="small text-muted" aria-live="polite" aria-atomic="true">
                     <i className="far fa-calendar-check me-1" aria-hidden="true"></i>
                     {monthEventCount} {monthEventCount === 1 ? 'event' : 'events'}
@@ -582,7 +593,7 @@ function Events() {
                 {/* Month/Year Controls */}
                 <div className="d-flex gap-2 mb-3">
                   <select 
-                    className="form-select form-select-sm"
+                    className="form-control-custom form-select-sm"
                     value={selectedMonth}
                     onChange={(e) => {
                       setSelectedMonth(parseInt(e.target.value));
@@ -596,7 +607,7 @@ function Events() {
                     ))}
                   </select>
                   <select 
-                    className="form-select form-select-sm"
+                    className="form-control-custom form-select-sm"
                     value={selectedYear}
                     onChange={(e) => {
                       setSelectedYear(parseInt(e.target.value));
@@ -623,7 +634,7 @@ function Events() {
                   role="grid"
                   aria-label="Calendar"
                 >
-                  {['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'].map((day, i) => (
+                  {['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'].map((day, i) => (
                     <div key={day} className="text-center small fw-bold text-muted py-1" role="columnheader">
                       {day.slice(0, 1)}
                       <span className="visually-hidden">{day}</span>
@@ -645,17 +656,17 @@ function Events() {
                 </div>
 
                 {/* Legend */}
-                <div className="d-flex flex-wrap gap-3 small">
+                <div className="d-flex flex-wrap gap-2 small">
                   <div className="d-flex align-items-center gap-1">
-                    <span className="cal-day has-event" style={{ width: '16px', height: '16px', borderRadius: '50%', backgroundColor: '#ebf8ff' }} aria-hidden="true"></span>
+                    <span className="cal-day has-event" style={{ width: '14px', height: '14px', borderRadius: '50%', backgroundColor: '#ebf8ff' }} aria-hidden="true"></span>
                     <span className="text-muted">Has events</span>
                   </div>
                   <div className="d-flex align-items-center gap-1">
-                    <span className="cal-day today" style={{ width: '16px', height: '16px', borderRadius: '50%', border: '2px solid #132f66' }} aria-hidden="true"></span>
+                    <span className="cal-day today" style={{ width: '14px', height: '14px', borderRadius: '50%', border: '2px solid var(--navy)' }} aria-hidden="true"></span>
                     <span className="text-muted">Today</span>
                   </div>
                   <div className="d-flex align-items-center gap-1">
-                    <span className="cal-day selected" style={{ width: '16px', height: '16px', borderRadius: '50%', backgroundColor: '#cebd04' }} aria-hidden="true"></span>
+                    <span className="cal-day selected" style={{ width: '14px', height: '14px', borderRadius: '50%', backgroundColor: 'var(--gold)' }} aria-hidden="true"></span>
                     <span className="text-muted">Selected</span>
                   </div>
                 </div>
@@ -664,16 +675,16 @@ function Events() {
                 <div className="mt-3 pt-2 border-top" aria-live="polite" aria-atomic="true">
                   <div className="d-flex justify-content-between align-items-center small">
                     <span className="text-muted">Total events:</span>
-                    <span className="fw-bold" aria-label={`Total events: ${monthEventCount}`}>{monthEventCount}</span>
+                    <span className="fw-bold text-navy" aria-label={`Total events: ${monthEventCount}`}>{monthEventCount}</span>
                   </div>
                   <div className="d-flex justify-content-between align-items-center small mt-1">
                     <span className="text-muted">Categories:</span>
-                    <span className="fw-bold" aria-label={`Categories: ${new Set(filteredEvents.map(e => e.category)).size}`}>{new Set(filteredEvents.map(e => e.category)).size}</span>
+                    <span className="fw-bold text-navy" aria-label={`Categories: ${new Set(filteredEvents.map(e => e.category)).size}`}>{new Set(filteredEvents.map(e => e.category)).size}</span>
                   </div>
                   {selectedDate && (
                     <div className="d-flex justify-content-between align-items-center small mt-1">
                       <span className="text-muted">Events on {selectedDate}:</span>
-                      <span className="fw-bold" aria-label={`Events on ${selectedDate}: ${getEventsForDate(selectedDate).length}`}>{getEventsForDate(selectedDate).length}</span>
+                      <span className="fw-bold text-navy" aria-label={`Events on ${selectedDate}: ${getEventsForDate(selectedDate).length}`}>{getEventsForDate(selectedDate).length}</span>
                     </div>
                   )}
                 </div>
@@ -683,42 +694,45 @@ function Events() {
         </Container>
       </section>
 
+      {/* Why This Matters Section - Reduced padding */}
+      <section className="statistics-section py-4" aria-labelledby="why-matters-heading">
+        <Container>
+          <Row className="justify-content-center text-center">
+            <Col lg={8}>
+              <h2 id="why-matters-heading" className="h3 fw-bold mb-2 text-white">
+                Why This Matters for You as a Parent
+              </h2>
+              <div style={{ width: '80px', height: '3px', background: 'var(--gold)', margin: '0.75rem auto 1.5rem', borderRadius: '2px' }}></div>
+              <p className="lead text-white" style={{ fontSize: '1.1rem', maxWidth: '700px', margin: '0 auto' }}>
+                Keeping track of school events helps you stay involved in your child's education, support their activities, and plan effectively throughout the school term.
+              </p>
+            </Col>
+          </Row>
+        </Container>
+      </section>
+
       <Suspense fallback={null}>
         <GetInTouch />
       </Suspense>
 
-      {/* Critical CSS inline */}
+      {/* Additional CSS for event items */}
       <style dangerouslySetInnerHTML={{ __html: `
-        .visually-hidden {
-          position: absolute;
-          width: 1px;
-          height: 1px;
-          padding: 0;
-          margin: -1px;
-          overflow: hidden;
-          clip: rect(0, 0, 0, 0);
-          border: 0;
-        }
         .event-item {
           display: flex;
           gap: 1rem;
           padding: 1rem;
-          background: white;
-          border-radius: 12px;
-          box-shadow: 0 2px 8px rgba(0,0,0,0.05);
           transition: transform 0.2s ease, box-shadow 0.2s ease;
           border-left: 4px solid;
+          position: relative;
         }
         .event-item:hover,
         .event-item:focus-within {
           transform: translateY(-2px);
           box-shadow: 0 8px 16px rgba(0,0,0,0.1);
-          outline: 3px solid #cebd04;
-          outline-offset: 2px;
         }
-        .calendar-card {
-          position: sticky;
-          top: 100px;
+        .event-item.featured {
+          background: linear-gradient(135deg, #ffffff 0%, #fff5f5 100%);
+          border-left-width: 6px;
         }
         .cal-day {
           aspect-ratio: 1;
@@ -735,7 +749,7 @@ function Events() {
         .cal-day.active:hover,
         .cal-day.active:focus-visible {
           background: #f0f4ff;
-          outline: 3px solid #cebd04;
+          outline: 3px solid var(--gold);
           outline-offset: 2px;
         }
         .cal-day.has-event:not(.selected) {
@@ -743,12 +757,15 @@ function Events() {
           font-weight: 500;
         }
         .cal-day.today {
-          border: 2px solid #132f66;
+          border: 2px solid var(--navy);
           font-weight: bold;
         }
         .cal-day.selected {
-          background-color: #cebd04;
+          background-color: var(--gold);
           color: white;
+        }
+        .category-filter-btn.active {
+          box-shadow: 0 4px 12px rgba(0,0,0,0.15);
         }
         @media (max-width: 768px) {
           .event-item {
@@ -756,7 +773,10 @@ function Events() {
             gap: 0.5rem;
           }
           .calendar-card {
-            position: static;
+            position: static !important;
+          }
+          .section-heading {
+            font-size: 1.6rem;
           }
         }
         @media (prefers-reduced-motion: reduce) {
